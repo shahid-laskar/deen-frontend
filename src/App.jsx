@@ -4,7 +4,7 @@ import { useAuthStore } from './store/authStore'
 import AppLayout from './components/layout/AppLayout'
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
-import OnboardingPage from './pages/auth/OnboardingPage'
+import OnboardingV2 from './pages/auth/OnboardingV2'
 import Dashboard from './pages/Dashboard'
 import Prayer from './pages/Prayer'
 import Quran from './pages/Quran'
@@ -14,12 +14,10 @@ import Tasks from './pages/Tasks'
 import Female from './pages/Female'
 import AIGuide from './pages/AIGuide'
 import Settings from './pages/Settings'
-// V2
 import Meal from './pages/Meal'
 import Workout from './pages/Workout'
 import Children from './pages/Children'
 import Qibla from './pages/Qibla'
-// V3
 import Community from './pages/Community'
 import Waqf from './pages/Waqf'
 
@@ -29,10 +27,12 @@ function ProtectedRoute({ children }) {
   if (!user?.onboarding_completed) return <Navigate to="/onboarding" replace />
   return children
 }
+
 function AuthRoute({ children }) {
   const { isAuthenticated } = useAuthStore()
   return isAuthenticated ? <Navigate to="/dashboard" replace /> : children
 }
+
 function FemaleRoute({ children }) {
   const { isFemale } = useAuthStore()
   return isFemale() ? children : <Navigate to="/dashboard" replace />
@@ -44,7 +44,7 @@ export default function App() {
       <Routes>
         <Route path="/login"      element={<AuthRoute><LoginPage /></AuthRoute>} />
         <Route path="/register"   element={<AuthRoute><RegisterPage /></AuthRoute>} />
-        <Route path="/onboarding" element={<OnboardingPage />} />
+        <Route path="/onboarding" element={<OnboardingV2 />} />
         <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard"  element={<Dashboard />} />
@@ -56,12 +56,10 @@ export default function App() {
           <Route path="/ai"         element={<AIGuide />} />
           <Route path="/settings"   element={<Settings />} />
           <Route path="/female"     element={<FemaleRoute><Female /></FemaleRoute>} />
-          {/* V2 */}
           <Route path="/meal"       element={<Meal />} />
           <Route path="/workout"    element={<Workout />} />
           <Route path="/children"   element={<Children />} />
           <Route path="/qibla"      element={<Qibla />} />
-          {/* V3 */}
           <Route path="/community"  element={<Community />} />
           <Route path="/waqf"       element={<Waqf />} />
         </Route>

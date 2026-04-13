@@ -1,198 +1,373 @@
+/* ============================================================
+   Deen Design System — index.css
+   Full token rebuild for Phase 1
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@400;600;700&family=Noto+Nastaliq+Urdu:wght@400;700&family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Design Tokens ─────────────────────────────────────────────────────────── */
+/* ─── Theme CSS Variables (defaults — overridden by themeStore) ──────────────── */
 :root {
-  --color-primary: #0d6b3d;
-  --color-primary-light: #14a860;
-  --color-primary-dark: #0a4f2e;
-  --color-gold: #c9870a;
-  --color-gold-light: #e8b832;
-  --color-bg: #faf6f1;
-  --color-bg-card: #ffffff;
-  --color-text: #1a1410;
-  --color-text-muted: #6b5040;
-  --color-border: #ede3d6;
-  --color-border-strong: #c8ae94;
-  --sidebar-width: 260px;
+  --t-bg:            #0a1f14;
+  --t-bg-card:       #0f2e1e;
+  --t-bg-sidebar:    #071510;
+  --t-bg-input:      #0d2518;
+  --t-text:          #e8f5ee;
+  --t-text-muted:    #6aaf85;
+  --t-text-inverse:  #ffffff;
+  --t-border:        #1a3d28;
+  --t-border-strong: #2a5a3e;
+  --t-primary:       #14a860;
+  --t-primary-hover: #1cc97a;
+  --t-accent:        #c9870a;
+  --t-accent-hover:  #e8b832;
+  --t-nav-bg:        #071510;
+  --t-nav-active:    #14a860;
+  --t-nav-text:      #4a8a62;
+  --t-prayer-hero:   linear-gradient(135deg, #0a3d24 0%, #0d6b3d 50%, #0f5a32 100%);
+  --t-geometric:     rgba(20,168,96,0.06);
+  --t-glow:          0 0 20px rgba(20,168,96,0.15);
+
+  /* Typography */
+  --t-font-family: 'DM Sans', system-ui, sans-serif;
+  --t-font-scale:  1;
+  --t-quran-scale: 1.2;
+  --t-line-height: 1.6;
+
+  /* 8pt spacing grid */
+  --sp-xs:   4px;
+  --sp-sm:   8px;
+  --sp-md:   16px;
+  --sp-lg:   24px;
+  --sp-xl:   32px;
+  --sp-2xl:  48px;
+  --sp-3xl:  64px;
+
+  /* Border radius */
+  --r-sm:   6px;
+  --r-md:   10px;
+  --r-lg:   16px;
+  --r-xl:   24px;
+  --r-full: 9999px;
+
+  /* Shadows — light mode */
+  --shadow-1: 0 1px 3px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.05);
+  --shadow-2: 0 4px 12px rgba(0,0,0,0.10), 0 8px 24px rgba(0,0,0,0.06);
+  --shadow-3: 0 8px 24px rgba(0,0,0,0.14), 0 16px 48px rgba(0,0,0,0.08);
+
+  /* Motion */
+  --motion-fast:   150ms cubic-bezier(0.4,0,0.2,1);
+  --motion-std:    250ms cubic-bezier(0.4,0,0.2,1);
+  --motion-slow:   400ms cubic-bezier(0.4,0,0.2,1);
+  --motion-spring: 300ms cubic-bezier(0.34,1.56,0.64,1);
+
+  /* Bottom nav height */
+  --nav-h: 64px;
+
+  /* Sidebar width (desktop) */
+  --sidebar-w: 260px;
 }
 
 .dark {
-  --color-bg: #0f1a14;
-  --color-bg-card: #162118;
-  --color-text: #f0ebe4;
-  --color-text-muted: #9aaf9f;
-  --color-border: #1e3328;
-  --color-border-strong: #2a4a36;
+  --shadow-1: 0 1px 3px rgba(0,0,0,0.30), var(--t-glow);
+  --shadow-2: 0 4px 12px rgba(0,0,0,0.40), var(--t-glow);
+  --shadow-3: 0 8px 24px rgba(0,0,0,0.50), var(--t-glow);
 }
 
-/* ─── Base Styles ────────────────────────────────────────────────────────────── */
-* { box-sizing: border-box; margin: 0; padding: 0; }
+/* ─── Theme transition (300ms crossfade on all theme-driven properties) ───────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  transition: background-color var(--motion-std), border-color var(--motion-std),
+              color var(--motion-std);
+}
+/* Exception: never animate transforms through the theme transition */
+*:where([class*="animate-"], [class*="motion-"]) {
+  transition: none;
+}
 
-html { scroll-behavior: smooth; }
+/* ─── Base ───────────────────────────────────────────────────────────────────── */
+html {
+  font-size: calc(16px * var(--t-font-scale, 1));
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
 
 body {
-  background-color: var(--color-bg);
-  color: var(--color-text);
-  font-family: 'DM Sans', system-ui, sans-serif;
-  line-height: 1.6;
+  background-color: var(--t-bg);
+  color: var(--t-text);
+  font-family: var(--t-font-family);
+  line-height: var(--t-line-height);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Reserve space for bottom nav on mobile */
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* ─── Islamic Geometric Pattern Background ───────────────────────────────────── */
+/* ─── Typography scale (inherits --t-font-scale from html) ───────────────────── */
+h1 { font-size: calc(2rem   * var(--t-font-scale, 1)); }
+h2 { font-size: calc(1.5rem * var(--t-font-scale, 1)); }
+h3 { font-size: calc(1.25rem* var(--t-font-scale, 1)); }
+
+/* ─── Arabic / Quran text ─────────────────────────────────────────────────────── */
+.font-arabic {
+  font-family: 'Amiri', serif;
+  direction: rtl;
+  line-height: 2.2;
+  font-size: calc(1.4rem * var(--t-quran-scale, 1.2));
+}
+.font-cairo   { font-family: 'Cairo', sans-serif; }
+.font-urdu    { font-family: 'Noto Nastaliq Urdu', serif; }
+
+/* ─── Scrollbars ─────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar         { width: 5px; height: 5px; }
+::-webkit-scrollbar-track   { background: transparent; }
+::-webkit-scrollbar-thumb   { background: var(--t-border-strong); border-radius: var(--r-full); }
+::-webkit-scrollbar-thumb:hover { background: var(--t-text-muted); }
+
+/* ─── Islamic geometric background ──────────────────────────────────────────── */
 .bg-geometric {
-  background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%230d6b3d' fill-opacity='0.04'%3E%3Cpath fill-rule='evenodd' d='M11 0l5 20H6L0 0h11zm30 0l5 20H36L30 0h11zm30 0l5 20H66L60 0h11zM11 80l5-20H6L0 80h11zm30 0l5-20H36L30 80h11zm30 0l5-20H66L60 80h11zM0 40l5-20h10L10 40H0zm70 0l5-20h10L80 40H70zM35 40l5-20h10L45 40H35z'/%3E%3C/g%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath fill-rule='evenodd' d='M11 0l5 20H6L0 0h11zm30 0l5 20H36L30 0h11zm30 0l5 20H66L60 0h11zM11 80l5-20H6L0 80h11zm30 0l5-20H36L30 80h11zm30 0l5-20H66L60 80h11zM0 40l5-20h10L10 40H0zm70 0l5-20h10L80 40H70zM35 40l5-20h10L45 40H35z'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 80px 80px;
 }
+/* Colour is applied via --t-geometric in the component */
 
-/* ─── Custom Scrollbar ───────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--color-border-strong); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
-
-/* ─── Component Classes ──────────────────────────────────────────────────────── */
+/* ─── Component layer ─────────────────────────────────────────────────────────── */
 @layer components {
+
+  /* Card */
   .card {
-    @apply bg-white dark:bg-emerald-950/50 rounded-2xl shadow-card border border-parchment-200 dark:border-emerald-900/50;
+    background-color: var(--t-bg-card);
+    border: 0.5px solid var(--t-border);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-1);
   }
-
   .card-hover {
-    @apply hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200;
+    transition: transform var(--motion-std), box-shadow var(--motion-std);
+  }
+  .card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-2);
   }
 
-  .btn-primary {
-    @apply bg-emerald-800 hover:bg-emerald-700 text-white font-medium px-6 py-3 rounded-xl
-           transition-all duration-200 active:scale-95 shadow-emerald disabled:opacity-50 disabled:cursor-not-allowed;
+  /* Button base */
+  .btn-base {
+    @apply inline-flex items-center justify-center gap-2 font-medium rounded-xl
+           transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed
+           select-none;
+    border-radius: var(--r-md);
+    transition: background-color var(--motion-fast), transform 80ms;
   }
-
+  .btn-primary  {
+    @apply btn-base bg-emerald-800 hover:bg-emerald-700 text-white;
+    box-shadow: 0 4px 20px rgba(13,107,61,0.25);
+  }
   .btn-secondary {
-    @apply bg-parchment-100 dark:bg-emerald-900/30 hover:bg-parchment-200 dark:hover:bg-emerald-900/50
-           text-emerald-900 dark:text-emerald-100 font-medium px-6 py-3 rounded-xl
-           border border-parchment-300 dark:border-emerald-800 transition-all duration-200 active:scale-95;
+    @apply btn-base;
+    background-color: var(--t-bg-card);
+    border: 0.5px solid var(--t-border-strong);
+    color: var(--t-text);
   }
-
+  .btn-secondary:hover { background-color: var(--t-bg); }
   .btn-gold {
-    @apply bg-gold-700 hover:bg-gold-600 text-white font-medium px-6 py-3 rounded-xl
-           transition-all duration-200 active:scale-95 shadow-gold;
+    @apply btn-base;
+    background-color: var(--t-accent);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(201,135,10,0.28);
   }
-
+  .btn-gold:hover { background-color: var(--t-accent-hover); }
   .btn-ghost {
-    @apply hover:bg-parchment-100 dark:hover:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300
-           font-medium px-4 py-2 rounded-xl transition-all duration-200;
+    @apply btn-base;
+    color: var(--t-text-muted);
+    background: transparent;
   }
+  .btn-ghost:hover { background-color: var(--t-border); }
 
+  /* Input */
   .input {
-    @apply w-full px-4 py-3 rounded-xl border border-parchment-300 dark:border-emerald-800
-           bg-white dark:bg-emerald-950/30 text-emerald-950 dark:text-emerald-50
-           placeholder:text-parchment-500 dark:placeholder:text-emerald-700
-           focus:outline-none focus:ring-2 focus:ring-emerald-700/40 focus:border-emerald-700
-           transition-all duration-200;
+    width: 100%;
+    padding: 0.65rem 1rem;
+    border-radius: var(--r-md);
+    border: 0.5px solid var(--t-border-strong);
+    background-color: var(--t-bg-input);
+    color: var(--t-text);
+    font-family: var(--t-font-family);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    outline: none;
+    transition: border-color var(--motion-fast), box-shadow var(--motion-fast);
+  }
+  .input::placeholder { color: var(--t-text-muted); opacity: 0.7; }
+  .input:focus {
+    border-color: var(--t-primary);
+    box-shadow: 0 0 0 3px rgba(20,168,96,0.15);
   }
 
+  /* Label */
   .label {
-    @apply block text-sm font-medium text-emerald-900 dark:text-emerald-200 mb-1.5;
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--t-text);
+    margin-bottom: 0.375rem;
+    opacity: 0.85;
   }
 
+  /* Badge */
   .badge {
     @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium;
   }
+  .badge-green { @apply badge bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300; }
+  .badge-gold  { @apply badge bg-amber-100  dark:bg-amber-900/40  text-amber-800  dark:text-amber-300; }
+  .badge-red   { @apply badge bg-red-100    dark:bg-red-900/40    text-red-700    dark:text-red-300; }
+  .badge-blue  { @apply badge bg-blue-100   dark:bg-blue-900/40   text-blue-700   dark:text-blue-300; }
+  .badge-gray  { @apply badge; background-color: var(--t-border); color: var(--t-text-muted); }
 
-  .badge-green {
-    @apply badge bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300;
-  }
+  /* Typography helpers */
+  .page-title    { @apply font-display text-2xl md:text-3xl font-bold; color: var(--t-text); }
+  .section-title { @apply font-display text-xl font-semibold; color: var(--t-text); }
+  .text-muted    { font-size: 0.85rem; color: var(--t-text-muted); }
 
-  .badge-gold {
-    @apply badge bg-gold-100 dark:bg-gold-900/40 text-gold-800 dark:text-gold-300;
-  }
-
-  .badge-red {
-    @apply badge bg-red-100 text-red-700;
-  }
-
-  .section-title {
-    @apply font-display text-xl font-semibold text-emerald-900 dark:text-emerald-100;
-  }
-
-  .page-title {
-    @apply font-display text-2xl md:text-3xl font-bold text-emerald-900 dark:text-emerald-50;
-  }
-
-  .text-muted {
-    @apply text-parchment-600 dark:text-emerald-600 text-sm;
-  }
-
-  /* Skeleton loading */
+  /* Skeleton */
   .skeleton {
-    @apply bg-parchment-200 dark:bg-emerald-900/40 rounded-lg animate-pulse;
+    border-radius: var(--r-md);
+    animation: shimmer 1.6s ease-in-out infinite;
+    background: linear-gradient(90deg,
+      var(--t-border) 25%,
+      var(--t-border-strong) 50%,
+      var(--t-border) 75%
+    );
+    background-size: 200% 100%;
+  }
+
+  /* Modal overlay */
+  .modal-overlay {
+    @apply fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(6px);
   }
 
   /* Prayer status pills */
-  .status-on_time { @apply badge bg-emerald-100 text-emerald-700; }
-  .status-late { @apply badge bg-gold-100 text-gold-700; }
-  .status-missed { @apply badge bg-red-100 text-red-600; }
-  .status-qadha { @apply badge bg-blue-100 text-blue-600; }
-  .status-excused { @apply badge bg-parchment-100 text-parchment-600; }
+  .status-on_time { @apply badge-green; }
+  .status-late    { @apply badge-gold; }
+  .status-missed  { @apply badge-red; }
+  .status-qadha   { @apply badge-blue; }
+  .status-excused { @apply badge-gray; }
+
+  /* Progress ring */
+  .progress-ring circle {
+    transition: stroke-dashoffset 0.6s cubic-bezier(0.4,0,0.2,1);
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+  }
+
+  /* Heatmap */
+  .heatmap-cell {
+    @apply rounded-sm cursor-pointer;
+    transition: transform var(--motion-fast), box-shadow var(--motion-fast);
+  }
+  .heatmap-cell:hover { transform: scale(1.3); box-shadow: var(--shadow-1); }
+
+  /* Quran ayah */
+  .quran-ayah {
+    @apply font-arabic py-4;
+    border-bottom: 0.5px solid var(--t-border);
+    color: var(--t-text);
+  }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: var(--nav-h);
+    background: var(--t-nav-bg);
+    border-top: 0.5px solid var(--t-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    z-index: 40;
+    padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.15);
+    transition: transform var(--motion-std);
+  }
+  .bottom-nav.hidden { transform: translateY(100%); }
+
+  .nav-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    flex: 1;
+    height: 100%;
+    color: var(--t-nav-text);
+    font-size: 0.65rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    background: none;
+    padding: 0;
+    transition: color var(--motion-fast), transform var(--motion-spring);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .nav-tab.active { color: var(--t-nav-active); }
+  .nav-tab.active svg { transform: scale(1.1); }
+  .nav-tab:active { transform: scale(0.92); }
+
+  /* Stagger animations */
+  .stagger-1 { animation-delay: 0.05s; }
+  .stagger-2 { animation-delay: 0.10s; }
+  .stagger-3 { animation-delay: 0.15s; }
+  .stagger-4 { animation-delay: 0.20s; }
+  .stagger-5 { animation-delay: 0.25s; }
+  .stagger-6 { animation-delay: 0.30s; }
 }
 
-/* ─── Stagger Animations ─────────────────────────────────────────────────────── */
-.stagger-1 { animation-delay: 0.05s; }
-.stagger-2 { animation-delay: 0.10s; }
-.stagger-3 { animation-delay: 0.15s; }
-.stagger-4 { animation-delay: 0.20s; }
-.stagger-5 { animation-delay: 0.25s; }
-.stagger-6 { animation-delay: 0.30s; }
-
-.animate-fade-up { animation: fadeUp 0.5s ease both; }
-
+/* ─── Keyframes ────────────────────────────────────────────────────────────── */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
-/* ─── Arabic Text ────────────────────────────────────────────────────────────── */
-.font-arabic {
-  font-family: 'Amiri', serif;
-  direction: rtl;
-  line-height: 2;
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(32px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+@keyframes pulseGold {
+  0%, 100% { box-shadow: 0 0 0 0   rgba(201,135,10,0.5); }
+  50%       { box-shadow: 0 0 0 8px rgba(201,135,10,0); }
+}
+@keyframes crescentRise {
+  from { opacity: 0; transform: translateY(30px) rotate(-20deg); }
+  to   { opacity: 1; transform: translateY(0)   rotate(0deg); }
+}
+@keyframes starTwinkle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.8); }
+}
+@keyframes countdownPulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.02); }
 }
 
-/* ─── Sidebar Layout ─────────────────────────────────────────────────────────── */
-.layout-with-sidebar {
-  display: grid;
-  grid-template-columns: var(--sidebar-width) 1fr;
-  min-height: 100vh;
-}
-
-@media (max-width: 768px) {
-  .layout-with-sidebar {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ─── Quran Reader ───────────────────────────────────────────────────────────── */
-.quran-ayah {
-  @apply font-arabic text-2xl leading-loose text-right text-emerald-950 dark:text-emerald-50 py-4
-         border-b border-parchment-200 dark:border-emerald-900/50;
-}
-
-/* ─── Progress Rings ─────────────────────────────────────────────────────────── */
-.progress-ring circle {
-  transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-  transform: rotate(-90deg);
-  transform-origin: 50% 50%;
-}
-
-/* ─── Streak Heatmap ─────────────────────────────────────────────────────────── */
-.heatmap-cell {
-  @apply rounded-sm transition-all duration-200 cursor-pointer;
-}
-.heatmap-cell:hover { @apply ring-1 ring-emerald-700; }
-
-/* ─── Modal Overlay ──────────────────────────────────────────────────────────── */
-.modal-overlay {
-  @apply fixed inset-0 z-50 flex items-center justify-center p-4;
-  background: rgba(5, 46, 28, 0.5);
-  backdrop-filter: blur(8px);
-}
+/* ─── Utility animations ────────────────────────────────────────────────────── */
+.animate-fade-up    { animation: fadeUp      0.5s ease both; }
+.animate-fade-in    { animation: fadeIn      0.4s ease both; }
+.animate-slide-up   { animation: slideInUp   0.4s ease both; }
+.animate-slide-right{ animation: slideInRight 0.35s ease both; }
+.animate-pulse-gold { animation: pulseGold   2s ease-in-out infinite; }

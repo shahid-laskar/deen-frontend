@@ -1,244 +1,202 @@
-import React from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
+import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { motion } from 'framer-motion'
 import { format } from 'date-fns'
-import {
-  Clock, BookOpen, Target, Flame, CheckSquare,
-  Sparkles, ChevronRight, BookMarked, TrendingUp
-} from 'lucide-react'
-import { prayerApi, habitsApi, quranApi, tasksApi } from '../lib/api'
+import { BookOpen, Target, Compass, RefreshCw, ChevronRight } from 'lucide-react'
+import api from '../lib/api'
 import { useAuthStore } from '../store/authStore'
-import { Card, StatCard, ProgressRing, Skeleton, Badge } from '../components/ui/index'
+import { getIslamicContext } from '../lib/hijri'
+import { Card, Skeleton, ProgressRing } from '../components/ui/index'
+import { clsx } from 'clsx'
 
-const PRAYER_NAMES = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha']
-const STATUS_COLOR = {
-  on_time: '#0d6b3d', late: '#c9870a', missed: '#ef4444', qadha: '#3b82f6', excused: '#9ca3af',
+function getGreeting(name) {
+  const h = new Date().getHours()
+  const prefix = h < 5 ? '🌙 Good night' : h < 12 ? '🌅 Good morning' : h < 17 ? '☀️ Good afternoon' : '🌆 Good evening'
+  return `${prefix}${name ? `, ${name}` : ''}`
 }
 
-function PrayerWidget({ summary }) {
-  if (!summary) return <Skeleton className="h-32" />
-  const total = 5
-  const done = summary.total_logged || 0
+function useCountdown(targetTimeStr) {
+  const [remaining, setRemaining] = React.useState(null)
+  React.useEffect(() => {
+    if (!targetTimeStr) return
+    const tick = () => {
+      const [h, m] = targetTimeStr.split(':').map(Number)
+      const now = new Date(); const target = new Date()
+      target.setHours(h, m, 0, 0); if (target < now) target.setDate(target.getDate() + 1)
+      const diff = target - now
+      setRemaining({ h: Math.floor(diff / 3_600_000), m: Math.floor((diff % 3_600_000) / 60_000), s: Math.floor((diff % 60_000) / 1_000) })
+    }
+    tick(); const id = setInterval(tick, 1_000); return () => clearInterval(id)
+  }, [targetTimeStr])
+  return remaining
+}
+
+const PRAYER_ORDER = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha']
+
+function findNextPrayer(timings) {
+  if (!timings) return null
+  const now = new Date()
+  for (const name of PRAYER_ORDER) {
+    const val = timings[name]; if (!val) continue
+    const [h, m] = val.split(':').map(Number); const t = new Date(); t.setHours(h, m, 0, 0)
+    if (t > now) return { name, time: val }
+  }
+  return { name: 'Fajr', time: timings.Fajr }
+}
+
+function pad(n) { return String(n).padStart(2, '0') }
+
+function PrayerHero({ times, summary }) {
+  const next = findNextPrayer(times?.timings)
+  const countdown = useCountdown(next?.time)
   return (
-    <div className="flex items-center gap-4">
-      <ProgressRing value={done} max={total} size={72} strokeWidth={6} color="#0d6b3d">
-        <span className="text-sm font-bold text-emerald-800 dark:text-emerald-200">{done}/{total}</span>
-      </ProgressRing>
-      <div className="flex-1 space-y-2">
-        {PRAYER_NAMES.map((p) => {
-          const log = summary[p]
-          return (
-            <div key={p} className="flex items-center gap-2">
-              <div
-                className="w-2 h-2 rounded-full flex-shrink-0"
-                style={{ background: log ? STATUS_COLOR[log.status] || '#9ca3af' : '#e5e7eb' }}
-              />
-              <span className="text-xs capitalize text-emerald-800 dark:text-emerald-300 w-16">{p}</span>
-              {log ? (
-                <span className={`text-xs status-${log.status}`}>{log.status.replace('_', ' ')}</span>
-              ) : (
-                <span className="text-xs text-parchment-400 dark:text-emerald-700">—</span>
-              )}
-            </div>
-          )
-        })}
+    <div className="relative overflow-hidden rounded-2xl p-5 mb-5" style={{ background: 'var(--t-prayer-hero)' }}>
+      <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")", backgroundSize: '40px 40px' }} />
+      <div className="relative z-10">
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <p className="text-white/70 text-xs uppercase tracking-widest mb-0.5">Next prayer</p>
+            <h2 className="font-display text-2xl font-bold text-white">{next?.name || '—'}</h2>
+            <p className="text-white/60 text-sm">{next?.time || ''}</p>
+          </div>
+          {summary && (
+            <ProgressRing value={summary.total_logged} max={5} size={64} strokeWidth={5} color="rgba(255,255,255,0.9)">
+              <span className="text-xs font-bold text-white">{summary.total_logged}/5</span>
+            </ProgressRing>
+          )}
+        </div>
+        {countdown && (
+          <div className="flex gap-2 items-end">
+            {[{ v: pad(countdown.h), l: 'hr' }, { v: pad(countdown.m), l: 'min' }, { v: pad(countdown.s), l: 'sec' }].map(({ v, l }, i) => (
+              <React.Fragment key={i}>
+                {i > 0 && <span className="text-white/40 font-bold pb-4">:</span>}
+                <div className="text-center"><div className="font-display text-2xl font-bold text-white leading-none">{v}</div><div className="text-white/50 text-[10px] uppercase">{l}</div></div>
+              </React.Fragment>
+            ))}
+            <span className="text-white/50 text-xs ml-1 pb-1">until {next?.name}</span>
+          </div>
+        )}
+        <div className="flex gap-2 mt-4">
+          {['Fajr','Dhuhr','Asr','Maghrib','Isha'].map(name => {
+            const log = summary?.[name.toLowerCase()]
+            return (
+              <div key={name} className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
+                style={{ background: log?.status === 'on_time' ? 'rgba(255,255,255,0.9)' : log?.status ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.12)', color: log?.status === 'on_time' ? '#0a3d24' : 'rgba(255,255,255,0.8)' }}>{name[0]}</div>
+            )
+          })}
+        </div>
       </div>
     </div>
   )
 }
 
-function HabitStreak({ habits }) {
-  if (!habits) return <Skeleton className="h-24" />
-  const today = habits.filter((h) => h.completed_today)
-  const total = habits.filter((h) => h.is_active)
+const QUICK_ACTIONS = [
+  { icon: '📿', label: 'Dhikr',  to: '/habits'  },
+  { icon: '📖', label: 'Quran',  to: '/quran'   },
+  { icon: '✍️', label: 'Journal',to: '/journal' },
+  { icon: '✅', label: 'Habits', to: '/habits'  },
+]
+
+function IslamicBanner({ ctx }) {
+  const msgs = { isRamadan: { e:'🌙', t:`Ramadan Mubarak! Day ${ctx.hijri.day}` }, isEidFitr: { e:'🎉', t:'Eid ul-Fitr Mubarak!' }, isEidAdha: { e:'🐑', t:'Eid ul-Adha Mubarak!' }, isDhulHijjah10: { e:'🕌', t:`Day ${ctx.hijri.day} of Dhul Hijjah` } }
+  const key = Object.keys(msgs).find(k => ctx[k])
+  if (!key) return null
+  const { e, t } = msgs[key]
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <span className="text-muted text-xs">Today's habits</span>
-        <Badge variant={today.length === total.length && total.length > 0 ? 'green' : 'gold'}>
-          {today.length}/{total.length}
-        </Badge>
-      </div>
-      <div className="space-y-1.5">
-        {total.slice(0, 4).map((h) => (
-          <div key={h.id} className="flex items-center gap-2">
-            <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${
-              h.completed_today
-                ? 'bg-emerald-700 border-emerald-700'
-                : 'border-parchment-300 dark:border-emerald-700'
-            }`}>
-              {h.completed_today && <span className="text-white text-xs">✓</span>}
-            </div>
-            <span className="text-xs text-emerald-800 dark:text-emerald-300 truncate">{h.name}</span>
-            {h.current_streak > 0 && (
-              <span className="text-xs text-gold-600 ml-auto flex items-center gap-0.5">
-                <Flame size={10} /> {h.current_streak}
-              </span>
-            )}
-          </div>
-        ))}
-        {total.length === 0 && <p className="text-xs text-muted">No habits yet. <Link to="/habits" className="text-emerald-700 hover:underline">Add one →</Link></p>}
-      </div>
-    </div>
+    <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="rounded-xl px-4 py-3 mb-4 flex items-center gap-3" style={{ background: 'var(--t-accent)' }}>
+      <span className="text-xl">{e}</span>
+      <p className="text-sm font-medium text-white">{t}</p>
+    </motion.div>
   )
 }
 
 export default function Dashboard() {
-  const { user, isFemale } = useAuthStore()
-  const today = format(new Date(), 'EEEE, d MMMM yyyy')
-  const displayName = user?.profile?.display_name || user?.email?.split('@')[0] || 'friend'
+  const { user } = useAuthStore()
+  const qc = useQueryClient()
+  const navigate = useNavigate()
+  const [refreshing, setRefreshing] = useState(false)
+  const ctx = getIslamicContext()
+  const displayName = user?.profile?.display_name || user?.email?.split('@')[0] || ''
+  const lat = user?.latitude; const lng = user?.longitude
 
-  const { data: prayerSummary } = useQuery({
-    queryKey: ['prayer', 'today'],
-    queryFn: () => prayerApi.getTodaySummary().then((r) => r.data),
-  })
+  const { data: prayerTimes, isLoading: ptLoading } = useQuery({ queryKey: ['prayer','times'], queryFn: () => api.get('/prayer/times', lat && lng ? { params: { lat, lng } } : {}).then(r => r.data).catch(() => null), staleTime: 5*60_000 })
+  const { data: summary } = useQuery({ queryKey: ['prayer','summary','today'], queryFn: () => api.get('/prayer/summary/today').then(r => r.data).catch(() => null) })
+  const { data: habits } = useQuery({ queryKey: ['habits'], queryFn: () => api.get('/habits').then(r => r.data).catch(() => []) })
+  const { data: journal } = useQuery({ queryKey: ['journal'], queryFn: () => api.get('/journal', { params: { limit: 1 } }).then(r => r.data).catch(() => []) })
 
-  const { data: streak } = useQuery({
-    queryKey: ['prayer', 'streak'],
-    queryFn: () => prayerApi.getStreak().then((r) => r.data),
-  })
-
-  const { data: habits } = useQuery({
-    queryKey: ['habits'],
-    queryFn: () => habitsApi.list().then((r) => r.data),
-  })
-
-  const { data: hifzDue } = useQuery({
-    queryKey: ['quran', 'hifz', 'due'],
-    queryFn: () => quranApi.getHifzDueToday().then((r) => r.data),
-  })
-
-  const { data: todayTasks } = useQuery({
-    queryKey: ['tasks', 'today'],
-    queryFn: () => tasksApi.today().then((r) => r.data),
-  })
-
-  const pendingTasks = todayTasks?.filter((t) => !t.completed) || []
-
-  const greeting = () => {
-    const h = new Date().getHours()
-    if (h < 5) return 'Assalamu Alaikum'
-    if (h < 12) return 'Good morning'
-    if (h < 17) return 'Good afternoon'
-    if (h < 20) return 'Good evening'
-    return 'Good night'
-  }
+  const refresh = async () => { setRefreshing(true); await qc.invalidateQueries(); setTimeout(() => setRefreshing(false), 800) }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="max-w-2xl mx-auto px-4 py-5">
       {/* Header */}
-      <div className="mb-8 animate-fade-up">
-        <p className="text-muted text-sm mb-1">{today}</p>
-        <h1 className="font-display text-3xl font-bold text-emerald-900 dark:text-emerald-50">
-          {greeting()}, {displayName} 🌙
-        </h1>
-        <p className="text-parchment-500 dark:text-emerald-600 mt-1">
-          {streak?.current_streak > 0
-            ? `${streak.current_streak} day prayer streak — MashaaAllah!`
-            : 'Start your day with Bismillah.'}
-        </p>
-      </div>
-
-      {/* Stats row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        {[
-          { label: 'Prayer streak', value: streak?.current_streak ?? 0, sub: 'days in a row', icon: Flame, color: 'gold' },
-          { label: 'Habits today', value: `${habits?.filter(h => h.completed_today).length ?? 0}/${habits?.length ?? 0}`, sub: 'completed', icon: Target, color: 'emerald' },
-          { label: 'Hifz due', value: hifzDue?.length ?? 0, sub: 'pages to review', icon: BookOpen, color: 'blue' },
-          { label: 'Tasks today', value: pendingTasks.length, sub: 'pending', icon: CheckSquare, color: 'emerald' },
-        ].map((stat, i) => (
-          <div key={stat.label} className={`animate-fade-up stagger-${i + 1}`}>
-            <StatCard {...stat} />
-          </div>
-        ))}
-      </div>
-
-      {/* Main grid */}
-      <div className="grid md:grid-cols-3 gap-5">
-        {/* Prayer card */}
-        <Card className="animate-fade-up stagger-1">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Clock size={18} className="text-emerald-700 dark:text-emerald-500" />
-              <h2 className="section-title text-base">Today's Prayers</h2>
-            </div>
-            <Link to="/prayer" className="text-muted hover:text-emerald-700 text-xs flex items-center gap-1">
-              View <ChevronRight size={12} />
-            </Link>
-          </div>
-          <PrayerWidget summary={prayerSummary} />
-        </Card>
-
-        {/* Habits card */}
-        <Card className="animate-fade-up stagger-2">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Target size={18} className="text-emerald-700 dark:text-emerald-500" />
-              <h2 className="section-title text-base">Habits</h2>
-            </div>
-            <Link to="/habits" className="text-muted hover:text-emerald-700 text-xs flex items-center gap-1">
-              View <ChevronRight size={12} />
-            </Link>
-          </div>
-          <HabitStreak habits={habits} />
-        </Card>
-
-        {/* Quick links */}
-        <div className="space-y-3 animate-fade-up stagger-3">
-          {[
-            { to: '/quran', icon: BookOpen, label: 'Quran & Hifz', sub: hifzDue?.length ? `${hifzDue.length} due for review` : 'Continue memorising', color: 'text-emerald-600' },
-            { to: '/journal', icon: BookMarked, label: 'Journal', sub: 'Reflect on your day', color: 'text-gold-600' },
-            { to: '/ai', icon: Sparkles, label: 'AI Guide', sub: 'Get lifestyle advice', color: 'text-blue-600' },
-          ].map(({ to, icon: Icon, label, sub, color }) => (
-            <Link key={to} to={to}>
-              <Card hover className="!p-4">
-                <div className="flex items-center gap-3">
-                  <Icon size={20} className={color} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-emerald-900 dark:text-emerald-200">{label}</p>
-                    <p className="text-xs text-muted truncate">{sub}</p>
-                  </div>
-                  <ChevronRight size={16} className="text-parchment-400 flex-shrink-0" />
-                </div>
-              </Card>
-            </Link>
-          ))}
+      <div className="flex items-start justify-between mb-5">
+        <div>
+          <h1 className="font-display text-xl font-bold" style={{ color: 'var(--t-text)' }}>{getGreeting(displayName)}</h1>
+          <p className="text-sm mt-0.5 font-medium" style={{ color: 'var(--t-accent)' }}>{ctx.formatted}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={refresh} className={clsx('p-2 rounded-xl', refreshing && 'animate-spin')} style={{ color: 'var(--t-text-muted)', background: 'var(--t-bg-card)', border: '0.5px solid var(--t-border)' }}><RefreshCw size={16} /></button>
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white text-sm" style={{ background: 'var(--t-primary)' }}>{displayName?.[0]?.toUpperCase() ?? 'U'}</div>
         </div>
       </div>
 
-      {/* Tasks due today */}
-      {pendingTasks.length > 0 && (
-        <Card className="mt-5 animate-fade-up">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <CheckSquare size={18} className="text-emerald-700 dark:text-emerald-500" />
-              <h2 className="section-title text-base">Today's Tasks</h2>
-            </div>
-            <Link to="/tasks" className="text-muted hover:text-emerald-700 text-xs flex items-center gap-1">
-              All tasks <ChevronRight size={12} />
-            </Link>
+      <IslamicBanner ctx={ctx} />
+
+      {ptLoading ? <Skeleton className="h-44 mb-5" /> : <PrayerHero times={prayerTimes} summary={summary} />}
+
+      {/* Quick actions */}
+      <div className="grid grid-cols-4 gap-3 mb-5">
+        {QUICK_ACTIONS.map((a, i) => (
+          <motion.button key={a.label} onClick={() => navigate(a.to)} className="flex flex-col items-center gap-2 py-3 rounded-xl" style={{ background: 'var(--t-bg-card)', border: '0.5px solid var(--t-border)' }} whileTap={{ scale: 0.92 }} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+            <span className="text-2xl">{a.icon}</span>
+            <span className="text-xs font-medium" style={{ color: 'var(--t-text-muted)' }}>{a.label}</span>
+          </motion.button>
+        ))}
+      </div>
+
+      {/* Habits card */}
+      {habits?.length > 0 && (
+        <Card className="mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-display font-semibold text-sm" style={{ color: 'var(--t-text)' }}>Today's habits</h3>
+            <span className="text-xs" style={{ color: 'var(--t-text-muted)' }}>{habits.filter(h=>h.completed_today).length}/{habits.length}</span>
           </div>
           <div className="space-y-2">
-            {pendingTasks.slice(0, 4).map((task) => (
-              <div key={task.id} className="flex items-center gap-3 py-2 border-b border-parchment-100 dark:border-emerald-900/30 last:border-0">
-                <div className="w-4 h-4 rounded border-2 border-parchment-300 dark:border-emerald-700 flex-shrink-0" />
-                <span className="text-sm text-emerald-800 dark:text-emerald-300 flex-1 truncate">{task.title}</span>
-                {task.time_block && <Badge variant="gray" className="text-xs">{task.time_block.replace('_', ' ')}</Badge>}
+            {habits.slice(0,4).map(h => (
+              <div key={h.id} className="flex items-center gap-3">
+                <div className="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0"
+                  style={{ background: h.completed_today ? 'var(--t-primary)' : 'transparent', borderColor: h.completed_today ? 'var(--t-primary)' : 'var(--t-border-strong)' }}>
+                  {h.completed_today && <span style={{ color: 'white', fontSize: 9 }}>✓</span>}
+                </div>
+                <span className="text-sm flex-1" style={{ color: h.completed_today ? 'var(--t-text-muted)' : 'var(--t-text)', textDecoration: h.completed_today ? 'line-through' : 'none' }}>{h.name}</span>
+                {h.current_streak > 0 && <span className="text-xs" style={{ color: 'var(--t-accent)' }}>🔥 {h.current_streak}</span>}
               </div>
             ))}
           </div>
         </Card>
       )}
 
-      {/* Daily ayah */}
-      <Card className="mt-5 bg-emerald-950 border-0 animate-fade-up">
-        <p className="font-arabic text-2xl text-white text-right leading-loose mb-3">
-          رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ
-        </p>
-        <p className="text-emerald-300 text-sm text-right">
-          "Our Lord, give us in this world [that which is] good and in the Hereafter [that which is] good and protect us from the punishment of the Fire." — Quran 2:201
-        </p>
-      </Card>
+      {/* Quick nav cards */}
+      <div className="space-y-2">
+        {[
+          { to: '/quran',    icon: BookOpen,  label: 'Quran & Hifz',     desc: 'Continue your memorisation' },
+          { to: '/qibla',    icon: Compass,   label: 'Qibla & Mosques',  desc: 'Direction + nearby mosques' },
+          { to: '/waqf',     icon: Target,    label: 'Waqf & Sadaqah',   desc: 'Give for the sake of Allah' },
+        ].map((item, i) => (
+          <motion.a key={item.to} href={item.to} className="flex items-center gap-4 px-5 py-4 rounded-xl" style={{ background: 'var(--t-bg-card)', border: '0.5px solid var(--t-border)' }} whileTap={{ scale: 0.98 }} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 + i * 0.06 }}>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--t-border)' }}><item.icon size={20} style={{ color: 'var(--t-primary)' }} /></div>
+            <div className="flex-1"><div className="font-medium text-sm" style={{ color: 'var(--t-text)' }}>{item.label}</div><div className="text-xs" style={{ color: 'var(--t-text-muted)' }}>{item.desc}</div></div>
+            <ChevronRight size={16} style={{ color: 'var(--t-text-muted)' }} />
+          </motion.a>
+        ))}
+      </div>
+
+      {/* Ayat footer */}
+      <div className="mt-6 rounded-2xl p-5" style={{ background: 'var(--t-bg-sidebar)' }}>
+        <p className="font-arabic text-lg text-right mb-2" style={{ color: 'var(--t-accent)' }}>وَمَن يَتَّقِ اللَّهَ يَجْعَل لَّهُ مَخْرَجًا</p>
+        <p className="text-xs" style={{ color: 'var(--t-text-muted)' }}>"And whoever has taqwa of Allah — He will make for him a way out." — Quran 65:2</p>
+      </div>
     </div>
   )
 }

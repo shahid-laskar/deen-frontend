@@ -1,232 +1,149 @@
 import React, { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { MapPin, Lock, User, Trash2, Moon, Globe } from 'lucide-react'
-import { userApi } from '../lib/api'
+import { Palette, User, Globe, Bell, Lock, Check } from 'lucide-react'
+import api from '../lib/api'
 import { useAuthStore } from '../store/authStore'
-import { Card, Button, Input, Select, Toggle } from '../components/ui/index'
-import { useAppStore } from '../store/appStore'
+import { useThemeStore, FONT_OPTIONS, TEXT_SCALES, LINE_HEIGHTS } from '../store/themeStore'
+import { THEME_LIST } from '../themes/themes'
+import { Card, Button, Input, Toggle } from '../components/ui/index'
 import toast from 'react-hot-toast'
 
-const MADHABS = ['hanafi', 'shafii', 'maliki', 'hanbali']
-const TIMEZONES = Intl.supportedValuesOf ? Intl.supportedValuesOf('timeZone') : []
+const TABS = [
+  { id: 'appearance', label: 'Appearance', icon: Palette },
+  { id: 'profile',    label: 'Profile',    icon: User },
+  { id: 'prayer',     label: 'Prayer',     icon: Globe },
+  { id: 'notifications', label: 'Alerts', icon: Bell },
+  { id: 'privacy',    label: 'Privacy',    icon: Lock },
+]
 
-export default function Settings() {
-  const { user, updateUser, logout, isFemale } = useAuthStore()
-  const { theme, toggleTheme } = useAppStore()
+function ThemeGrid({ themeId, setTheme }) {
+  return (
+    <div className="grid grid-cols-3 gap-3">
+      {THEME_LIST.map(theme => {
+        const active = themeId === theme.id
+        return (
+          <button key={theme.id} onClick={() => setTheme(theme.id)}
+            className="relative rounded-xl overflow-hidden border-2 transition-all text-left"
+            style={{ borderColor: active ? 'var(--t-accent)' : 'var(--t-border)' }} title={theme.name}>
+            <div className="h-10 w-full" style={{ background: `linear-gradient(135deg, ${theme.preview[0]}, ${theme.preview[1]}, ${theme.preview[2]})` }} />
+            <div className="px-2 py-1" style={{ background: theme.vars['--t-bg-card'] }}>
+              <p className="text-[10px] font-medium truncate" style={{ color: theme.vars['--t-text'] }}>{theme.name}</p>
+            </div>
+            {active && <div className="absolute top-1 right-1 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: 'var(--t-accent)' }}><Check size={9} color="white" /></div>}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
 
-  const [profileForm, setProfileForm] = useState({
-    display_name: user?.profile?.display_name || '',
-    quran_daily_goal_minutes: user?.profile?.quran_daily_goal_minutes || 15,
-  })
-
-  const [userForm, setUserForm] = useState({
-    madhab: user?.madhab || 'hanafi',
-    timezone: user?.timezone || 'UTC',
-    latitude: user?.latitude || '',
-    longitude: user?.longitude || '',
-    gender: user?.gender || '',
-  })
-
-  const [pwdForm, setPwdForm] = useState({ current_password: '', new_password: '' })
-  const [deleteConfirm, setDeleteConfirm] = useState(false)
-  const [geoLoading, setGeoLoading] = useState(false)
-
-  const { mutate: saveProfile, isPending: savingProfile } = useMutation({
-    mutationFn: () => Promise.all([
-      userApi.updateProfile(profileForm),
-      userApi.updateMe(userForm),
-    ]),
-    onSuccess: ([_, userResp]) => {
-      updateUser(userResp.data)
-      toast.success('Settings saved!')
-    },
-    onError: () => toast.error('Could not save settings.'),
-  })
-
-  const { mutate: changePassword, isPending: changingPwd } = useMutation({
-    mutationFn: () => userApi.changePassword(pwdForm),
-    onSuccess: () => {
-      setPwdForm({ current_password: '', new_password: '' })
-      toast.success('Password changed successfully.')
-    },
-    onError: (e) => toast.error(e.response?.data?.detail || 'Could not change password.'),
-  })
-
-  const { mutate: deleteAccount, isPending: deleting } = useMutation({
-    mutationFn: () => userApi.deleteAccount(),
-    onSuccess: () => {
-      logout()
-      toast.success('Account deleted. May Allah bless your journey.')
-    },
-  })
-
-  const getLocation = () => {
-    setGeoLoading(true)
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setUserForm({ ...userForm, latitude: pos.coords.latitude.toFixed(6), longitude: pos.coords.longitude.toFixed(6) })
-        setGeoLoading(false)
-        toast.success('Location updated!')
-      },
-      () => {
-        setGeoLoading(false)
-        toast.error('Could not get location.')
-      }
-    )
-  }
+function AppearanceTab() {
+  const store = useThemeStore()
+  const { themeId, setTheme, typography, setTypography, autoDarkAfterMaghrib, toggleAutoDark } = store
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
+    <div className="space-y-8">
+      <section>
+        <h3 className="font-display font-semibold mb-3" style={{ color: 'var(--t-text)' }}>Theme — {THEME_LIST.length} built-in</h3>
+        <ThemeGrid themeId={themeId} setTheme={setTheme} />
+      </section>
+      <section>
+        <h3 className="font-display font-semibold mb-3" style={{ color: 'var(--t-text)' }}>Automatic</h3>
+        <Card className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div><p className="text-sm font-medium" style={{ color: 'var(--t-text)' }}>Dark after Maghrib</p><p className="text-xs" style={{ color: 'var(--t-text-muted)' }}>Switches to dark theme after sunset</p></div>
+            <Toggle checked={autoDarkAfterMaghrib} onChange={e => toggleAutoDark(e.target.checked)} />
+          </div>
+          <div className="flex items-center justify-between" style={{ borderTop: '0.5px solid var(--t-border)', paddingTop: 12 }}>
+            <div><p className="text-sm font-medium" style={{ color: 'var(--t-text)' }}>Seasonal themes</p><p className="text-xs" style={{ color: 'var(--t-text-muted)' }}>Auto-activate for Ramadan, Eid, Dhul Hijjah</p></div>
+            <Toggle checked={useThemeStore.getState().seasonalEnabled} onChange={e => useThemeStore.setState({ seasonalEnabled: e.target.checked })} />
+          </div>
+        </Card>
+      </section>
+      <section className="space-y-5">
+        <h3 className="font-display font-semibold" style={{ color: 'var(--t-text)' }}>Typography</h3>
+        <div>
+          <p className="text-sm font-medium mb-2" style={{ color: 'var(--t-text)' }}>Font</p>
+          <div className="grid grid-cols-2 gap-2">
+            {Object.entries(FONT_OPTIONS).slice(0,6).map(([key, opt]) => (
+              <button key={key} onClick={() => setTypography({ fontFamily: key })}
+                className="px-3 py-2.5 rounded-xl text-sm text-left border transition-all"
+                style={{ fontFamily: `'${key}',system-ui`, background: typography.fontFamily === key ? 'var(--t-bg-input)' : 'var(--t-bg-card)', borderColor: typography.fontFamily === key ? 'var(--t-primary)' : 'var(--t-border)', color: 'var(--t-text)' }}>
+                <div className="font-medium">{opt.label}</div>
+                <div className="text-[10px] opacity-60">Aa Bb — بسم الله</div>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className="text-sm font-medium mb-2" style={{ color: 'var(--t-text)' }}>Text size</p>
+          <div className="flex gap-2 flex-wrap">
+            {Object.entries(TEXT_SCALES).map(([key, opt]) => (
+              <button key={key} onClick={() => setTypography({ textScale: key })} className="px-4 py-2 rounded-xl text-sm border transition-all"
+                style={{ background: typography.textScale === key ? 'var(--t-primary)' : 'var(--t-bg-card)', borderColor: typography.textScale === key ? 'var(--t-primary)' : 'var(--t-border)', color: typography.textScale === key ? 'white' : 'var(--t-text)' }}>{opt.label}</button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className="text-sm font-medium mb-2" style={{ color: 'var(--t-text)' }}>Line height</p>
+          <div className="flex gap-2 flex-wrap">
+            {Object.entries(LINE_HEIGHTS).map(([key, opt]) => (
+              <button key={key} onClick={() => setTypography({ lineHeight: key })} className="px-4 py-2 rounded-xl text-sm border transition-all"
+                style={{ background: typography.lineHeight === key ? 'var(--t-primary)' : 'var(--t-bg-card)', borderColor: typography.lineHeight === key ? 'var(--t-primary)' : 'var(--t-border)', color: typography.lineHeight === key ? 'white' : 'var(--t-text)' }}>{opt.label}</button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className="text-sm font-medium mb-2" style={{ color: 'var(--t-text)' }}>Quran font size</p>
+          <div className="flex items-center gap-4">
+            <input type="range" min="0.8" max="2" step="0.1" value={typography.quranScale}
+              onChange={e => setTypography({ quranScale: parseFloat(e.target.value) })} className="flex-1" />
+            <span className="text-sm font-mono w-12" style={{ color: 'var(--t-text)' }}>{Math.round(typography.quranScale * 100)}%</span>
+          </div>
+          <div className="font-arabic text-center py-3 rounded-xl mt-2" style={{ background: 'var(--t-bg-card)', border: '0.5px solid var(--t-border)' }}>
+            بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+          </div>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function ProfileTab() {
+  const { user, updateUser } = useAuthStore()
+  const [form, setForm] = useState({ display_name: user?.profile?.display_name || '', city: user?.profile?.city || '', country: user?.profile?.country || '' })
+  const { mutate: save, isPending } = useMutation({
+    mutationFn: () => api.patch('/users/me/profile', form),
+    onSuccess: () => { updateUser({ ...user, profile: { ...user.profile, ...form } }); toast.success('Profile updated!') },
+  })
+  return (
+    <div className="space-y-4">
+      <Input label="Display name" value={form.display_name} onChange={e => setForm({ ...form, display_name: e.target.value })} />
+      <Input label="City" value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} />
+      <Input label="Country" value={form.country} onChange={e => setForm({ ...form, country: e.target.value })} />
+      <Button variant="primary" onClick={() => save()} loading={isPending} className="w-full">Save changes</Button>
+    </div>
+  )
+}
+
+export default function Settings() {
+  const [activeTab, setActiveTab] = useState('appearance')
+  return (
+    <div className="max-w-2xl mx-auto px-4 py-6">
       <h1 className="page-title mb-6">Settings</h1>
-
-      {/* Profile */}
-      <Card className="mb-5">
-        <div className="flex items-center gap-2 mb-5">
-          <User size={18} className="text-emerald-700" />
-          <h2 className="section-title text-base">Profile</h2>
-        </div>
-        <div className="space-y-4">
-          <div>
-            <label className="label">Email</label>
-            <p className="px-4 py-3 bg-parchment-50 dark:bg-emerald-900/20 rounded-xl text-emerald-800 dark:text-emerald-300 text-sm">{user?.email}</p>
-          </div>
-          <Input label="Display name" value={profileForm.display_name}
-            onChange={(e) => setProfileForm({ ...profileForm, display_name: e.target.value })} />
-          <div>
-            <label className="label">Quran daily goal (minutes)</label>
-            <div className="flex gap-2">
-              {[10, 15, 20, 30, 45, 60].map((m) => (
-                <button key={m} type="button"
-                  onClick={() => setProfileForm({ ...profileForm, quran_daily_goal_minutes: m })}
-                  className={`px-3 py-2 rounded-xl text-sm border transition-all ${profileForm.quran_daily_goal_minutes === m ? 'bg-emerald-800 text-white border-emerald-800' : 'border-parchment-300 dark:border-emerald-800 text-parchment-600 dark:text-emerald-500'}`}
-                >{m}m</button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      {/* Islamic settings */}
-      <Card className="mb-5">
-        <div className="flex items-center gap-2 mb-5">
-          <Globe size={18} className="text-emerald-700" />
-          <h2 className="section-title text-base">Islamic & Regional</h2>
-        </div>
-        <div className="space-y-4">
-          <div>
-            <label className="label">School of thought (Madhab)</label>
-            <div className="grid grid-cols-2 gap-2">
-              {MADHABS.map((m) => (
-                <button key={m} type="button" onClick={() => setUserForm({ ...userForm, madhab: m })}
-                  className={`py-3 rounded-xl text-sm font-medium border transition-all capitalize ${userForm.madhab === m ? 'bg-emerald-800 text-white border-emerald-800' : 'border-parchment-300 dark:border-emerald-800 text-parchment-600 dark:text-emerald-500'}`}>
-                  {m}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <label className="label">Gender</label>
-            <div className="grid grid-cols-3 gap-2">
-              {[['male', 'Male'], ['female', 'Female'], ['prefer_not_to_say', 'Prefer not']].map(([v, l]) => (
-                <button key={v} type="button" onClick={() => setUserForm({ ...userForm, gender: v })}
-                  className={`py-3 rounded-xl text-sm border transition-all ${userForm.gender === v ? 'bg-emerald-800 text-white border-emerald-800' : 'border-parchment-300 dark:border-emerald-800 text-parchment-600 dark:text-emerald-500'}`}>
-                  {l}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <label className="label">Timezone</label>
-            <select className="input" value={userForm.timezone} onChange={(e) => setUserForm({ ...userForm, timezone: e.target.value })}>
-              {TIMEZONES.length > 0
-                ? TIMEZONES.map((tz) => <option key={tz} value={tz}>{tz}</option>)
-                : <option value={userForm.timezone}>{userForm.timezone}</option>
-              }
-            </select>
-          </div>
-        </div>
-      </Card>
-
-      {/* Location */}
-      <Card className="mb-5">
-        <div className="flex items-center gap-2 mb-5">
-          <MapPin size={18} className="text-emerald-700" />
-          <h2 className="section-title text-base">Prayer Location</h2>
-        </div>
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <Input label="Latitude" type="number" step="0.0001" value={userForm.latitude}
-              onChange={(e) => setUserForm({ ...userForm, latitude: e.target.value })} />
-            <Input label="Longitude" type="number" step="0.0001" value={userForm.longitude}
-              onChange={(e) => setUserForm({ ...userForm, longitude: e.target.value })} />
-          </div>
-          <Button variant="outline" onClick={getLocation} loading={geoLoading} className="w-full">
-            <MapPin size={14} /> Use my current location
-          </Button>
-        </div>
-      </Card>
-
-      {/* Appearance */}
-      <Card className="mb-5">
-        <div className="flex items-center gap-2 mb-5">
-          <Moon size={18} className="text-emerald-700" />
-          <h2 className="section-title text-base">Appearance</h2>
-        </div>
-        <Toggle
-          checked={theme === 'dark'}
-          onChange={toggleTheme}
-          label={theme === 'dark' ? 'Dark mode (enabled)' : 'Dark mode (disabled)'}
-        />
-      </Card>
-
-      {/* Save */}
-      <Button variant="primary" onClick={() => saveProfile()} loading={savingProfile} className="w-full mb-5">
-        Save all settings
-      </Button>
-
-      {/* Password */}
-      <Card className="mb-5">
-        <div className="flex items-center gap-2 mb-5">
-          <Lock size={18} className="text-emerald-700" />
-          <h2 className="section-title text-base">Change Password</h2>
-        </div>
-        <div className="space-y-4">
-          <Input label="Current password" type="password" value={pwdForm.current_password}
-            onChange={(e) => setPwdForm({ ...pwdForm, current_password: e.target.value })} />
-          <Input label="New password" type="password" placeholder="Min. 8 chars, uppercase, number" value={pwdForm.new_password}
-            onChange={(e) => setPwdForm({ ...pwdForm, new_password: e.target.value })} />
-          <Button variant="secondary" onClick={() => changePassword()} loading={changingPwd} className="w-full">
-            Update password
-          </Button>
-        </div>
-      </Card>
-
-      {/* Delete account */}
-      <Card className="border-red-200 dark:border-red-900/40">
-        <div className="flex items-center gap-2 mb-3">
-          <Trash2 size={18} className="text-red-500" />
-          <h2 className="font-display font-semibold text-red-600">Danger zone</h2>
-        </div>
-        <p className="text-sm text-muted mb-4">
-          Permanently delete your account and all data. This cannot be undone.
-          All your prayers, habits, journal entries, and cycle data will be erased.
-        </p>
-        {!deleteConfirm ? (
-          <Button variant="danger" size="sm" onClick={() => setDeleteConfirm(true)}>
-            Delete account
-          </Button>
-        ) : (
-          <div className="space-y-3">
-            <p className="text-sm font-medium text-red-600">Are you absolutely sure? This is irreversible.</p>
-            <div className="flex gap-3">
-              <Button variant="secondary" onClick={() => setDeleteConfirm(false)} className="flex-1">Cancel</Button>
-              <Button variant="danger" onClick={() => deleteAccount()} loading={deleting} className="flex-1">
-                Yes, delete everything
-              </Button>
-            </div>
-          </div>
-        )}
-      </Card>
+      <div className="flex gap-1 p-1 rounded-xl mb-6 overflow-x-auto" style={{ background: 'var(--t-bg-card)', border: '0.5px solid var(--t-border)' }}>
+        {TABS.map(({ id, label, icon: Icon }) => (
+          <button key={id} onClick={() => setActiveTab(id)} className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap flex-1"
+            style={{ background: activeTab === id ? 'var(--t-primary)' : 'transparent', color: activeTab === id ? 'white' : 'var(--t-text-muted)' }}>
+            <Icon size={14} />{label}
+          </button>
+        ))}
+      </div>
+      {activeTab === 'appearance'    && <AppearanceTab />}
+      {activeTab === 'profile'       && <ProfileTab />}
+      {activeTab === 'prayer'        && <p className="text-sm" style={{ color: 'var(--t-text-muted)' }}>Prayer settings — Phase 2</p>}
+      {activeTab === 'notifications' && <p className="text-sm" style={{ color: 'var(--t-text-muted)' }}>Notification settings — Phase 10</p>}
+      {activeTab === 'privacy'       && <p className="text-sm" style={{ color: 'var(--t-text-muted)' }}>Privacy settings — Phase 10</p>}
     </div>
   )
 }
