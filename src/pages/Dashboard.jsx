@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { format } from 'date-fns'
-import { BookOpen, Target, Compass, RefreshCw, ChevronRight } from 'lucide-react'
+import { BookOpen, Target, Compass, RefreshCw, ChevronRight, Activity } from 'lucide-react'
 import api from '../lib/api'
 import { useAuthStore } from '../store/authStore'
 import { getIslamicContext } from '../lib/hijri'
@@ -182,6 +182,7 @@ export default function Dashboard() {
         {[
           { to: '/quran',    icon: BookOpen,  label: 'Quran & Hifz',     desc: 'Continue your memorisation' },
           { to: '/qibla',    icon: Compass,   label: 'Qibla & Mosques',  desc: 'Direction + nearby mosques' },
+          { to: '/wellness', icon: Activity,  label: 'Wellness Center',  desc: 'Health, fasts & sleep' },
           { to: '/waqf',     icon: Target,    label: 'Waqf & Sadaqah',   desc: 'Give for the sake of Allah' },
         ].map((item, i) => (
           <motion.a key={item.to} href={item.to} className="flex items-center gap-4 px-5 py-4 rounded-xl" style={{ background: 'var(--t-bg-card)', border: '0.5px solid var(--t-border)' }} whileTap={{ scale: 0.98 }} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 + i * 0.06 }}>

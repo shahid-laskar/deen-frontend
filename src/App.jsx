@@ -20,6 +20,7 @@ import Children from './pages/Children'
 import Qibla from './pages/Qibla'
 import Community from './pages/Community'
 import Waqf from './pages/Waqf'
+import Wellness from './pages/Wellness'
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, user } = useAuthStore()
@@ -42,26 +43,27 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login"      element={<AuthRoute><LoginPage /></AuthRoute>} />
-        <Route path="/register"   element={<AuthRoute><RegisterPage /></AuthRoute>} />
+        <Route path="/login" element={<AuthRoute><LoginPage /></AuthRoute>} />
+        <Route path="/register" element={<AuthRoute><RegisterPage /></AuthRoute>} />
         <Route path="/onboarding" element={<OnboardingV2 />} />
         <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
           <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard"  element={<Dashboard />} />
-          <Route path="/prayer"     element={<Prayer />} />
-          <Route path="/quran"      element={<Quran />} />
-          <Route path="/habits"     element={<Habits />} />
-          <Route path="/journal"    element={<Journal />} />
-          <Route path="/tasks"      element={<Tasks />} />
-          <Route path="/ai"         element={<AIGuide />} />
-          <Route path="/settings"   element={<Settings />} />
-          <Route path="/female"     element={<FemaleRoute><Female /></FemaleRoute>} />
-          <Route path="/meal"       element={<Meal />} />
-          <Route path="/workout"    element={<Workout />} />
-          <Route path="/children"   element={<Children />} />
-          <Route path="/qibla"      element={<Qibla />} />
-          <Route path="/community"  element={<Community />} />
-          <Route path="/waqf"       element={<Waqf />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/prayer" element={<Prayer />} />
+          <Route path="/quran" element={<Quran />} />
+          <Route path="/habits" element={<Habits />} />
+          <Route path="/journal" element={<Journal />} />
+          <Route path="/tasks" element={<Tasks />} />
+          <Route path="/ai" element={<AIGuide />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/female" element={<FemaleRoute><Female /></FemaleRoute>} />
+          <Route path="/meal" element={<Meal />} />
+          <Route path="/workout" element={<Workout />} />
+          <Route path="/wellness" element={<Wellness />} />
+          <Route path="/children" element={<Children />} />
+          <Route path="/qibla" element={<Qibla />} />
+          <Route path="/community" element={<Community />} />
+          <Route path="/waqf" element={<Waqf />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
