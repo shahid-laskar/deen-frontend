@@ -1,280 +1,312 @@
 /* ============================================================
    Deen Design System — index.css
-   Full token rebuild for Phase 1
+   Phase 1: Full OKLCH token system (matches deen-enhanced)
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@400;600;700&family=Noto+Nastaliq+Urdu:wght@400;700&family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap');
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@custom-variant dark (&:is(.dark *));
 
-/* ─── Theme CSS Variables (defaults — overridden by themeStore) ──────────────── */
+/* ─── Theme inline config ─────────────────────────────────── */
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+
+  --color-background:          var(--background);
+  --color-foreground:          var(--foreground);
+  --color-card:                var(--card);
+  --color-card-foreground:     var(--card-foreground);
+  --color-popover:             var(--popover);
+  --color-popover-foreground:  var(--popover-foreground);
+  --color-primary:             var(--primary);
+  --color-primary-foreground:  var(--primary-foreground);
+  --color-secondary:           var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted:               var(--muted);
+  --color-muted-foreground:    var(--muted-foreground);
+  --color-accent:              var(--accent);
+  --color-accent-foreground:   var(--accent-foreground);
+  --color-destructive:         var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border:              var(--border);
+  --color-input:               var(--input);
+  --color-ring:                var(--ring);
+  --color-ring-offset-background: var(--background);
+
+  /* Islamic palette */
+  --color-gold:          var(--gold);
+  --color-gold-foreground: var(--gold-foreground);
+  --color-sage:          var(--sage);
+  --color-sage-foreground: var(--sage-foreground);
+  --color-warm:          var(--warm);
+  --color-warm-foreground: var(--warm-foreground);
+
+  /* Chart colors */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Sidebar */
+  --color-sidebar:                 var(--sidebar);
+  --color-sidebar-foreground:      var(--sidebar-foreground);
+  --color-sidebar-primary:         var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent:          var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border:          var(--sidebar-border);
+  --color-sidebar-ring:            var(--sidebar-ring);
+
+  /* Fonts */
+  --font-amiri:   "Amiri", serif;
+  --font-display: "Inter", sans-serif;
+  --font-mono:    "JetBrains Mono", monospace;
+}
+
+/* ─── Light mode tokens ───────────────────────────────────── */
 :root {
-  --t-bg:            #0a1f14;
-  --t-bg-card:       #0f2e1e;
-  --t-bg-sidebar:    #071510;
-  --t-bg-input:      #0d2518;
-  --t-text:          #e8f5ee;
-  --t-text-muted:    #6aaf85;
-  --t-text-inverse:  #ffffff;
-  --t-border:        #1a3d28;
-  --t-border-strong: #2a5a3e;
-  --t-primary:       #14a860;
-  --t-primary-hover: #1cc97a;
-  --t-accent:        #c9870a;
-  --t-accent-hover:  #e8b832;
-  --t-nav-bg:        #071510;
-  --t-nav-active:    #14a860;
-  --t-nav-text:      #4a8a62;
-  --t-prayer-hero:   linear-gradient(135deg, #0a3d24 0%, #0d6b3d 50%, #0f5a32 100%);
-  --t-geometric:     rgba(20,168,96,0.06);
-  --t-glow:          0 0 20px rgba(20,168,96,0.15);
+  --radius: 0.75rem;
 
-  /* Typography */
-  --t-font-family: 'DM Sans', system-ui, sans-serif;
-  --t-font-scale:  1;
-  --t-quran-scale: 1.2;
-  --t-line-height: 1.6;
+  /* Warm parchment light theme */
+  --background:            oklch(0.98 0.005 80);
+  --foreground:            oklch(0.22 0.03 50);
+  --card:                  oklch(0.995 0.002 80);
+  --card-foreground:       oklch(0.22 0.03 50);
+  --popover:               oklch(0.995 0.002 80);
+  --popover-foreground:    oklch(0.22 0.03 50);
+  --primary:               oklch(0.55 0.12 55);     /* Warm golden-amber */
+  --primary-foreground:    oklch(0.99 0.002 80);
+  --secondary:             oklch(0.94 0.015 85);
+  --secondary-foreground:  oklch(0.35 0.05 55);
+  --muted:                 oklch(0.95 0.01 80);
+  --muted-foreground:      oklch(0.50 0.03 55);
+  --accent:                oklch(0.92 0.02 85);
+  --accent-foreground:     oklch(0.30 0.05 55);
+  --destructive:           oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.99 0.002 80);
+  --border:                oklch(0.91 0.015 80);
+  --input:                 oklch(0.91 0.015 80);
+  --ring:                  oklch(0.55 0.12 55);
 
-  /* 8pt spacing grid */
-  --sp-xs:   4px;
-  --sp-sm:   8px;
-  --sp-md:   16px;
-  --sp-lg:   24px;
-  --sp-xl:   32px;
-  --sp-2xl:  48px;
-  --sp-3xl:  64px;
+  /* Islamic palette tokens */
+  --gold:                  oklch(0.75 0.14 75);
+  --gold-foreground:       oklch(0.25 0.06 60);
+  --sage:                  oklch(0.55 0.10 155);    /* Islamic green */
+  --sage-foreground:       oklch(0.99 0.002 80);
+  --warm:                  oklch(0.45 0.08 45);
+  --warm-foreground:       oklch(0.99 0.002 80);
 
-  /* Border radius */
-  --r-sm:   6px;
-  --r-md:   10px;
-  --r-lg:   16px;
-  --r-xl:   24px;
-  --r-full: 9999px;
+  /* Chart colors */
+  --chart-1:   oklch(0.55 0.12 55);
+  --chart-2:   oklch(0.55 0.10 155);
+  --chart-3:   oklch(0.75 0.14 75);
+  --chart-4:   oklch(0.60 0.10 30);
+  --chart-5:   oklch(0.50 0.06 260);
 
-  /* Shadows — light mode */
-  --shadow-1: 0 1px 3px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.05);
-  --shadow-2: 0 4px 12px rgba(0,0,0,0.10), 0 8px 24px rgba(0,0,0,0.06);
-  --shadow-3: 0 8px 24px rgba(0,0,0,0.14), 0 16px 48px rgba(0,0,0,0.08);
+  /* Sidebar */
+  --sidebar:                      oklch(0.97 0.008 75);
+  --sidebar-foreground:           oklch(0.22 0.03 50);
+  --sidebar-primary:              oklch(0.55 0.12 55);
+  --sidebar-primary-foreground:   oklch(0.99 0.002 80);
+  --sidebar-accent:               oklch(0.94 0.02 80);
+  --sidebar-accent-foreground:    oklch(0.30 0.05 55);
+  --sidebar-border:               oklch(0.91 0.015 80);
+  --sidebar-ring:                 oklch(0.55 0.12 55);
 
-  /* Motion */
-  --motion-fast:   150ms cubic-bezier(0.4,0,0.2,1);
-  --motion-std:    250ms cubic-bezier(0.4,0,0.2,1);
-  --motion-slow:   400ms cubic-bezier(0.4,0,0.2,1);
-  --motion-spring: 300ms cubic-bezier(0.34,1.56,0.64,1);
-
-  /* Bottom nav height */
+  /* Legacy compat vars (used during migration) */
   --nav-h: 64px;
-
-  /* Sidebar width (desktop) */
   --sidebar-w: 260px;
 }
 
+/* ─── Dark mode tokens ─────────────────────────────────────── */
 .dark {
-  --shadow-1: 0 1px 3px rgba(0,0,0,0.30), var(--t-glow);
-  --shadow-2: 0 4px 12px rgba(0,0,0,0.40), var(--t-glow);
-  --shadow-3: 0 8px 24px rgba(0,0,0,0.50), var(--t-glow);
+  --background:            oklch(0.16 0.02 50);
+  --foreground:            oklch(0.93 0.01 80);
+  --card:                  oklch(0.20 0.025 50);
+  --card-foreground:       oklch(0.93 0.01 80);
+  --popover:               oklch(0.20 0.025 50);
+  --popover-foreground:    oklch(0.93 0.01 80);
+  --primary:               oklch(0.72 0.13 60);
+  --primary-foreground:    oklch(0.15 0.02 50);
+  --secondary:             oklch(0.25 0.025 50);
+  --secondary-foreground:  oklch(0.90 0.01 80);
+  --muted:                 oklch(0.25 0.02 50);
+  --muted-foreground:      oklch(0.65 0.03 60);
+  --accent:                oklch(0.28 0.03 50);
+  --accent-foreground:     oklch(0.90 0.01 80);
+  --destructive:           oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.99 0.002 80);
+  --border:                oklch(0.30 0.025 50);
+  --input:                 oklch(0.30 0.025 50);
+  --ring:                  oklch(0.72 0.13 60);
+
+  --gold:                  oklch(0.78 0.14 75);
+  --gold-foreground:       oklch(0.15 0.02 50);
+  --sage:                  oklch(0.60 0.10 155);
+  --sage-foreground:       oklch(0.15 0.02 50);
+  --warm:                  oklch(0.65 0.08 45);
+  --warm-foreground:       oklch(0.15 0.02 50);
+
+  --chart-1:   oklch(0.72 0.13 60);
+  --chart-2:   oklch(0.60 0.10 155);
+  --chart-3:   oklch(0.78 0.14 75);
+  --chart-4:   oklch(0.65 0.10 30);
+  --chart-5:   oklch(0.55 0.06 260);
+
+  --sidebar:                      oklch(0.18 0.025 50);
+  --sidebar-foreground:           oklch(0.93 0.01 80);
+  --sidebar-primary:              oklch(0.72 0.13 60);
+  --sidebar-primary-foreground:   oklch(0.15 0.02 50);
+  --sidebar-accent:               oklch(0.25 0.03 50);
+  --sidebar-accent-foreground:    oklch(0.90 0.01 80);
+  --sidebar-border:               oklch(0.30 0.025 50);
+  --sidebar-ring:                 oklch(0.72 0.13 60);
 }
 
-/* ─── Theme transition (300ms crossfade on all theme-driven properties) ───────── */
-*, *::before, *::after {
-  box-sizing: border-box;
-  transition: background-color var(--motion-std), border-color var(--motion-std),
-              color var(--motion-std);
-}
-/* Exception: never animate transforms through the theme transition */
-*:where([class*="animate-"], [class*="motion-"]) {
-  transition: none;
-}
-
-/* ─── Base ───────────────────────────────────────────────────────────────────── */
-html {
-  font-size: calc(16px * var(--t-font-scale, 1));
-  scroll-behavior: smooth;
-  -webkit-tap-highlight-color: transparent;
+/* ─── Seasonal theme overrides ────────────────────────────── */
+.season-ramadan {
+  --primary:               oklch(0.52 0.14 280);    /* Deep purple */
+  --primary-foreground:    oklch(0.99 0.002 80);
+  --gold:                  oklch(0.80 0.14 70);
+  --sage:                  oklch(0.58 0.08 270);
+  --ring:                  oklch(0.52 0.14 280);
+  --sidebar-primary:       oklch(0.52 0.14 280);
+  --sidebar-ring:          oklch(0.52 0.14 280);
+  --sidebar:               oklch(0.16 0.03 280);
+  --background:            oklch(0.14 0.025 280);
+  --card:                  oklch(0.17 0.03 280);
+  --border:                oklch(0.28 0.04 280);
 }
 
-body {
-  background-color: var(--t-bg);
-  color: var(--t-text);
-  font-family: var(--t-font-family);
-  line-height: var(--t-line-height);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  /* Reserve space for bottom nav on mobile */
-  padding-bottom: env(safe-area-inset-bottom);
+.dark.season-ramadan {
+  --primary:               oklch(0.68 0.15 285);
+  --sidebar-primary:       oklch(0.68 0.15 285);
 }
 
-/* ─── Typography scale (inherits --t-font-scale from html) ───────────────────── */
-h1 { font-size: calc(2rem   * var(--t-font-scale, 1)); }
-h2 { font-size: calc(1.5rem * var(--t-font-scale, 1)); }
-h3 { font-size: calc(1.25rem* var(--t-font-scale, 1)); }
-
-/* ─── Arabic / Quran text ─────────────────────────────────────────────────────── */
-.font-arabic {
-  font-family: 'Amiri', serif;
-  direction: rtl;
-  line-height: 2.2;
-  font-size: calc(1.4rem * var(--t-quran-scale, 1.2));
+.season-eid {
+  --primary:               oklch(0.58 0.10 155);    /* Islamic green */
+  --primary-foreground:    oklch(0.99 0.002 80);
+  --gold:                  oklch(0.82 0.16 72);
+  --ring:                  oklch(0.58 0.10 155);
+  --sidebar-primary:       oklch(0.58 0.10 155);
 }
-.font-cairo   { font-family: 'Cairo', sans-serif; }
-.font-urdu    { font-family: 'Noto Nastaliq Urdu', serif; }
 
-/* ─── Scrollbars ─────────────────────────────────────────────────────────────── */
-::-webkit-scrollbar         { width: 5px; height: 5px; }
-::-webkit-scrollbar-track   { background: transparent; }
-::-webkit-scrollbar-thumb   { background: var(--t-border-strong); border-radius: var(--r-full); }
-::-webkit-scrollbar-thumb:hover { background: var(--t-text-muted); }
-
-/* ─── Islamic geometric background ──────────────────────────────────────────── */
-.bg-geometric {
-  background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath fill-rule='evenodd' d='M11 0l5 20H6L0 0h11zm30 0l5 20H36L30 0h11zm30 0l5 20H66L60 0h11zM11 80l5-20H6L0 80h11zm30 0l5-20H36L30 80h11zm30 0l5-20H66L60 80h11zM0 40l5-20h10L10 40H0zm70 0l5-20h10L80 40H70zM35 40l5-20h10L45 40H35z'/%3E%3C/g%3E%3C/svg%3E");
-  background-size: 80px 80px;
+.dark.season-eid {
+  --primary:               oklch(0.65 0.12 155);
+  --sidebar-primary:       oklch(0.65 0.12 155);
 }
-/* Colour is applied via --t-geometric in the component */
 
-/* ─── Component layer ─────────────────────────────────────────────────────────── */
+.season-dhul-hijjah {
+  --primary:               oklch(0.50 0.10 40);     /* Warm desert brown */
+  --primary-foreground:    oklch(0.99 0.002 80);
+  --gold:                  oklch(0.78 0.15 72);
+  --ring:                  oklch(0.50 0.10 40);
+  --sidebar-primary:       oklch(0.50 0.10 40);
+}
+
+/* ─── Base layer ───────────────────────────────────────────── */
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: "Inter", system-ui, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Arabic / Quran text */
+  .font-amiri {
+    font-family: "Amiri", serif;
+    direction: rtl;
+    line-height: 2.2;
+  }
+
+  /* Scrollbars */
+  ::-webkit-scrollbar         { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track   { background: transparent; }
+  ::-webkit-scrollbar-thumb   { background: var(--color-border); border-radius: 9999px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-muted-foreground); }
+
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.25rem; }
+}
+
+/* ─── Component utilities ──────────────────────────────────── */
 @layer components {
 
-  /* Card */
-  .card {
-    background-color: var(--t-bg-card);
-    border: 0.5px solid var(--t-border);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-1);
-  }
-  .card-hover {
-    transition: transform var(--motion-std), box-shadow var(--motion-std);
-  }
-  .card-hover:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-2);
+  /* Page wrapper */
+  .page-container {
+    @apply mx-auto max-w-4xl px-4 py-6 md:px-8 md:py-8 space-y-6;
   }
 
-  /* Button base */
-  .btn-base {
-    @apply inline-flex items-center justify-center gap-2 font-medium rounded-xl
-           transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed
-           select-none;
-    border-radius: var(--r-md);
-    transition: background-color var(--motion-fast), transform 80ms;
-  }
-  .btn-primary  {
-    @apply btn-base bg-emerald-800 hover:bg-emerald-700 text-white;
-    box-shadow: 0 4px 20px rgba(13,107,61,0.25);
-  }
-  .btn-secondary {
-    @apply btn-base;
-    background-color: var(--t-bg-card);
-    border: 0.5px solid var(--t-border-strong);
-    color: var(--t-text);
-  }
-  .btn-secondary:hover { background-color: var(--t-bg); }
-  .btn-gold {
-    @apply btn-base;
-    background-color: var(--t-accent);
-    color: #fff;
-    box-shadow: 0 4px 20px rgba(201,135,10,0.28);
-  }
-  .btn-gold:hover { background-color: var(--t-accent-hover); }
-  .btn-ghost {
-    @apply btn-base;
-    color: var(--t-text-muted);
-    background: transparent;
-  }
-  .btn-ghost:hover { background-color: var(--t-border); }
-
-  /* Input */
-  .input {
-    width: 100%;
-    padding: 0.65rem 1rem;
-    border-radius: var(--r-md);
-    border: 0.5px solid var(--t-border-strong);
-    background-color: var(--t-bg-input);
-    color: var(--t-text);
-    font-family: var(--t-font-family);
-    font-size: 0.9rem;
-    line-height: 1.5;
-    outline: none;
-    transition: border-color var(--motion-fast), box-shadow var(--motion-fast);
-  }
-  .input::placeholder { color: var(--t-text-muted); opacity: 0.7; }
-  .input:focus {
-    border-color: var(--t-primary);
-    box-shadow: 0 0 0 3px rgba(20,168,96,0.15);
+  /* Islamic geometric SVG overlay */
+  .bg-geometric-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0L40 20L20 40L0 20Z' fill='none' stroke='currentColor' stroke-width='0.5'/%3E%3Ccircle cx='20' cy='20' r='5' fill='none' stroke='currentColor' stroke-width='0.3'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 40px 40px;
   }
 
-  /* Label */
-  .label {
-    display: block;
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: var(--t-text);
-    margin-bottom: 0.375rem;
-    opacity: 0.85;
+  /* Section label */
+  .section-label {
+    @apply text-xs font-semibold uppercase tracking-wider text-muted-foreground;
   }
 
-  /* Badge */
-  .badge {
-    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium;
+  /* Bottom nav height */
+  .pb-nav {
+    padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom));
   }
-  .badge-green { @apply badge bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300; }
-  .badge-gold  { @apply badge bg-amber-100  dark:bg-amber-900/40  text-amber-800  dark:text-amber-300; }
-  .badge-red   { @apply badge bg-red-100    dark:bg-red-900/40    text-red-700    dark:text-red-300; }
-  .badge-blue  { @apply badge bg-blue-100   dark:bg-blue-900/40   text-blue-700   dark:text-blue-300; }
-  .badge-gray  { @apply badge; background-color: var(--t-border); color: var(--t-text-muted); }
-
-  /* Typography helpers */
-  .page-title    { @apply font-display text-2xl md:text-3xl font-bold; color: var(--t-text); }
-  .section-title { @apply font-display text-xl font-semibold; color: var(--t-text); }
-  .text-muted    { font-size: 0.85rem; color: var(--t-text-muted); }
 
   /* Skeleton */
   .skeleton {
-    border-radius: var(--r-md);
+    border-radius: var(--radius-md);
     animation: shimmer 1.6s ease-in-out infinite;
-    background: linear-gradient(90deg,
-      var(--t-border) 25%,
-      var(--t-border-strong) 50%,
-      var(--t-border) 75%
+    background: linear-gradient(
+      90deg,
+      var(--color-border) 25%,
+      var(--color-muted) 50%,
+      var(--color-border) 75%
     );
     background-size: 200% 100%;
   }
 
-  /* Modal overlay */
-  .modal-overlay {
-    @apply fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4;
-    background: rgba(0,0,0,0.55);
-    backdrop-filter: blur(6px);
-  }
+  /* Prayer stat pills */
+  .status-on_time { @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-sage/15 text-sage; }
+  .status-late    { @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gold/15 text-gold; }
+  .status-missed  { @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-destructive/15 text-destructive; }
+  .status-qadha   { @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/15 text-blue-500; }
+  .status-excused { @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground; }
 
-  /* Prayer status pills */
-  .status-on_time { @apply badge-green; }
-  .status-late    { @apply badge-gold; }
-  .status-missed  { @apply badge-red; }
-  .status-qadha   { @apply badge-blue; }
-  .status-excused { @apply badge-gray; }
-
-  /* Progress ring */
-  .progress-ring circle {
-    transition: stroke-dashoffset 0.6s cubic-bezier(0.4,0,0.2,1);
-    transform: rotate(-90deg);
-    transform-origin: 50% 50%;
-  }
-
-  /* Heatmap */
+  /* Heatmap cell */
   .heatmap-cell {
-    @apply rounded-sm cursor-pointer;
-    transition: transform var(--motion-fast), box-shadow var(--motion-fast);
+    @apply rounded-sm cursor-pointer transition-transform duration-150;
   }
-  .heatmap-cell:hover { transform: scale(1.3); box-shadow: var(--shadow-1); }
+  .heatmap-cell:hover { transform: scale(1.3); }
 
-  /* Quran ayah */
+  /* Quran ayah base */
   .quran-ayah {
-    @apply font-arabic py-4;
-    border-bottom: 0.5px solid var(--t-border);
-    color: var(--t-text);
+    @apply py-4 border-b border-border;
+    font-family: "Amiri", serif;
+    color: var(--color-foreground);
   }
 
   /* Bottom nav */
@@ -284,41 +316,12 @@ h3 { font-size: calc(1.25rem* var(--t-font-scale, 1)); }
     left: 0;
     right: 0;
     height: var(--nav-h);
-    background: var(--t-nav-bg);
-    border-top: 0.5px solid var(--t-border);
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
     z-index: 40;
     padding-bottom: env(safe-area-inset-bottom);
-    box-shadow: 0 -4px 24px rgba(0,0,0,0.15);
-    transition: transform var(--motion-std);
   }
-  .bottom-nav.hidden { transform: translateY(100%); }
+  .bottom-nav.hidden-nav { transform: translateY(100%); }
 
-  .nav-tab {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    flex: 1;
-    height: 100%;
-    color: var(--t-nav-text);
-    font-size: 0.65rem;
-    font-weight: 500;
-    cursor: pointer;
-    border: none;
-    background: none;
-    padding: 0;
-    transition: color var(--motion-fast), transform var(--motion-spring);
-    -webkit-tap-highlight-color: transparent;
-  }
-  .nav-tab.active { color: var(--t-nav-active); }
-  .nav-tab.active svg { transform: scale(1.1); }
-  .nav-tab:active { transform: scale(0.92); }
-
-  /* Stagger animations */
+  /* Stagger animation delays */
   .stagger-1 { animation-delay: 0.05s; }
   .stagger-2 { animation-delay: 0.10s; }
   .stagger-3 { animation-delay: 0.15s; }
@@ -327,7 +330,7 @@ h3 { font-size: calc(1.25rem* var(--t-font-scale, 1)); }
   .stagger-6 { animation-delay: 0.30s; }
 }
 
-/* ─── Keyframes ────────────────────────────────────────────────────────────── */
+/* ─── Keyframes ─────────────────────────────────────────────── */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -349,65 +352,17 @@ h3 { font-size: calc(1.25rem* var(--t-font-scale, 1)); }
   100% { background-position:  200% 0; }
 }
 @keyframes pulseGold {
-  0%, 100% { box-shadow: 0 0 0 0   rgba(201,135,10,0.5); }
-  50%       { box-shadow: 0 0 0 8px rgba(201,135,10,0); }
-}
-@keyframes crescentRise {
-  from { opacity: 0; transform: translateY(30px) rotate(-20deg); }
-  to   { opacity: 1; transform: translateY(0)   rotate(0deg); }
-}
-@keyframes starTwinkle {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.5; transform: scale(0.8); }
+  0%, 100% { box-shadow: 0 0 0 0   oklch(0.75 0.14 75 / 0.5); }
+  50%       { box-shadow: 0 0 0 8px oklch(0.75 0.14 75 / 0); }
 }
 @keyframes countdownPulse {
   0%, 100% { transform: scale(1); }
   50%       { transform: scale(1.02); }
 }
 
-/* ─── Utility animations ────────────────────────────────────────────────────── */
+/* ─── Utility animation classes ─────────────────────────────── */
 .animate-fade-up    { animation: fadeUp      0.5s ease both; }
 .animate-fade-in    { animation: fadeIn      0.4s ease both; }
 .animate-slide-up   { animation: slideInUp   0.4s ease both; }
 .animate-slide-right{ animation: slideInRight 0.35s ease both; }
 .animate-pulse-gold { animation: pulseGold   2s ease-in-out infinite; }
-
-/* ─── Theme Overrides for legacy Tailwind classes ──────────────────────────── */
-.text-emerald-950, .text-emerald-900, .text-emerald-800, .text-emerald-700,
-.text-parchment-900, .text-parchment-800, .text-parchment-700, 
-.dark\:text-emerald-900, .dark\:text-emerald-800, .dark\:text-emerald-700,
-.dark\:text-emerald-100, .dark\:text-emerald-200, .dark\:text-emerald-300,
-.dark\:text-white, .text-white {
-  color: var(--t-text) !important;
-}
-
-.text-emerald-600, .text-emerald-500, .text-emerald-400,
-.text-parchment-600, .text-parchment-500, .text-parchment-400,
-.dark\:text-emerald-600, .dark\:text-emerald-500, .dark\:text-emerald-400,
-.dark\:text-parchment-500, .dark\:text-parchment-600 {
-  color: var(--t-text-muted) !important;
-}
-
-.text-gold-700, .text-gold-600, .text-gold-500, 
-.dark\:text-gold-500, .dark\:text-gold-400 {
-  color: var(--t-accent) !important;
-}
-
-.bg-emerald-950, .dark\:bg-emerald-900, .bg-parchment-50, .dark\:bg-emerald-950 {
-  background-color: var(--t-bg) !important;
-}
-
-.bg-emerald-900, .bg-parchment-100, .dark\:bg-emerald-800 {
-  background-color: var(--t-bg-card) !important;
-}
-
-.border-emerald-900, .border-emerald-800, .border-parchment-200, .border-parchment-300,
-.dark\:border-emerald-900, .dark\:border-emerald-800 {
-  border-color: var(--t-border) !important;
-}
-
-/* Exempt primary buttons */
-.btn-primary.text-white, .btn-gold.text-white {
-  color: #fff !important;
-}
-

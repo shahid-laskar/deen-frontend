@@ -1,10 +1,27 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
-import App from './App'
+import { routeTree } from './routeTree.gen'
 import { queryClient } from './lib/queryClient'
+import { useAuthStore } from './store/authStore'
 import './index.css'
+
+// Create the router with auth context
+const router = createRouter({
+  routeTree,
+  context: {
+    auth: undefined, // will be set by the router on first render
+  },
+  defaultPreload: 'intent',
+  defaultPreloadStaleTime: 0,
+})
+
+function App() {
+  const auth = useAuthStore()
+  return <RouterProvider router={router} context={{ auth }} />
+}
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -13,16 +30,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <Toaster
         position="top-right"
         toastOptions={{
-          style: {
-            background: '#0a4f2e',
-            color: '#f0ebe4',
-            borderRadius: '12px',
-            padding: '12px 16px',
-            fontSize: '14px',
-            fontFamily: 'DM Sans, sans-serif',
-          },
-          success: { iconTheme: { primary: '#14a860', secondary: '#fff' } },
-          error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } },
+          className: '!rounded-xl !shadow-lg !border !border-border !bg-card !text-foreground !text-sm',
+          success: { iconTheme: { primary: 'oklch(0.60 0.10 155)', secondary: '#fff' } },
+          error:   { iconTheme: { primary: 'oklch(0.577 0.245 27.325)', secondary: '#fff' } },
         }}
       />
     </QueryClientProvider>

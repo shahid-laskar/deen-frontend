@@ -1,166 +1,146 @@
 /**
- * Theme Store
- * ===========
- * Manages:
- *  - Active theme (12 built-ins)
- *  - User typography preferences (font family, scale, line height)
- *  - Auto-dark-after-Maghrib logic
- *  - Seasonal theme auto-activation with user permission
+ * Theme Store — Phase 1 Redesign
+ * ================================
+ * Clean OKLCH-based theme system with:
+ *  - Simple dark/light toggle
+ *  - Polished seasonal themes via CSS class overrides
+ *  - Font family preference
+ *  - Quran text scale
+ *  - Auto-dark-after-Maghrib
  *
- * CSS variables are injected on :root. 300ms crossfade is handled in index.css.
+ * Seasonal themes apply a CSS class on <html> which overrides
+ * OKLCH tokens defined in index.css (.season-ramadan, .season-eid, .season-dhul-hijjah).
  */
 
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { THEMES, SEASONAL_THEMES, DEFAULT_THEME_ID } from '../themes/themes'
 import { detectIslamicSeason, isAfterMaghrib } from '../lib/hijri'
 
-// ─── Google Fonts map ──────────────────────────────────────────────────────────
+// ─── Season → CSS class ───────────────────────────────────────────────────────
+const SEASON_CLASSES = {
+  ramadan:     'season-ramadan',
+  eid_fitr:    'season-eid',
+  eid_adha:    'season-eid',
+  dhul_hijjah_10: 'season-dhul-hijjah',
+}
+
+// ─── Font options ─────────────────────────────────────────────────────────────
 export const FONT_OPTIONS = {
-  // Minimal
-  'DM Sans':            { label: 'DM Sans',            category: 'Minimal', url: null }, // already loaded
-  'Plus Jakarta Sans':  { label: 'Plus Jakarta Sans',  category: 'Minimal', url: 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap' },
-  'Inter':              { label: 'Inter',               category: 'Minimal', url: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap' },
-  // Classic
-  'Lora':               { label: 'Lora',                category: 'Classic', url: 'https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&display=swap' },
-  'Merriweather':       { label: 'Merriweather',        category: 'Classic', url: 'https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap' },
-  // Arabic-feel
-  'Tajawal':            { label: 'Tajawal',             category: 'Arabic-feel', url: 'https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap' },
-  'IBM Plex Sans Arabic': { label: 'IBM Plex Arabic', category: 'Arabic-feel', url: 'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500&display=swap' },
-  // Bold/Strong
-  'Sora':               { label: 'Sora',                category: 'Bold', url: 'https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600&display=swap' },
-  'Barlow Semi Condensed': { label: 'Barlow Semi Condensed', category: 'Bold', url: 'https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600&display=swap' },
+  'Inter':              { label: 'Inter (Default)',  url: null },
+  'Plus Jakarta Sans':  { label: 'Plus Jakarta Sans', url: 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap' },
+  'Tajawal':            { label: 'Tajawal',          url: 'https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap' },
+  'Sora':               { label: 'Sora',             url: 'https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600&display=swap' },
+  'Lora':               { label: 'Lora (Serif)',     url: 'https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&display=swap' },
 }
 
-// Text scale options
-export const TEXT_SCALES = {
-  small:      { label: 'Small',      scale: 0.875 },
-  default:    { label: 'Default',    scale: 1.0 },
-  large:      { label: 'Large',      scale: 1.125 },
-  xlarge:     { label: 'Extra Large', scale: 1.25 },
+// ─── Apply fonts to DOM ───────────────────────────────────────────────────────
+const _loadedFonts = new Set(['Inter'])
+
+function applyFontToDOM(fontFamily) {
+  const opt = FONT_OPTIONS[fontFamily]
+  if (opt?.url && !_loadedFonts.has(fontFamily)) {
+    const link = document.createElement('link')
+    link.rel = 'stylesheet'
+    link.href = opt.url
+    document.head.appendChild(link)
+    _loadedFonts.add(fontFamily)
+  }
+  const root = document.documentElement
+  root.style.setProperty('--font-display', `"${fontFamily}", system-ui, sans-serif`)
+  document.body.style.fontFamily = `"${fontFamily}", system-ui, sans-serif`
 }
 
-// Line height options
-export const LINE_HEIGHTS = {
-  compact:     { label: 'Compact',     value: '1.4' },
-  comfortable: { label: 'Comfortable', value: '1.6' },
-  spacious:    { label: 'Spacious',    value: '1.85' },
+// ─── Apply dark mode to DOM ───────────────────────────────────────────────────
+function applyDarkToDOM(isDark) {
+  document.documentElement.classList.toggle('dark', isDark)
 }
 
-// ─── Apply theme to DOM ────────────────────────────────────────────────────────
-function applyThemeToDom(themeId, typography = {}) {
-  const theme = THEMES[themeId] || THEMES[DEFAULT_THEME_ID]
-  const root  = document.documentElement
-
-  // Inject CSS variables
-  Object.entries(theme.vars).forEach(([k, v]) => root.style.setProperty(k, v))
-
-  // Dark class on html element
-  root.classList.toggle('dark', theme.isDark)
-
-  // Typography variables
-  const { fontFamily = 'DM Sans', textScale = 'default', quranScale = 1.2, lineHeight = 'comfortable' } = typography
-  root.style.setProperty('--t-font-family', `'${fontFamily}', system-ui, sans-serif`)
-  root.style.setProperty('--t-font-scale',  String(TEXT_SCALES[textScale]?.scale ?? 1.0))
-  root.style.setProperty('--t-quran-scale', String(quranScale))
-  root.style.setProperty('--t-line-height', LINE_HEIGHTS[lineHeight]?.value ?? '1.6')
-}
-
-// ─── Font loader ───────────────────────────────────────────────────────────────
-const _loadedFonts = new Set()
-function loadFont(fontName) {
-  const opt = FONT_OPTIONS[fontName]
-  if (!opt?.url || _loadedFonts.has(fontName)) return
-  const link = document.createElement('link')
-  link.rel = 'stylesheet'
-  link.href = opt.url
-  document.head.appendChild(link)
-  _loadedFonts.add(fontName)
-}
-
-// ─── Seasonal override helper ─────────────────────────────────────────────────
-function getSeasonalThemeId(currentSeason, userOverride) {
-  // If user explicitly opted out of seasonal themes, respect that
-  if (userOverride === false) return null
-  const season = currentSeason || detectIslamicSeason()
-  if (!season) return null
-  return SEASONAL_THEMES[season] ?? null
+// ─── Apply season class to DOM ────────────────────────────────────────────────
+function applySeasonToDOM(season) {
+  const html = document.documentElement
+  // Remove any existing season classes
+  Object.values(SEASON_CLASSES).forEach(cls => html.classList.remove(cls))
+  if (season && SEASON_CLASSES[season]) {
+    html.classList.add(SEASON_CLASSES[season])
+  }
 }
 
 // ─── Store ────────────────────────────────────────────────────────────────────
 export const useThemeStore = create(
   persist(
     (set, get) => ({
-      // Active theme ID
-      themeId: DEFAULT_THEME_ID,
+      // Core
+      isDark: false,
 
       // Seasonal
-      seasonalEnabled: true,          // user preference
-      seasonalThemeActive: false,     // currently showing a seasonal theme
-      seasonalPermissionAsked: {},    // {ramadan: true, eid_fitr: true, ...}
-      pendingSeasonalTheme: null,     // set when we need to ask permission
+      seasonalEnabled: true,
+      seasonalPermissionAsked: {},   // {ramadan: true|false, eid: true|false, …}
+      pendingSeasonalTheme: null,    // {season, cssClass} — needs user permission
 
       // Typography
-      typography: {
-        fontFamily:  'DM Sans',
-        textScale:   'default',
-        quranScale:  1.2,
-        lineHeight:  'comfortable',
-      },
+      fontFamily:  'Inter',
+      quranScale:  1.2,
 
-      // Auto-dark toggle
+      // Auto-dark after Maghrib
       autoDarkAfterMaghrib: false,
 
       // ── Actions ──────────────────────────────────────────────────────────────
 
-      setTheme(id) {
-        if (!THEMES[id]) return
-        set({ themeId: id, seasonalThemeActive: false })
-        applyThemeToDom(id, get().typography)
+      /** Toggle dark/light mode */
+      toggleDark() {
+        const next = !get().isDark
+        set({ isDark: next })
+        applyDarkToDOM(next)
       },
 
-      setTypography(updates) {
-        const next = { ...get().typography, ...updates }
-        if (updates.fontFamily) loadFont(updates.fontFamily)
-        set({ typography: next })
-        applyThemeToDom(get().themeId, next)
+      setDark(val) {
+        set({ isDark: val })
+        applyDarkToDOM(val)
       },
 
+      /** Change font family */
+      setFont(fontFamily) {
+        if (!FONT_OPTIONS[fontFamily]) return
+        set({ fontFamily })
+        applyFontToDOM(fontFamily)
+      },
+
+      /** Change Quran text scale */
+      setQuranScale(scale) {
+        set({ quranScale: scale })
+        document.documentElement.style.setProperty('--quran-scale', String(scale))
+      },
+
+      /** Toggle auto-dark mode */
       toggleAutoDark(enabled) {
         set({ autoDarkAfterMaghrib: enabled })
       },
 
-      /** Called on app init and whenever prayer times update */
+      /** Check and apply auto-dark after Maghrib */
       checkAutoDark() {
         if (!get().autoDarkAfterMaghrib) return
-        const after = isAfterMaghrib()
-        const theme = THEMES[get().themeId]
-        if (after && !theme?.isDark) {
-          // Switch to the user's preferred dark theme, defaulting to medina-midnight
-          get().setTheme('medina-midnight')
+        if (isAfterMaghrib() && !get().isDark) {
+          get().setDark(true)
         }
       },
 
-      /** Call on app mount to check for seasonal themes */
+      /** Called on app mount to check for seasonal themes */
       checkSeasonalTheme() {
         if (!get().seasonalEnabled) return
         const season = detectIslamicSeason()
+
         if (!season) {
-          // If we were showing a seasonal theme, revert to user theme
-          if (get().seasonalThemeActive) {
-            get()._revertFromSeasonal()
-          }
+          // Revert any active season class
+          applySeasonToDOM(null)
           return
         }
-        const seasonalId = SEASONAL_THEMES[season]
-        if (!seasonalId) return
 
-        const alreadyAsked = get().seasonalPermissionAsked[season]
-        if (alreadyAsked === true)  { get()._activateSeasonal(season, seasonalId); return }
-        if (alreadyAsked === false) { return } // user declined
+        const asked = get().seasonalPermissionAsked[season]
+        if (asked === true)  { applySeasonToDOM(season); return }
+        if (asked === false) { return }
 
-        // Ask user for permission
-        set({ pendingSeasonalTheme: { season, themeId: seasonalId } })
+        // First time: ask user
+        set({ pendingSeasonalTheme: { season, cssClass: SEASON_CLASSES[season] } })
       },
 
       acceptSeasonalTheme() {
@@ -170,7 +150,7 @@ export const useThemeStore = create(
           pendingSeasonalTheme: null,
           seasonalPermissionAsked: { ...s.seasonalPermissionAsked, [pending.season]: true },
         }))
-        get()._activateSeasonal(pending.season, pending.themeId)
+        applySeasonToDOM(pending.season)
       },
 
       declineSeasonalTheme() {
@@ -182,46 +162,34 @@ export const useThemeStore = create(
         }))
       },
 
-      _activateSeasonal(season, themeId) {
-        set({ seasonalThemeActive: true })
-        applyThemeToDom(themeId, get().typography)
-      },
-
-      _revertFromSeasonal() {
-        set({ seasonalThemeActive: false })
-        applyThemeToDom(get().themeId, get().typography)
-      },
-
-      /** Apply current theme + typography to DOM (call on hydration) */
+      /** Called on hydration — apply current state to DOM */
       applyToDOM() {
-        const { themeId, typography, seasonalThemeActive, pendingSeasonalTheme } = get()
-        // Determine active theme
-        const season = detectIslamicSeason()
-        const seasonalId = season ? SEASONAL_THEMES[season] : null
-        const asked = get().seasonalPermissionAsked[season]
-        const effectiveId = (seasonalThemeActive && seasonalId && asked === true)
-          ? seasonalId
-          : themeId
-        loadFont(typography.fontFamily)
-        applyThemeToDom(effectiveId, typography)
+        const { isDark, fontFamily, quranScale, seasonalEnabled, seasonalPermissionAsked } = get()
+        applyDarkToDOM(isDark)
+        applyFontToDOM(fontFamily)
+        document.documentElement.style.setProperty('--quran-scale', String(quranScale))
+
+        // Re-apply season class if previously accepted
+        if (seasonalEnabled) {
+          const season = detectIslamicSeason()
+          if (season && seasonalPermissionAsked[season] === true) {
+            applySeasonToDOM(season)
+          }
+        }
       },
     }),
 
     {
-      name: 'deen-theme',
+      name: 'deen-theme-v2',
       onRehydrateStorage: () => (state) => {
         if (state) {
-          // Apply theme immediately on hydration to avoid flash
           setTimeout(() => state.applyToDOM(), 0)
-          setTimeout(() => state.checkSeasonalTheme(), 100)
+          setTimeout(() => {
+            state.checkSeasonalTheme()
+            state.checkAutoDark()
+          }, 100)
         }
       },
     }
   )
 )
-
-// Convenience: current theme object
-export const getActiveTheme = () => {
-  const { themeId } = useThemeStore.getState()
-  return THEMES[themeId] || THEMES[DEFAULT_THEME_ID]
-}
