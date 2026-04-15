@@ -277,8 +277,8 @@ function GriefCompanion() {
 
 // ─── Main Wellness page ────────────────────────────────────────────────────────
 
-const TABS = ['breathe', 'grief', 'programs']
-const TAB_LABELS = { breathe:'Breathing', grief:'Hardship', programs:'Programs' }
+const TABS = ['breathe', 'grief', 'health', 'programs']
+const TAB_LABELS = { breathe:'Breathing', grief:'Hardship', health:'Health', programs:'Programs' }
 
 const GUIDED_PROGRAMS = [
   {
@@ -378,6 +378,42 @@ export default function Wellness() {
 
       {/* ── Grief tab ── */}
       {tab === 'grief' && <GriefCompanion />}
+
+      {/* ── Health tab ── */}
+      {tab === 'health' && (
+        <div className="space-y-4">
+          <Card>
+            <h2 style={{ fontSize:15, fontWeight:700, color:'var(--t-text)', marginBottom:4 }}>Water Tracking</h2>
+            <p style={{ fontSize:12, color:'var(--t-text-muted)', marginBottom:16 }}>The Prophet ﷺ said, "The best form of charity is giving someone water." — Sunan an-Nasa'i</p>
+            <div style={{ display:'flex', alignItems:'center', gap:16 }}>
+              <div style={{ width:60, height:60, borderRadius:30, background:'rgba(59,130,246,0.1)', color:'#3b82f6', display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, fontWeight:700 }}>
+                💧
+              </div>
+              <div style={{ flex:1 }}>
+                <p style={{ fontSize:13, fontWeight:600, color:'var(--t-text)' }}>4 / 8 cups today</p>
+                <div style={{ height:6, background:'var(--t-border)', borderRadius:3, marginTop:6, overflow:'hidden' }}>
+                  <div style={{ height:'100%', width:'50%', background:'#3b82f6', borderRadius:3 }} />
+                </div>
+              </div>
+              <Button style={{ padding:'8px 12px' }}>+ Add</Button>
+            </div>
+          </Card>
+          <Card>
+            <h2 style={{ fontSize:15, fontWeight:700, color:'var(--t-text)', marginBottom:4 }}>Sleep Tracking</h2>
+            <p style={{ fontSize:12, color:'var(--t-text-muted)', marginBottom:16 }}>"And We made your sleep for rest." (78:9)</p>
+            <div style={{ display:'flex', gap:12 }}>
+              <div style={{ flex:1, padding:12, borderRadius:12, background:'var(--t-bg)', border:'0.5px solid var(--t-border)' }}>
+                <p style={{ fontSize:11, color:'var(--t-text-muted)' }}>Last Night</p>
+                <p style={{ fontSize:16, fontWeight:700, color:'var(--t-text)', marginTop:2 }}>06h 45m</p>
+              </div>
+              <div style={{ flex:1, padding:12, borderRadius:12, background:'var(--t-bg)', border:'0.5px solid var(--t-border)' }}>
+                <p style={{ fontSize:11, color:'var(--t-text-muted)' }}>Fajr Correlation</p>
+                <p style={{ fontSize:16, fontWeight:700, color:'var(--t-primary)', marginTop:2 }}>On Time</p>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
 
       {/* ── Programs tab ── */}
       {tab === 'programs' && (

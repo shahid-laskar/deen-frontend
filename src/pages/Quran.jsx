@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   BookOpen, Search, ChevronLeft, Play, Pause, SkipForward,
-  Maximize2, Minimize2, BookMarked, ChevronDown, Plus, Star, Eye, EyeOff
+  Maximize2, Minimize2, BookMarked, ChevronDown, Plus, Star, Eye, EyeOff,
+  Mic, MicOff, Timer, ChevronRight, Volume2, StopCircle
 } from 'lucide-react'
 import api from '../lib/api'
 import { useAuthStore } from '../store/authStore'
@@ -10,8 +11,8 @@ import { Card, Button, Skeleton, Modal, ProgressRing } from '../components/ui/in
 import { getIslamicContext } from '../lib/hijri'
 import toast from 'react-hot-toast'
 
-const TABS = ['reader', 'hifz', 'duas', 'hadith', 'stats']
-const TAB_LABELS = { reader: 'Reader', hifz: 'Hifz', duas: 'Duas', hadith: 'Hadith', stats: 'Stats' }
+const TABS = ['reader', 'hifz', 'duas', 'hadith', 'stats', 'practice']
+const TAB_LABELS = { reader: 'Reader', hifz: 'Hifz', duas: 'Duas', hadith: 'Hadith', stats: 'Stats', practice: 'Practice' }
 
 const RECITERS = [
   { id: 7,  name: 'Mishary Alafasy',      slug: 'mishary_rashid_alafasy' },
@@ -51,10 +52,12 @@ const GRADE_STYLES = {
 
 function useAudio() {
   const audioRef = useRef(null)
+  const sleepTimerRef = useRef(null)
   const [playing,   setPlaying]   = useState(false)
   const [speed,     setSpeed]     = useState(1.0)
   const [currentV,  setCurrentV]  = useState(null)
   const [reciterId, setReciterId] = useState(7)
+  const [sleepTimer, setSleepTimer] = useState(null) // null | {remaining, label}
 
   const getUrl = useCallback((surah, ayah, reciter) => {
     const s = String(surah).padStart(3,'0')
@@ -63,9 +66,9 @@ function useAudio() {
     return `https://verses.quran.com/${r}/${s}${a}.mp3`
   },[])
 
-  const playVerse = useCallback((surah, ayah) => {
+  const playVerse = useCallback((surah, ayah, audioUrl) => {
     if (!audioRef.current) audioRef.current = new Audio()
-    audioRef.current.src = getUrl(surah, ayah, reciterId)
+    audioRef.current.src = audioUrl ? `https://verses.quran.com/${audioUrl}` : getUrl(surah, ayah, reciterId)
     audioRef.current.playbackRate = speed
     audioRef.current.play().then(()=>{ setPlaying(true); setCurrentV({surah,ayah}) }).catch(()=>{})
   },[reciterId, speed, getUrl])
@@ -74,7 +77,26 @@ function useAudio() {
   const resume = useCallback(()=>{ audioRef.current?.play().then(()=>setPlaying(true)).catch(()=>{}) },[])
   const changeSpeed = useCallback((s)=>{ setSpeed(s); if(audioRef.current) audioRef.current.playbackRate=s },[])
 
-  return { playing, speed, currentV, reciterId, setReciterId, playVerse, pause, resume, changeSpeed }
+  const startSleepTimer = useCallback((minutes) => {
+    if (sleepTimerRef.current) clearTimeout(sleepTimerRef.current)
+    const label = minutes ? `${minutes} min` : 'End of surah'
+    setSleepTimer({ remaining: minutes, label })
+    if (minutes) {
+      sleepTimerRef.current = setTimeout(() => {
+        audioRef.current?.pause()
+        setPlaying(false)
+        setSleepTimer(null)
+        toast.success('Sleep timer ended — audio stopped 🌙')
+      }, minutes * 60 * 1000)
+    }
+  }, [])
+
+  const cancelSleepTimer = useCallback(() => {
+    if (sleepTimerRef.current) clearTimeout(sleepTimerRef.current)
+    setSleepTimer(null)
+  }, [])
+
+  return { playing, speed, currentV, reciterId, setReciterId, playVerse, pause, resume, changeSpeed, sleepTimer, startSleepTimer, cancelSleepTimer }
 }
 
 function MiniPlayer({ audio, surahName }) {
@@ -139,17 +161,22 @@ function SurahReader({ surah, onBack, audio }) {
   const [showTrans,    setShowTrans]    = useState(true)
   const [showTranslit, setShowTranslit] = useState(false)
   const [showTajweed,  setShowTajweed]  = useState(false)
+  const [showGrammar,  setShowGrammar]  = useState(false)
   const [readingMode,  setReadingMode]  = useState('scroll')
   const [focusMode,    setFocusMode]    = useState(false)
   const [bookmarkSheet,setBookmarkSheet]= useState(null)
   const [noteText,     setNoteText]     = useState('')
   const [hlColor,      setHlColor]      = useState('gold')
+  const [tafsirVerse,  setTafsirVerse]  = useState(null)
+  const [grammarWord,  setGrammarWord]  = useState(null)
+  const [translationId, setTranslationId] = useState(20)
+  const [showSleepTimer, setShowSleepTimer] = useState(false)
   const sessionStart = useRef(Date.now())
   const versesRead   = useRef(0)
 
   const { data: verseData, isLoading } = useQuery({
-    queryKey:['quran','surah',surah.id],
-    queryFn: ()=>api.get(`/quran/surah/${surah.id}`).then(r=>r.data),
+    queryKey:['quran','surah',surah.id, translationId],
+    queryFn: ()=>api.get(`/quran/surah/${surah.id}?translation_id=${translationId}`).then(r=>r.data),
     staleTime:30*60_000,
   })
   const { data: bookmarks=[] } = useQuery({
@@ -185,11 +212,14 @@ function SurahReader({ surah, onBack, audio }) {
     const isHighlighted = audio.currentV?.surah===surah.id&&audio.currentV?.ayah===ayahNum
     const isBookmarked = bookmarks.some(b=>b.surah_number===surah.id&&b.ayah_number===ayahNum)
     const [revealed, setRevealed] = useState(false)
+    const arabicText = v.text_uthmani||v.text_imlaei||''
+    // Use API words array or fallback
+    const words = v.words?.filter(w => w.char_type_name === 'word') || arabicText.split(' ').map(w => ({ text_uthmani: w }))
     return (
       <div key={i} id={`ayah-${ayahNum}`} style={{padding:'16px 0',borderBottom:'0.5px solid var(--t-border)',background:isHighlighted?'rgba(201,135,10,0.08)':'transparent',transition:'background 0.3s'}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
           <div style={{display:'flex',gap:8}}>
-            <button onClick={()=>{versesRead.current++;isPlaying?audio.pause():audio.playVerse(surah.id,ayahNum)}}
+            <button onClick={()=>{versesRead.current++;isPlaying?audio.pause():audio.playVerse(surah.id,ayahNum, v.audio?.url)}}
               style={{width:28,height:28,borderRadius:'50%',background:isPlaying?'var(--t-accent)':'var(--t-border)',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
               {isPlaying?<Pause size={12} color="white"/>:<Play size={12} style={{color:'var(--t-text-muted)'}}/>}
             </button>
@@ -197,19 +227,36 @@ function SurahReader({ surah, onBack, audio }) {
               style={{width:28,height:28,borderRadius:'50%',background:'transparent',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
               <BookMarked size={14} style={{color:isBookmarked?'var(--t-accent)':'var(--t-text-muted)'}} fill={isBookmarked?'currentColor':'none'}/>
             </button>
+            <button onClick={()=>setTafsirVerse({surahNum: surah.id, ayahNum, text: arabicText, trans: v.translations?.[0]?.text?.replace(/<[^>]+>/g,'')})}
+              style={{width:28,height:28,borderRadius:'50%',background:'transparent',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,color:'var(--t-text-muted)'}} title="View Tafsir">
+              📖
+            </button>
           </div>
           <div style={{width:28,height:28,borderRadius:'50%',background:'var(--t-accent)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:600,color:'white'}}>{ayahNum}</div>
         </div>
         {readingMode==='hifz' ? (
           <div onClick={()=>setRevealed(r=>!r)} style={{cursor:'pointer'}}>
             {revealed
-              ? <p style={{fontFamily:'Amiri,serif',fontSize:'calc(1.5rem * var(--t-quran-scale,1.2))',lineHeight:2.2,textAlign:'right',direction:'rtl',color:'var(--t-text)'}}>{v.text_uthmani||v.text_imlaei}</p>
+              ? <p style={{fontFamily:'Amiri,serif',fontSize:'calc(1.5rem * var(--t-quran-scale,1.2))',lineHeight:2.2,textAlign:'right',direction:'rtl',color:'var(--t-text)'}}>{arabicText}</p>
               : <div style={{borderRadius:10,height:56,background:'var(--t-border)',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--t-text-muted)',fontSize:13}}>Tap to reveal</div>
             }
           </div>
+        ) : showGrammar ? (
+          <div style={{textAlign:'right',direction:'rtl',lineHeight:2.5, display: 'flex', flexWrap: 'wrap', flexDirection: 'row-reverse', gap: 6}}>
+            {words.map((w, wi) => (
+              <div key={wi} onClick={()=>setGrammarWord({word: w.text_uthmani || w.text, trans: w.translation?.text, translit: w.transliteration?.text, ayah: ayahNum, index: wi, surahName: surah.name_simple})}
+                style={{cursor:'pointer',padding:'4px 8px',borderRadius:8,background:'rgba(59,130,246,0.06)',border:'0.5px solid rgba(59,130,246,0.15)',display:'flex',flexDirection:'column',alignItems:'center',gap:4}}
+                onMouseEnter={e=>e.currentTarget.style.background='rgba(59,130,246,0.12)'}
+                onMouseLeave={e=>e.currentTarget.style.background='rgba(59,130,246,0.06)'}>
+                <span style={{fontFamily:'Amiri,serif',fontSize:'calc(1.3rem * var(--t-quran-scale,1.2))',color:'var(--t-text)'}}>{w.text_uthmani || w.text}</span>
+                {showTranslit && w.transliteration?.text && <span style={{fontSize:10,color:'var(--t-accent)',fontStyle:'italic'}}>{w.transliteration.text}</span>}
+                <span style={{fontSize:11,color:'var(--t-text-muted)'}}>{w.translation?.text || '—'}</span>
+              </div>
+            ))}
+          </div>
         ) : (
           <p style={{fontFamily:'Amiri,serif',fontSize:'calc(1.5rem * var(--t-quran-scale,1.2))',lineHeight:2.2,textAlign:'right',direction:'rtl',color:'var(--t-text)',wordSpacing:'0.15em'}}>
-            {v.text_uthmani||v.text_imlaei}
+            {arabicText}
           </p>
         )}
         {showTrans&&v.translations?.[0] && <p style={{fontSize:'0.9rem',color:'var(--t-text-muted)',marginTop:8,lineHeight:1.7}}>{v.translations[0].text?.replace(/<[^>]+>/g,'')}</p>}
@@ -234,12 +281,19 @@ function SurahReader({ surah, onBack, audio }) {
             <p style={{fontWeight:700,fontSize:16,color:'var(--t-text)'}}>{surah.name_simple}</p>
             <p style={{fontSize:12,color:'var(--t-text-muted)'}}>{surah.translated_name?.name} \xb7 {surah.verses_count} verses</p>
           </div>
-          {[['Trans',showTrans,setShowTrans],['Latin',showTranslit,setShowTranslit],['Tajweed',showTajweed,setShowTajweed]].map(([label,active,toggle])=>(
+          {[['Trans',showTrans,setShowTrans],['Latin',showTranslit,setShowTranslit],['Tajweed',showTajweed,setShowTajweed],['Grammar',showGrammar,setShowGrammar]].map(([label,active,toggle])=>(
             <button key={label} onClick={()=>toggle(v=>!v)}
               style={{padding:'4px 10px',borderRadius:8,border:'0.5px solid',borderColor:active?'var(--t-primary)':'var(--t-border)',background:active?'rgba(20,168,96,0.1)':'var(--t-bg-card)',fontSize:11,color:active?'var(--t-primary)':'var(--t-text-muted)',cursor:'pointer'}}>
               {label}
             </button>
           ))}
+          <select value={translationId} onChange={e=>setTranslationId(Number(e.target.value))} style={{padding:'4px 8px',borderRadius:8,border:'0.5px solid var(--t-border)',background:'var(--t-bg-card)',fontSize:11,color:'var(--t-text-muted)',cursor:'pointer'}}>
+            <option value={20}>Sahih International</option>
+            <option value={131}>Clear Quran</option>
+          </select>
+          <button onClick={()=>setShowSleepTimer(v=>!v)} style={{padding:'4px 8px',borderRadius:8,border:'0.5px solid',borderColor:audio.sleepTimer?'#a855f7':'var(--t-border)',background:audio.sleepTimer?'rgba(168,85,247,0.1)':'var(--t-bg-card)',cursor:'pointer',color:audio.sleepTimer?'#a855f7':'var(--t-text-muted)'}} title="Sleep timer">
+            <Timer size={14}/>
+          </button>
           <button onClick={()=>setFocusMode(true)} style={{padding:'4px 8px',borderRadius:8,border:'0.5px solid var(--t-border)',background:'var(--t-bg-card)',cursor:'pointer',color:'var(--t-text-muted)'}}><Maximize2 size={14}/></button>
         </div>
       )}
@@ -264,6 +318,30 @@ function SurahReader({ surah, onBack, audio }) {
 
       {!focusMode && readerContent}
 
+      {/* Sleep Timer Panel */}
+      {showSleepTimer && (
+        <div style={{marginBottom:12,padding:'12px 14px',borderRadius:12,background:'rgba(168,85,247,0.08)',border:'1px solid rgba(168,85,247,0.25)'}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
+            <p style={{fontWeight:600,fontSize:13,color:'#a855f7'}}>🌙 Sleep Timer</p>
+            {audio.sleepTimer && (
+              <button onClick={audio.cancelSleepTimer} style={{padding:'3px 10px',borderRadius:8,background:'rgba(239,68,68,0.1)',border:'0.5px solid #ef4444',color:'#ef4444',fontSize:11,cursor:'pointer'}}>Cancel</button>
+            )}
+          </div>
+          {audio.sleepTimer ? (
+            <p style={{fontSize:13,color:'var(--t-text)'}}>Timer set: <strong>{audio.sleepTimer.label}</strong> — audio will stop automatically.</p>
+          ) : (
+            <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+              {[15,30,60].map(min => (
+                <button key={min} onClick={()=>{audio.startSleepTimer(min);setShowSleepTimer(false)}}
+                  style={{padding:'6px 14px',borderRadius:10,background:'rgba(168,85,247,0.1)',border:'0.5px solid rgba(168,85,247,0.3)',color:'#a855f7',fontSize:13,cursor:'pointer',fontWeight:600}}>
+                  {min} min
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       <Modal open={!!bookmarkSheet} onClose={()=>setBookmarkSheet(null)} title="Add bookmark">
         <div className="space-y-4">
           <div>
@@ -276,6 +354,63 @@ function SurahReader({ surah, onBack, audio }) {
           <Button variant="primary" className="w-full" onClick={saveBookmark}>Save bookmark</Button>
         </div>
       </Modal>
+
+      {/* Tafsir Modal */}
+      <Modal open={!!tafsirVerse} onClose={()=>setTafsirVerse(null)} title={`Tafsir Ibn Kathir — ${surah.name_simple} ${tafsirVerse?.ayahNum}`}>
+        {tafsirVerse && <TafsirViewer surahNum={tafsirVerse.surahNum} ayahNum={tafsirVerse.ayahNum} arabicText={tafsirVerse.text} translation={tafsirVerse.trans} />}
+      </Modal>
+
+      {/* Grammar Word Modal */}
+      <Modal open={!!grammarWord} onClose={()=>setGrammarWord(null)} title={`Word Analysis`}>
+        {grammarWord && (
+          <div className="space-y-4">
+            <p style={{fontFamily:'Amiri,serif',fontSize:'3rem',textAlign:'center',color:'var(--t-text)',direction:'rtl'}}>{grammarWord.word}</p>
+            <div style={{padding:'12px 14px',borderRadius:10,background:'var(--t-bg-card)',border:'0.5px solid var(--t-border)', textAlign: 'center'}}>
+              <p style={{fontSize:16,fontWeight:600,color:'var(--t-accent)',marginBottom:6}}>{grammarWord.translit || '—'}</p>
+              <p style={{fontSize:18,color:'var(--t-text)',marginBottom:12}}>{grammarWord.trans || '—'}</p>
+              <div style={{padding:'10px',borderRadius:8,background:'rgba(59,130,246,0.1)',border:'1px solid rgba(59,130,246,0.2)'}}>
+                 <p style={{fontSize:12,color:'var(--t-text-muted)'}}>Context: {grammarWord.surahName}, Ayah {grammarWord.ayah}</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </div>
+  )
+}
+
+function TafsirViewer({ surahNum, ayahNum, arabicText, translation }) {
+  const { data: tafsirData, isLoading, isError } = useQuery({
+    queryKey: ['quran', 'tafsir', surahNum, ayahNum],
+    queryFn: () => api.get(`/quran/tafsir/${surahNum}/${ayahNum}`).then(r => r.data),
+    staleTime: 60 * 60_000,
+  })
+
+  return (
+    <div className="space-y-4" style={{ maxHeight: '75vh', overflowY: 'auto' }}>
+      <div style={{ borderBottom: '1px solid var(--t-border)', paddingBottom: 16 }}>
+        <p style={{fontFamily:'Amiri,serif',fontSize:'1.5rem',lineHeight:2.2,textAlign:'right',direction:'rtl',color:'var(--t-text)',marginBottom:10}}>{arabicText}</p>
+        <p style={{fontSize:15,color:'var(--t-text-muted)',lineHeight:1.7}}>{translation}</p>
+      </div>
+      
+      {isLoading ? (
+        <div style={{padding: '20px 0'}}>
+          <Skeleton className="h-6 w-3/4 mb-4" />
+          <Skeleton className="h-4 w-full mb-2" />
+          <Skeleton className="h-4 w-full mb-2" />
+          <Skeleton className="h-4 w-5/6" />
+        </div>
+      ) : isError ? (
+        <p style={{color:'#ef4444',fontSize:14}}>Failed to load Tafsir. Please check your connection.</p>
+      ) : tafsirData?.tafsir?.text ? (
+        <div 
+          className="tafsir-content"
+          style={{fontSize: 15, lineHeight: 1.8, color: 'var(--t-text)'}}
+          dangerouslySetInnerHTML={{ __html: tafsirData.tafsir.text }}
+        />
+      ) : (
+         <p style={{color:'var(--t-text-muted)',fontSize:14}}>No Tafsir available for this language/Ayah.</p>
+      )}
     </div>
   )
 }
@@ -284,17 +419,49 @@ function HifzTab() {
   const qc = useQueryClient()
   const [addModal,  setAddModal]  = useState(false)
   const [hifzMode,  setHifzMode]  = useState(0)
+  const [dailyTarget, setDailyTarget] = useState(5)
   const [form, setForm] = useState({surah_number:1,surah_name:'Al-Fatihah',ayah_from:1,ayah_to:7,total_ayahs:7})
   const { data: entries=[], isLoading } = useQuery({queryKey:['quran','hifz'],queryFn:()=>api.get('/quran/hifz').then(r=>r.data).catch(()=>[])})
   const { data: dueToday=[] } = useQuery({queryKey:['quran','hifz','due'],queryFn:()=>api.get('/quran/hifz/due-today').then(r=>r.data).catch(()=>[])})
   const { mutate: addEntry } = useMutation({ mutationFn:()=>api.post('/quran/hifz',form), onSuccess:()=>{qc.invalidateQueries({queryKey:['quran','hifz']});setAddModal(false);toast.success('Added!')} })
   const { mutate: review } = useMutation({ mutationFn:({id,quality})=>api.post(`/quran/hifz/${id}/review`,{quality}), onSuccess:()=>{qc.invalidateQueries({queryKey:['quran','hifz']});toast.success('Saved!')} })
   const LBOX = ['','#ef4444','#f97316','#eab308','#22c55e','#16a34a']
+  // Planner calculations
+  const totalSurahs = 114
+  const memorisedCount = entries.filter(e=>e.status==='memorised').length
+  const pctDone = Math.round((memorisedCount/totalSurahs)*100)
   return (
     <div className="space-y-4">
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
         <div><h2 style={{fontWeight:700,fontSize:18,color:'var(--t-text)'}}>Hifz Tracker</h2><p style={{fontSize:12,color:'var(--t-text-muted)'}}>{dueToday.length} due today</p></div>
         <Button variant="primary" size="sm" onClick={()=>setAddModal(true)}><Plus size={14}/> Add</Button>
+      </div>
+
+      {/* Hifz Planner */}
+      <div style={{borderRadius:14,padding:16,background:'linear-gradient(135deg,rgba(20,168,96,0.1),rgba(201,135,10,0.05))',border:'0.5px solid var(--t-border)'}}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+          <div>
+            <p style={{fontWeight:700,fontSize:15,color:'var(--t-text)'}}>📅 Hifz Planner</p>
+            <p style={{fontSize:12,color:'var(--t-text-muted)',marginTop:2}}>{memorisedCount} of {totalSurahs} surahs · {pctDone}% complete</p>
+          </div>
+          <div style={{textAlign:'right'}}>
+            <p style={{fontSize:11,color:'var(--t-text-muted)'}}>Daily target</p>
+            <div style={{display:'flex',alignItems:'center',gap:6,marginTop:2}}>
+              <button onClick={()=>setDailyTarget(t=>Math.max(1,t-1))} style={{width:24,height:24,borderRadius:'50%',border:'0.5px solid var(--t-border)',background:'var(--t-bg-card)',cursor:'pointer',fontSize:14,color:'var(--t-text-muted)'}}>−</button>
+              <span style={{fontWeight:700,fontSize:16,color:'var(--t-text)',minWidth:20,textAlign:'center'}}>{dailyTarget}</span>
+              <button onClick={()=>setDailyTarget(t=>Math.min(20,t+1))} style={{width:24,height:24,borderRadius:'50%',border:'0.5px solid var(--t-border)',background:'var(--t-bg-card)',cursor:'pointer',fontSize:14,color:'var(--t-text-muted)'}}>+</button>
+              <span style={{fontSize:11,color:'var(--t-text-muted)'}}>ayahs/day</span>
+            </div>
+          </div>
+        </div>
+        <div style={{height:6,background:'var(--t-border)',borderRadius:3,overflow:'hidden',marginBottom:8}}>
+          <div style={{height:'100%',width:`${pctDone}%`,background:'var(--t-primary)',borderRadius:3,transition:'width 0.7s'}}/>
+        </div>
+        {dailyTarget > 0 && (
+          <p style={{fontSize:12,color:'var(--t-text-muted)'}}>
+            At {dailyTarget} ayahs/day — estimated completion in ~<strong style={{color:'var(--t-primary)'}}>{Math.ceil((6236 * (1 - pctDone/100)) / dailyTarget)} days</strong>
+          </p>
+        )}
       </div>
       <div style={{display:'flex',gap:4,overflowX:'auto'}}>
         {HIFZ_MODES.map((m,i)=><button key={i} onClick={()=>setHifzMode(i)} style={{padding:'6px 12px',borderRadius:99,border:'0.5px solid',borderColor:hifzMode===i?'var(--t-primary)':'var(--t-border)',background:hifzMode===i?'rgba(20,168,96,0.1)':'var(--t-bg-card)',fontSize:12,color:hifzMode===i?'var(--t-primary)':'var(--t-text-muted)',cursor:'pointer',whiteSpace:'nowrap'}}>{m}</button>)}
@@ -491,6 +658,146 @@ function StatsTab() {
   )
 }
 
+// ─── Practice Tab (Recitation AI) ─────────────────────────────────────────────
+
+function PracticeTab() {
+  const [recording, setRecording] = useState(false)
+  const [mediaRecorder, setMediaRecorder] = useState(null)
+  const [sessions, setSessions] = useState([])
+  const [selectedSurah, setSelectedSurah] = useState(1)
+  const [selectedAyah, setSelectedAyah] = useState(1)
+  const [processing, setProcessing] = useState(false)
+  const { data: surahs=[] } = useQuery({ queryKey:['quran','surahs'], queryFn:()=>api.get('/quran/surahs').then(r=>r.data), staleTime: 24*60*60_000 })
+  const { data: mySessions=[] } = useQuery({ queryKey:['recitation','sessions'], queryFn:()=>api.get('/recitation/sessions').then(r=>r.data).catch(()=>[]) })
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const rec = new MediaRecorder(stream)
+      const chunks = []
+      rec.ondataavailable = e => chunks.push(e.data)
+      rec.onstop = async () => {
+        setProcessing(true)
+        const blob = new Blob(chunks, { type: 'audio/webm' })
+        const form = new FormData()
+        form.append('audio', blob, 'recitation.webm')
+        form.append('surah_number', selectedSurah)
+        form.append('ayah_number', selectedAyah)
+        try {
+          const res = await api.post('/recitation/sessions', form, { headers: { 'Content-Type': 'multipart/form-data' } })
+          setSessions(s => [res.data, ...s])
+          toast.success('Recitation analysed!')
+        } catch {
+          toast.error('Analysis failed — check your connection')
+        }
+        setProcessing(false)
+        stream.getTracks().forEach(t => t.stop())
+      }
+      rec.start()
+      setMediaRecorder(rec)
+      setRecording(true)
+    } catch {
+      toast.error('Microphone permission denied')
+    }
+  }
+
+  const stopRecording = () => {
+    mediaRecorder?.stop()
+    setRecording(false)
+    setMediaRecorder(null)
+  }
+
+  const allSessions = [...sessions, ...mySessions].slice(0, 20)
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <h3 style={{fontWeight:700,fontSize:17,color:'var(--t-text)',marginBottom:4}}>🎙️ Recitation Practice</h3>
+        <p style={{fontSize:13,color:'var(--t-text-muted)',marginBottom:16}}>Record yourself reciting an ayah. Our AI will check your Tajweed and pronunciation.</p>
+
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:16}}>
+          <div>
+            <p className="label">Surah</p>
+            <select className="input" value={selectedSurah} onChange={e=>setSelectedSurah(Number(e.target.value))}>
+              {surahs.map(s => <option key={s.id} value={s.id}>{s.id}. {s.name_simple}</option>)}
+            </select>
+          </div>
+          <div>
+            <p className="label">Ayah #</p>
+            <input className="input" type="number" min="1" max="286" value={selectedAyah} onChange={e=>setSelectedAyah(Number(e.target.value))}/>
+          </div>
+        </div>
+
+        <button
+          onClick={recording ? stopRecording : startRecording}
+          disabled={processing}
+          style={{
+            width:'100%', padding:'16px', borderRadius:14, border:'none', cursor: processing ? 'not-allowed' : 'pointer',
+            background: recording ? '#ef4444' : 'var(--t-primary)',
+            color:'white', fontWeight:700, fontSize:15, display:'flex', alignItems:'center', justifyContent:'center', gap:10,
+            transition:'all 0.2s', opacity: processing ? 0.7 : 1,
+          }}>
+          {processing ? '⏳ Analysing…' : recording ? <><StopCircle size={20}/> Stop Recording</> : <><Mic size={20}/> Start Recording</>}
+        </button>
+
+        {recording && (
+          <div style={{marginTop:12,textAlign:'center'}}>
+            <div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'6px 14px',borderRadius:99,background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.3)'}}>
+              <div style={{width:8,height:8,borderRadius:'50%',background:'#ef4444',animation:'pulse 1s infinite'}}/>
+              <span style={{fontSize:13,color:'#ef4444',fontWeight:600}}>Recording…</span>
+            </div>
+          </div>
+        )}
+      </Card>
+
+      {allSessions.length > 0 && (
+        <div>
+          <h3 style={{fontWeight:700,fontSize:15,color:'var(--t-text)',marginBottom:10}}>Recent Sessions</h3>
+          <div className="space-y-3">
+            {allSessions.map((s, i) => (
+              <Card key={s.id || i}>
+                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}>
+                  <div>
+                    <p style={{fontWeight:600,fontSize:14,color:'var(--t-text)'}}>Surah {s.surah_number} · Ayah {s.ayah_number}</p>
+                    <p style={{fontSize:12,color:'var(--t-text-muted)'}}>
+                      {s.created_at ? new Date(s.created_at).toLocaleDateString() : 'Just now'}
+                    </p>
+                  </div>
+                  {s.overall_score != null && (
+                    <div style={{textAlign:'center'}}>
+                      <p style={{fontSize:22,fontWeight:700,color:s.overall_score>=80?'var(--t-primary)':s.overall_score>=60?'var(--t-accent)':'#ef4444'}}>{Math.round(s.overall_score)}%</p>
+                      <p style={{fontSize:10,color:'var(--t-text-muted)'}}>Accuracy</p>
+                    </div>
+                  )}
+                </div>
+                {s.feedback && (
+                  <p style={{fontSize:13,color:'var(--t-text-muted)',padding:'8px 10px',borderRadius:8,background:'var(--t-bg)',lineHeight:1.6}}>{s.feedback}</p>
+                )}
+                {s.tajweed_errors?.length > 0 && (
+                  <div style={{marginTop:8}}>
+                    <p style={{fontSize:11,fontWeight:600,color:'var(--t-accent)',marginBottom:4}}>Tajweed notes:</p>
+                    {s.tajweed_errors.map((err, ei) => (
+                      <p key={ei} style={{fontSize:12,color:'var(--t-text-muted)',lineHeight:1.6}}>• {err}</p>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {allSessions.length === 0 && !recording && (
+        <div style={{textAlign:'center',padding:'32px 0',color:'var(--t-text-muted)'}}>
+          <span style={{fontSize:48}}>🎙️</span>
+          <p style={{marginTop:12,fontSize:14}}>No sessions yet. Record your first recitation above!</p>
+          <p style={{marginTop:6,fontSize:12,color:'var(--t-text-muted)'}}>Start with Al-Fatihah, Surah 1, Ayah 1</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Quran() {
   const [tab,         setTab]         = useState('reader')
   const [activeSurah, setActiveSurah] = useState(null)
@@ -530,6 +837,7 @@ export default function Quran() {
       {tab==='duas'&&<DuaTab/>}
       {tab==='hadith'&&<HadithTab/>}
       {tab==='stats'&&<StatsTab/>}
+      {tab==='practice'&&<PracticeTab/>}
       <MiniPlayer audio={audio} surahName={activeSurah?.name_simple}/>
     </div>
   )

@@ -21,6 +21,8 @@ import Qibla from './pages/Qibla'
 import Community from './pages/Community'
 import Waqf from './pages/Waqf'
 import Wellness from './pages/Wellness'
+import Gamification from './pages/Gamification'
+import Learning from './pages/Learning'
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, user } = useAuthStore()
@@ -64,6 +66,8 @@ export default function App() {
           <Route path="/qibla" element={<Qibla />} />
           <Route path="/community" element={<Community />} />
           <Route path="/waqf" element={<Waqf />} />
+          <Route path="/gamification" element={<Gamification />} />
+          <Route path="/learning" element={<Learning />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

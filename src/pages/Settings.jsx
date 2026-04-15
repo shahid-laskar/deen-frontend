@@ -126,6 +126,114 @@ function ProfileTab() {
   )
 }
 
+function PrayerTab() {
+  const { user, updateUser } = useAuthStore()
+  const [form, setForm] = useState({
+    city: user?.profile?.city || '',
+    country: user?.profile?.country || '',
+    madhab: user?.madhab || 'shafi',
+    calculation_method: user?.prayer_method || 2, // ISNA
+    latitude: user?.latitude || '',
+    longitude: user?.longitude || '',
+  })
+  const [detecting, setDetecting] = useState(false)
+
+  const handleDetect = () => {
+    setDetecting(true)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setForm(prev => ({
+          ...prev,
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude
+        }))
+        setDetecting(false)
+        toast.success('Coordinates detected!')
+      },
+      (err) => {
+        console.error(err)
+        toast.error('Could not get position. Check permissions.')
+        setDetecting(false)
+      }
+    )
+  }
+
+  const { mutate: save, isPending } = useMutation({
+    mutationFn: async () => {
+      // Update profile bits
+      await api.patch('/users/me/profile', { city: form.city, country: form.country })
+      // Update user bits
+      const res = await api.patch('/users/me', {
+        madhab: form.madhab,
+        prayer_method: `${form.calculation_method}`,
+        latitude: form.latitude ? parseFloat(form.latitude) : null,
+        longitude: form.longitude ? parseFloat(form.longitude) : null,
+      })
+      return res.data
+    },
+    onSuccess: (updatedUser) => {
+      updateUser(updatedUser)
+      toast.success('Prayer settings updated!')
+    },
+    onError: () => toast.error('Failed to update prayer settings')
+  })
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <h3 className="font-display font-semibold mb-4" style={{ color: 'var(--t-text)' }}>Location settings</h3>
+        <div className="space-y-4">
+          <Input label="City" value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} placeholder="e.g. London" />
+          <Input label="Country" value={form.country} onChange={e => setForm({ ...form, country: e.target.value })} placeholder="e.g. United Kingdom" />
+          <div className="pt-2">
+            <p className="text-sm font-medium mb-2" style={{ color: 'var(--t-text)' }}>Coordinates</p>
+            <div className="flex items-center gap-2 mb-2">
+              <Input placeholder="Latitude" value={form.latitude} onChange={e => setForm({ ...form, latitude: e.target.value })} className="flex-1" />
+              <Input placeholder="Longitude" value={form.longitude} onChange={e => setForm({ ...form, longitude: e.target.value })} className="flex-1" />
+            </div>
+            <Button size="sm" onClick={handleDetect} loading={detecting} className="w-full bg-blue-500/10 text-blue-500 border border-blue-500/20">
+              📍 Auto-Detect Location
+            </Button>
+            <p className="text-xs mt-2" style={{ color: 'var(--t-text-muted)' }}>Coordinates are heavily required to fetch extremely accurate timings for offline processing and calculations.</p>
+          </div>
+        </div>
+      </Card>
+      
+      <Card>
+        <h3 className="font-display font-semibold mb-4" style={{ color: 'var(--t-text)' }}>Calculation methods</h3>
+        <div className="space-y-4">
+          <div>
+            <p className="text-sm font-medium mb-1" style={{ color: 'var(--t-text)' }}>Asr Madhab</p>
+            <select className="w-full px-3 py-2.5 rounded-xl border text-sm"
+              style={{ background: 'var(--t-bg-input)', borderColor: 'var(--t-border)', color: 'var(--t-text)' }}
+              value={form.madhab} onChange={e => setForm({ ...form, madhab: e.target.value })}>
+              <option value="shafi">Standard (Shafi'i, Maliki, Hanbali)</option>
+              <option value="hanafi">Hanafi</option>
+            </select>
+          </div>
+          <div>
+            <p className="text-sm font-medium mb-1" style={{ color: 'var(--t-text)' }}>Calculation Authority</p>
+            <select className="w-full px-3 py-2.5 rounded-xl border text-sm"
+              style={{ background: 'var(--t-bg-input)', borderColor: 'var(--t-border)', color: 'var(--t-text)' }}
+              value={form.calculation_method} onChange={e => setForm({ ...form, calculation_method: e.target.value })}>
+              <option value="1">University of Islamic Sciences, Karachi</option>
+              <option value="2">Islamic Society of North America (ISNA)</option>
+              <option value="3">Muslim World League</option>
+              <option value="4">Umm Al-Qura University, Makkah</option>
+              <option value="5">Egyptian General Authority of Survey</option>
+              <option value="7">Institute of Geophysics, University of Tehran</option>
+              <option value="12">Union Organization islamic de France</option>
+              <option value="13">Diyanet İşleri Başkanlığı, Turkey</option>
+            </select>
+          </div>
+        </div>
+      </Card>
+      
+      <Button variant="primary" onClick={() => save()} loading={isPending} className="w-full">Save Prayer Settings</Button>
+    </div>
+  )
+}
+
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('appearance')
   return (
@@ -141,9 +249,10 @@ export default function Settings() {
       </div>
       {activeTab === 'appearance'    && <AppearanceTab />}
       {activeTab === 'profile'       && <ProfileTab />}
-      {activeTab === 'prayer'        && <p className="text-sm" style={{ color: 'var(--t-text-muted)' }}>Prayer settings — Phase 2</p>}
+      {activeTab === 'prayer'        && <PrayerTab />}
       {activeTab === 'notifications' && <p className="text-sm" style={{ color: 'var(--t-text-muted)' }}>Notification settings — Phase 10</p>}
       {activeTab === 'privacy'       && <p className="text-sm" style={{ color: 'var(--t-text-muted)' }}>Privacy settings — Phase 10</p>}
+
     </div>
   )
 }

@@ -1,14 +1,15 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { format } from 'date-fns'
-import { BookOpen, Target, Compass, RefreshCw, ChevronRight, Activity } from 'lucide-react'
+import { BookOpen, Target, Compass, RefreshCw, ChevronRight, Activity, Sparkles, X, ThumbsUp, ThumbsDown } from 'lucide-react'
 import api from '../lib/api'
 import { useAuthStore } from '../store/authStore'
 import { getIslamicContext } from '../lib/hijri'
 import { Card, Skeleton, ProgressRing } from '../components/ui/index'
 import { clsx } from 'clsx'
+import toast from 'react-hot-toast'
 
 function getGreeting(name) {
   const h = new Date().getHours()
@@ -34,21 +35,21 @@ function useCountdown(targetTimeStr) {
 
 const PRAYER_ORDER = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha']
 
-function findNextPrayer(timings) {
-  if (!timings) return null
+function findNextPrayer(times) {
+  if (!times) return null
   const now = new Date()
   for (const name of PRAYER_ORDER) {
-    const val = timings[name]; if (!val) continue
+    const val = times[name.toLowerCase()]; if (!val) continue
     const [h, m] = val.split(':').map(Number); const t = new Date(); t.setHours(h, m, 0, 0)
     if (t > now) return { name, time: val }
   }
-  return { name: 'Fajr', time: timings.Fajr }
+  return { name: 'Fajr', time: times.fajr }
 }
 
 function pad(n) { return String(n).padStart(2, '0') }
 
 function PrayerHero({ times, summary }) {
-  const next = findNextPrayer(times?.timings)
+  const next = findNextPrayer(times)
   const countdown = useCountdown(next?.time)
   return (
     <div className="relative overflow-hidden rounded-2xl p-5 mb-5" style={{ background: 'var(--t-prayer-hero)' }}>
@@ -91,6 +92,86 @@ function PrayerHero({ times, summary }) {
   )
 }
 
+// ─── AI Insight Card ──────────────────────────────────────────────────────────
+
+function InsightCard() {
+  const qc = useQueryClient()
+  const [dismissed, setDismissed] = useState(false)
+
+  const { data: insight } = useQuery({
+    queryKey: ['insights', 'today'],
+    queryFn: () => api.get('/insights/today').then(r => r.data).catch(() => null),
+  })
+
+  const { mutate: dismiss } = useMutation({
+    mutationFn: () => api.post(`/insights/${insight.id}/dismiss`),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['insights'] }); setDismissed(true) },
+  })
+
+  const { mutate: rate } = useMutation({
+    mutationFn: (rating) => api.post(`/insights/${insight.id}/rate`, { rating }),
+    onSuccess: () => { toast.success('Thanks for your feedback!'); setDismissed(true) },
+  })
+
+  if (!insight || dismissed) return null
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+      style={{ borderRadius: 14, padding: '14px 16px', marginBottom: 16, background: 'linear-gradient(135deg, rgba(168,85,247,0.08), rgba(59,130,246,0.08))', border: '1px solid rgba(168,85,247,0.2)' }}>
+      <div style={{ display: 'flex', alignItems: 'start', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Sparkles size={14} style={{ color: '#a855f7', flexShrink: 0 }} />
+          <p style={{ fontSize: 11, fontWeight: 700, color: '#a855f7', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Today's Insight</p>
+        </div>
+        <button onClick={() => setDismissed(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--t-text-muted)', padding: 2 }}>
+          <X size={14} />
+        </button>
+      </div>
+
+      <p style={{ fontSize: 14, color: 'var(--t-text)', lineHeight: 1.7, marginBottom: 10 }}>{insight.content}</p>
+
+      {insight.quran_reference && (
+        <p style={{ fontSize: 12, color: '#a855f7', fontStyle: 'italic', marginBottom: 10 }}>{insight.quran_reference}</p>
+      )}
+
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+        <button onClick={() => rate(1)} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 8, background: 'rgba(20,168,96,0.1)', border: '0.5px solid rgba(20,168,96,0.3)', color: 'var(--t-primary)', fontSize: 11, cursor: 'pointer' }}>
+          <ThumbsUp size={11} /> Helpful
+        </button>
+        <button onClick={() => dismiss()} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 8, background: 'rgba(107,114,128,0.08)', border: '0.5px solid var(--t-border)', color: 'var(--t-text-muted)', fontSize: 11, cursor: 'pointer' }}>
+          <X size={11} /> Dismiss
+        </button>
+      </div>
+    </motion.div>
+  )
+}
+
+// ─── Pull-to-Refresh ──────────────────────────────────────────────────────────
+
+function usePullToRefresh(onRefresh) {
+  const startY = useRef(null)
+  const [pulling, setPulling] = useState(false)
+  const [pullDist, setPullDist] = useState(0)
+
+  const onTouchStart = useCallback(e => {
+    if (window.scrollY === 0) startY.current = e.touches[0].clientY
+  }, [])
+
+  const onTouchMove = useCallback(e => {
+    if (startY.current === null) return
+    const dist = e.touches[0].clientY - startY.current
+    if (dist > 0) { e.preventDefault(); setPullDist(Math.min(dist, 80)); setPulling(true) }
+  }, [])
+
+  const onTouchEnd = useCallback(() => {
+    if (pullDist >= 60) onRefresh()
+    startY.current = null; setPullDist(0); setPulling(false)
+  }, [pullDist, onRefresh])
+
+  return { onTouchStart, onTouchMove, onTouchEnd, pulling, pullDist }
+}
+
 const QUICK_ACTIONS = [
   { icon: '📿', label: 'Dhikr',  to: '/habits'  },
   { icon: '📖', label: 'Quran',  to: '/quran'   },
@@ -121,14 +202,29 @@ export default function Dashboard() {
   const lat = user?.latitude; const lng = user?.longitude
 
   const { data: prayerTimes, isLoading: ptLoading } = useQuery({ queryKey: ['prayer','times'], queryFn: () => api.get('/prayer/times', lat && lng ? { params: { lat, lng } } : {}).then(r => r.data).catch(() => null), staleTime: 5*60_000 })
-  const { data: summary } = useQuery({ queryKey: ['prayer','summary','today'], queryFn: () => api.get('/prayer/summary/today').then(r => r.data).catch(() => null) })
+  const today = format(new Date(), 'yyyy-MM-dd')
+  const { data: summary } = useQuery({ queryKey: ['prayer','summary','today', today], queryFn: () => api.get(`/prayer/summary/today?date=${today}`).then(r => r.data).catch(() => null) })
   const { data: habits } = useQuery({ queryKey: ['habits'], queryFn: () => api.get('/habits').then(r => r.data).catch(() => []) })
   const { data: journal } = useQuery({ queryKey: ['journal'], queryFn: () => api.get('/journal', { params: { limit: 1 } }).then(r => r.data).catch(() => []) })
 
-  const refresh = async () => { setRefreshing(true); await qc.invalidateQueries(); setTimeout(() => setRefreshing(false), 800) }
+  const refresh = useCallback(async () => {
+    setRefreshing(true)
+    await qc.invalidateQueries()
+    setTimeout(() => setRefreshing(false), 800)
+  }, [qc])
+
+  const { onTouchStart, onTouchMove, onTouchEnd, pulling, pullDist } = usePullToRefresh(refresh)
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-5">
+    <div className="max-w-2xl mx-auto px-4 py-5" onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
+
+      {/* Pull-to-refresh indicator */}
+      {pulling && (
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8, opacity: pullDist / 60, transform: `rotate(${pullDist * 3}deg)`, transition: pulling ? 'none' : 'all 0.3s' }}>
+          <RefreshCw size={20} style={{ color: 'var(--t-primary)' }} />
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-start justify-between mb-5">
         <div>
@@ -144,6 +240,9 @@ export default function Dashboard() {
       <IslamicBanner ctx={ctx} />
 
       {ptLoading ? <Skeleton className="h-44 mb-5" /> : <PrayerHero times={prayerTimes} summary={summary} />}
+
+      {/* AI Insight Card */}
+      <InsightCard />
 
       {/* Quick actions */}
       <div className="grid grid-cols-4 gap-3 mb-5">

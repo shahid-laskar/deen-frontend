@@ -371,3 +371,43 @@ h3 { font-size: calc(1.25rem* var(--t-font-scale, 1)); }
 .animate-slide-up   { animation: slideInUp   0.4s ease both; }
 .animate-slide-right{ animation: slideInRight 0.35s ease both; }
 .animate-pulse-gold { animation: pulseGold   2s ease-in-out infinite; }
+
+/* ─── Theme Overrides for legacy Tailwind classes ──────────────────────────── */
+.text-emerald-950, .text-emerald-900, .text-emerald-800, .text-emerald-700,
+.text-parchment-900, .text-parchment-800, .text-parchment-700, 
+.dark\:text-emerald-900, .dark\:text-emerald-800, .dark\:text-emerald-700,
+.dark\:text-emerald-100, .dark\:text-emerald-200, .dark\:text-emerald-300,
+.dark\:text-white, .text-white {
+  color: var(--t-text) !important;
+}
+
+.text-emerald-600, .text-emerald-500, .text-emerald-400,
+.text-parchment-600, .text-parchment-500, .text-parchment-400,
+.dark\:text-emerald-600, .dark\:text-emerald-500, .dark\:text-emerald-400,
+.dark\:text-parchment-500, .dark\:text-parchment-600 {
+  color: var(--t-text-muted) !important;
+}
+
+.text-gold-700, .text-gold-600, .text-gold-500, 
+.dark\:text-gold-500, .dark\:text-gold-400 {
+  color: var(--t-accent) !important;
+}
+
+.bg-emerald-950, .dark\:bg-emerald-900, .bg-parchment-50, .dark\:bg-emerald-950 {
+  background-color: var(--t-bg) !important;
+}
+
+.bg-emerald-900, .bg-parchment-100, .dark\:bg-emerald-800 {
+  background-color: var(--t-bg-card) !important;
+}
+
+.border-emerald-900, .border-emerald-800, .border-parchment-200, .border-parchment-300,
+.dark\:border-emerald-900, .dark\:border-emerald-800 {
+  border-color: var(--t-border) !important;
+}
+
+/* Exempt primary buttons */
+.btn-primary.text-white, .btn-gold.text-white {
+  color: #fff !important;
+}
+

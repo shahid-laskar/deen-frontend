@@ -15,11 +15,13 @@ const V1_NAV = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/prayer',    icon: Clock,           label: 'Prayer' },
   { to: '/quran',     icon: BookOpen,        label: 'Quran & Hifz' },
+  { to: '/learning',  icon: BookOpen,        label: 'Learning Hub' },
   { to: '/habits',    icon: Target,          label: 'Habits' },
   { to: '/journal',   icon: BookMarked,      label: 'Journal' },
   { to: '/tasks',     icon: CheckSquare,     label: 'Planner' },
   { to: '/ai',        icon: Sparkles,        label: 'AI Guide' },
   { to: '/qibla',     icon: Compass,         label: 'Qibla & Mosques' },
+  { to: '/gamification', icon: Target,       label: 'Journey & Gamification' },
 ]
 
 const V2_NAV = [
@@ -39,17 +41,19 @@ function NavItem({ to, icon: Icon, label, pink = false }) {
   return (
     <NavLink to={to} className={({ isActive }) => clsx(
       'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-150',
-      isActive
-        ? pink ? 'bg-pink-900/40 text-pink-200 font-medium' : 'bg-emerald-800/70 text-white font-medium'
-        : pink ? 'text-emerald-400 hover:bg-pink-900/20 hover:text-pink-300' : 'text-emerald-400 hover:bg-emerald-900/50 hover:text-emerald-200'
-    )}>
-      {({ isActive }) => <><Icon size={18} className={isActive ? (pink ? 'text-pink-400' : 'text-gold-400') : ''} />{label}</>}
+      isActive && 'font-medium shadow-sm'
+    )}
+    style={({ isActive }) => ({
+      background: isActive ? (pink ? 'rgba(236,72,153,0.15)' : 'var(--t-primary)') : 'transparent',
+      color: isActive ? (pink ? '#f472b6' : '#ffffff') : (pink ? 'rgba(236,72,153,0.7)' : 'var(--t-text-muted)'),
+    })}>
+      {({ isActive }) => <><Icon size={18} style={{ color: isActive ? (pink ? '#f472b6' : 'white') : (pink ? 'rgba(236,72,153,0.6)' : 'var(--t-text-muted)') }} />{label}</>}
     </NavLink>
   )
 }
 
 function SectionLabel({ label }) {
-  return <p className="pt-3 pb-1 px-3 text-emerald-700 text-xs uppercase tracking-wider font-medium">{label}</p>
+  return <p className="pt-3 pb-1 px-3 text-xs uppercase tracking-wider font-medium" style={{ color: 'var(--t-accent)' }}>{label}</p>
 }
 
 export default function Sidebar() {
@@ -68,30 +72,30 @@ export default function Sidebar() {
     <>
       {sidebarOpen && <div className="fixed inset-0 bg-black/40 z-30 md:hidden" onClick={toggleSidebar} />}
       <aside className={clsx(
-        'fixed left-0 top-0 h-full z-40 flex flex-col bg-emerald-950 border-r border-emerald-900/50 transition-transform duration-300 w-[260px]',
+        'fixed left-0 top-0 h-full z-40 flex flex-col transition-transform duration-300 w-[260px]',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full', 'md:relative md:translate-x-0'
-      )}>
+      )} style={{ background: 'var(--t-bg-sidebar)', borderRight: '1px solid var(--t-border)' }}>
         {/* Logo */}
-        <div className="flex items-center gap-3 px-6 py-5 border-b border-emerald-900/50">
-          <div className="w-9 h-9 bg-gold-700 rounded-xl flex items-center justify-center flex-shrink-0">
+        <div className="flex items-center gap-3 px-6 py-5" style={{ borderBottom: '1px solid var(--t-border)' }}>
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--t-accent)' }}>
             <span className="font-arabic text-white font-bold text-lg leading-none">د</span>
           </div>
           <div>
-            <h1 className="font-display text-white font-semibold text-lg leading-none">Deen</h1>
-            <p className="text-emerald-500 text-xs mt-0.5">Islamic Companion</p>
+            <h1 className="font-display text-white font-semibold text-lg leading-none" style={{ color: 'var(--t-text)' }}>Deen</h1>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--t-primary)' }}>Islamic Companion</p>
           </div>
-          <button onClick={toggleSidebar} className="ml-auto md:hidden text-emerald-500 hover:text-white"><ChevronRight size={18} /></button>
+          <button onClick={toggleSidebar} className="ml-auto md:hidden hover:text-white" style={{ color: 'var(--t-text-muted)' }}><ChevronRight size={18} /></button>
         </div>
 
         {/* User */}
-        <div className="px-4 py-4 border-b border-emerald-900/50">
+        <div className="px-4 py-4" style={{ borderBottom: '1px solid var(--t-border)' }}>
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-emerald-800 rounded-xl flex items-center justify-center text-emerald-200 font-semibold text-sm">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center font-semibold text-sm" style={{ background: 'rgba(20,168,96,0.1)', color: 'var(--t-primary)' }}>
               {user?.email?.[0]?.toUpperCase() ?? 'U'}
             </div>
             <div className="min-w-0">
-              <p className="text-white text-sm font-medium truncate">{user?.profile?.display_name || user?.email?.split('@')[0] || 'User'}</p>
-              <p className="text-emerald-500 text-xs capitalize">{user?.madhab} school</p>
+              <p className="text-sm font-medium truncate" style={{ color: 'var(--t-text)' }}>{user?.profile?.display_name || user?.email?.split('@')[0] || 'User'}</p>
+              <p className="text-xs capitalize" style={{ color: 'var(--t-text-muted)' }}>{user?.madhab} school</p>
             </div>
           </div>
         </div>

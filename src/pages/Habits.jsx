@@ -585,8 +585,20 @@ function DhikrTab() {
 
 // ─── Main Habits page ─────────────────────────────────────────────────────────
 
+import { useLocation } from 'react-router-dom'
+
 export default function Habits() {
-    const [tab, setTab] = useState('today')
+    const location = useLocation()
+    const queryParams = new URLSearchParams(location.search)
+    const initialTab = queryParams.get('tab') && TABS.includes(queryParams.get('tab')) ? queryParams.get('tab') : 'today'
+    const [tab, setTab] = useState(initialTab)
+    
+    // Update tab if URL changes
+    useEffect(() => {
+        const queryTab = new URLSearchParams(location.search).get('tab')
+        if (queryTab && TABS.includes(queryTab)) setTab(queryTab)
+    }, [location.search])
+
     const ctx = getIslamicContext()
     return (
         <div className="max-w-2xl mx-auto px-4 py-5">

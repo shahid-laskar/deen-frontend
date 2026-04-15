@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, subDays, startOfWeek, eachDayOfInterval } from 'date-fns'
-import { Clock, MapPin, RotateCcw, Star, Users, Plane, ChevronDown } from 'lucide-react'
+import { Clock, MapPin, RotateCcw, Star, Users, Plane, ChevronDown, Navigation } from 'lucide-react'
 import api from '../lib/api'
 import { useAuthStore } from '../store/authStore'
 import { Card, Button, Skeleton, StatCard, ProgressRing, Toggle, Modal } from '../components/ui/index'
@@ -20,6 +20,13 @@ const STATUS_OPTIONS = [
   { value: 'missed',  label: 'Missed', emoji: '❌' },
 ]
 const STATUS_COLOR = { on_time: 'var(--t-primary)', late: 'var(--t-accent)', qadha: '#3b82f6', missed: '#ef4444', excused: 'var(--t-border)' }
+
+const TABS = [
+  { id: 'times',   label: 'Times'   },
+  { id: 'mosques', label: 'Mosques' },
+  { id: 'travel',  label: 'Travel'  },
+  { id: 'stats',   label: 'Stats'   },
+]
 
 function useOfflineTimes(user) {
   return useMemo(() => {
@@ -170,10 +177,11 @@ function PrayerRow({ name, time, log, isNext, onLog }) {
   )
 }
 
-function RamadanBanner({ times }) {
-  const ctx = getIslamicContext()
-  if (!ctx.isRamadan) return null
-  return (
+// ─── Islamic Season Banners ────────────────────────────────────────────────────
+
+function SeasonBanner({ times, ctx }) {
+  // Ramadan
+  if (ctx.isRamadan) return (
     <div style={{ borderRadius: 16, padding: 16, marginBottom: 16, background: 'linear-gradient(135deg, #1a0d40, #2d1060)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
         <span style={{ fontSize: 24 }}>🌙</span>
@@ -190,6 +198,211 @@ function RamadanBanner({ times }) {
           </div>
         ))}
       </div>
+    </div>
+  )
+
+  // Eid ul-Fitr
+  if (ctx.isEidFitr) return (
+    <div style={{ borderRadius: 16, padding: 16, marginBottom: 16, background: 'linear-gradient(135deg, #14532d, #166534)', textAlign: 'center' }}>
+      <p style={{ fontSize: 28 }}>🎉</p>
+      <p style={{ color: 'white', fontWeight: 700, fontSize: 18 }}>Eid ul-Fitr Mubarak!</p>
+      <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, marginTop: 4 }}>Taqabbal Allahu Minna wa Minkum</p>
+    </div>
+  )
+
+  // Eid ul-Adha
+  if (ctx.isEidAdha) return (
+    <div style={{ borderRadius: 16, padding: 16, marginBottom: 16, background: 'linear-gradient(135deg, #451a03, #78350f)', textAlign: 'center' }}>
+      <p style={{ fontSize: 28 }}>🐑</p>
+      <p style={{ color: 'white', fontWeight: 700, fontSize: 18 }}>Eid ul-Adha Mubarak!</p>
+      <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, marginTop: 4 }}>May Allah accept our Qurbani</p>
+    </div>
+  )
+
+  // Dhul Hijjah first 10 days
+  if (ctx.isDhulHijjah10) return (
+    <div style={{ borderRadius: 16, padding: '12px 16px', marginBottom: 16, background: 'linear-gradient(135deg, #1c1917, #292524)', display: 'flex', alignItems: 'center', gap: 12 }}>
+      <span style={{ fontSize: 20 }}>🕌</span>
+      <div>
+        <p style={{ color: '#fbbf24', fontWeight: 700 }}>Day {ctx.hijri.day} of Dhul Hijjah</p>
+        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12 }}>Best days for deeds — these days are more beloved than any others</p>
+      </div>
+    </div>
+  )
+
+  return null
+}
+
+// ─── Mosque Finder Tab ─────────────────────────────────────────────────────────
+
+function MosqueTab({ user }) {
+  const [locationError, setLocationError] = useState(null)
+  const [currentLat, setCurrentLat] = useState(user?.latitude)
+  const [currentLng, setCurrentLng] = useState(user?.longitude)
+  const [detecting, setDetecting] = useState(false)
+
+  const { data: mosques = [], isLoading, refetch } = useQuery({
+    queryKey: ['prayer', 'mosques', currentLat, currentLng],
+    queryFn: () => {
+      if (!currentLat || !currentLng) return []
+      return api.get('/prayer/mosques/nearby', { params: { lat: currentLat, lng: currentLng, radius_km: 50000 } }).then(r => r.data).catch(() => [])
+    },
+    enabled: !!(currentLat && currentLng),
+  })
+
+  const detectLocation = () => {
+    setDetecting(true)
+    navigator.geolocation?.getCurrentPosition(
+      pos => { setCurrentLat(pos.coords.latitude); setCurrentLng(pos.coords.longitude); setDetecting(false) },
+      () => { setLocationError('Could not get your location.'); setDetecting(false) }
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <div>
+            <h3 className="font-display font-semibold" style={{ color: 'var(--t-text)' }}>Nearby Mosques</h3>
+            <p style={{ fontSize: 12, color: 'var(--t-text-muted)', marginTop: 2 }}>
+              {currentLat ? `Closest mosques to your location` : 'Enable location to find nearby mosques'}
+            </p>
+          </div>
+          <button onClick={detectLocation} disabled={detecting}
+            style={{ padding: '8px 14px', borderRadius: 10, background: 'var(--t-primary)', color: 'white', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600, opacity: detecting ? 0.7 : 1 }}>
+            <Navigation size={14} style={{ display: 'inline', marginRight: 4 }} />
+            {detecting ? 'Detecting…' : 'Update Location'}
+          </button>
+        </div>
+        {locationError && <p style={{ color: '#ef4444', fontSize: 13, marginBottom: 8 }}>{locationError}</p>}
+        {isLoading ? (
+          <div className="space-y-2">{[1,2,3].map(i => <Skeleton key={i} className="h-16" />)}</div>
+        ) : mosques.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--t-text-muted)' }}>
+            <span style={{ fontSize: 32 }}>🕌</span>
+            <p style={{ marginTop: 8, fontSize: 14 }}>
+              {currentLat ? 'No mosques found nearby. Try increasing radius.' : 'Set your location to discover local mosques.'}
+            </p>
+            {!currentLat && (
+              <Button variant="primary" onClick={detectLocation} className="mt-3">Detect My Location</Button>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {mosques.map(m => (
+              <div key={m.id} style={{ padding: '12px 14px', borderRadius: 12, border: '0.5px solid var(--t-border)', background: 'var(--t-bg-card)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                  <div>
+                    <p style={{ fontWeight: 600, fontSize: 14, color: 'var(--t-text)' }}>
+                      {m.name}
+                      {m.is_verified && <span style={{ marginLeft: 6, fontSize: 10, color: 'var(--t-primary)', background: 'rgba(20,168,96,0.1)', padding: '2px 6px', borderRadius: 99 }}>✓ Verified</span>}
+                    </p>
+                    {m.address && <p style={{ fontSize: 12, color: 'var(--t-text-muted)', marginTop: 2 }}>{m.address}</p>}
+                    <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+                      {m.has_jumuah && <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 99, background: 'rgba(201,135,10,0.1)', color: 'var(--t-accent)' }}>Jumu'ah</span>}
+                      {m.madhab && <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 99, background: 'var(--t-border)', color: 'var(--t-text-muted)', textTransform: 'capitalize' }}>{m.madhab}</span>}
+                    </div>
+                  </div>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--t-text-muted)', whiteSpace: 'nowrap', marginLeft: 8 }}>{m.distance_km} km</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {/* Seed sample data button */}
+      <button onClick={() => api.post('/prayer/mosques/seed').then(() => refetch())}
+        style={{ width: '100%', padding: '10px', borderRadius: 10, border: '1px dashed var(--t-border)', background: 'transparent', color: 'var(--t-text-muted)', fontSize: 12, cursor: 'pointer' }}>
+        + Load sample mosque data
+      </button>
+    </div>
+  )
+}
+
+// ─── Travel Mode Tab ───────────────────────────────────────────────────────────
+
+function TravelTab({ user }) {
+  const [detecting, setDetecting] = useState(false)
+  const [currentLat, setCurrentLat] = useState(null)
+  const [currentLng, setCurrentLng] = useState(null)
+
+  const { data: travelInfo, isLoading } = useQuery({
+    queryKey: ['prayer', 'travel', currentLat, currentLng],
+    queryFn: () => api.get('/prayer/travel-mode', { params: { lat: currentLat, lng: currentLng } }).then(r => r.data).catch(() => null),
+    enabled: !!(currentLat && currentLng),
+  })
+
+  const detect = () => {
+    setDetecting(true)
+    navigator.geolocation?.getCurrentPosition(
+      pos => { setCurrentLat(pos.coords.latitude); setCurrentLng(pos.coords.longitude); setDetecting(false) },
+      () => { toast.error('Could not detect location'); setDetecting(false) }
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <h3 className="font-display font-semibold mb-2" style={{ color: 'var(--t-text)' }}>Travel Mode (Qasr)</h3>
+        <p style={{ fontSize: 13, color: 'var(--t-text-muted)', marginBottom: 16 }}>
+          Detect your current location to check if you qualify for Qasr (shortening 4-rakah prayers to 2).
+        </p>
+        <Button variant="primary" onClick={detect} loading={detecting} className="w-full">
+          <Plane size={16} style={{ marginRight: 6 }} />
+          Detect My Position
+        </Button>
+      </Card>
+
+      {isLoading && <Skeleton className="h-32" />}
+
+      {travelInfo && (
+        <Card>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, padding: '12px 14px', borderRadius: 12,
+            background: travelInfo.is_travelling ? 'rgba(59,130,246,0.1)' : 'rgba(20,168,96,0.1)',
+            border: `1px solid ${travelInfo.is_travelling ? '#3b82f6' : 'var(--t-primary)'}`,
+          }}>
+            <span style={{ fontSize: 28 }}>{travelInfo.is_travelling ? '✈️' : '🏠'}</span>
+            <div>
+              <p style={{ fontWeight: 700, color: 'var(--t-text)' }}>
+                {travelInfo.is_travelling ? 'You are travelling' : 'You are at home'}
+              </p>
+              <p style={{ fontSize: 13, color: 'var(--t-text-muted)', marginTop: 2 }}>
+                {travelInfo.distance_from_home_km} km from home location
+              </p>
+            </div>
+          </div>
+
+          {travelInfo.is_travelling && (
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)', marginBottom: 8 }}>
+                <p style={{ fontWeight: 600, fontSize: 13, color: '#3b82f6' }}>Qasr Prayers (2 rakat)</p>
+                <p style={{ fontSize: 12, color: 'var(--t-text-muted)', marginTop: 4 }}>Dhuhr, Asr, and Isha may be shortened to 2 rakat while travelling.</p>
+              </div>
+              <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)' }}>
+                <p style={{ fontWeight: 600, fontSize: 13, color: '#a855f7' }}>Jam' (Combining)</p>
+                <p style={{ fontSize: 12, color: 'var(--t-text-muted)', marginTop: 4 }}>You may combine Dhuhr+Asr and Maghrib+Isha when needed while travelling.</p>
+              </div>
+            </div>
+          )}
+
+          <div style={{ padding: '12px 14px', borderRadius: 10, background: 'var(--t-bg-card)', border: '0.5px solid var(--t-border)' }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--t-text-muted)', textTransform: 'uppercase', marginBottom: 6, letterSpacing: '0.05em' }}>
+              {user?.madhab || 'Hanafi'} Scholar Notes
+            </p>
+            <p style={{ fontSize: 13, color: 'var(--t-text)', lineHeight: 1.6 }}>{travelInfo.madhab_notes}</p>
+          </div>
+        </Card>
+      )}
+
+      {!travelInfo && !isLoading && (
+        <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--t-text-muted)' }}>
+          <span style={{ fontSize: 40 }}>✈️</span>
+          <p style={{ marginTop: 12, fontSize: 14 }}>Tap "Detect My Position" above to check your travel status.</p>
+          <p style={{ marginTop: 6, fontSize: 12 }}>Your home location is set in Settings.</p>
+        </div>
+      )}
     </div>
   )
 }
@@ -245,7 +458,7 @@ export default function Prayer() {
   const nextPrayer = useMemo(() => times ? getNextPrayer(times) : null, [times])
   const ctx = getIslamicContext()
 
-  const { data: summary, isLoading: sumLoading } = useQuery({ queryKey: ['prayer','today'],  queryFn: () => api.get('/prayer/summary/today').then(r=>r.data).catch(()=>null) })
+  const { data: summary, isLoading: sumLoading } = useQuery({ queryKey: ['prayer','today', today],  queryFn: () => api.get(`/prayer/summary/today?date=${today}`).then(r=>r.data).catch(()=>null) })
   const { data: streak }                          = useQuery({ queryKey: ['prayer','streak'], queryFn: () => api.get('/prayer/streak').then(r=>r.data).catch(()=>null) })
 
   const { mutate: logPrayer, isPending } = useMutation({
@@ -261,11 +474,13 @@ export default function Prayer() {
           <h1 className="font-display text-2xl font-bold" style={{ color: 'var(--t-text)' }}>Prayer</h1>
           <p style={{ fontSize: 13, color: 'var(--t-accent)' }}>{ctx.formatted}</p>
         </div>
-        <div style={{ display: 'flex', gap: 2, padding: 4, borderRadius: 12, background: 'var(--t-bg-card)', border: '0.5px solid var(--t-border)' }}>
-          {[{id:'times',label:'Times'},{id:'stats',label:'Stats'}].map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: '8px 16px', borderRadius: 9, fontSize: 13, fontWeight: 500, background: tab === t.id ? 'var(--t-primary)' : 'transparent', color: tab === t.id ? 'white' : 'var(--t-text-muted)', border: 'none', cursor: 'pointer' }}>{t.label}</button>
-          ))}
-        </div>
+      </div>
+
+      {/* Tab bar */}
+      <div style={{ display: 'flex', gap: 2, padding: 4, borderRadius: 12, background: 'var(--t-bg-card)', border: '0.5px solid var(--t-border)', marginBottom: 16, overflowX: 'auto' }}>
+        {TABS.map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: '8px 16px', borderRadius: 9, fontSize: 13, fontWeight: 500, background: tab === t.id ? 'var(--t-primary)' : 'transparent', color: tab === t.id ? 'white' : 'var(--t-text-muted)', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s' }}>{t.label}</button>
+        ))}
       </div>
 
       {tab === 'times' && <>
@@ -275,7 +490,7 @@ export default function Prayer() {
             <p style={{ fontSize: 13, color: 'var(--t-text)' }}>Set your location in <a href="/settings" style={{ color: 'var(--t-accent)' }}>Settings</a> for accurate times.</p>
           </div>
         )}
-        <RamadanBanner times={times} />
+        <SeasonBanner times={times} ctx={ctx} />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 16 }}>
           {[['Current streak', streak?.current_streak ?? '—', 'days'], ['Today', `${summary?.total_on_time ?? 0}/5`, 'on time'], ['This week', streak ? `${Math.round(streak.this_week_completion)}%` : '—', 'completion']].map(([label, value, sub]) => (
             <div key={label} style={{ borderRadius: 12, padding: '12px 8px', textAlign: 'center', background: 'var(--t-bg-card)', border: '0.5px solid var(--t-border)' }}>
@@ -306,7 +521,9 @@ export default function Prayer() {
         <p style={{ textAlign: 'center', fontSize: 11, color: 'var(--t-text-muted)', marginBottom: 16 }}>Also track: {['jumuah','tahajjud','duha'].map((p,i) => <React.Fragment key={p}>{i > 0 && ' · '}<button onClick={() => setLogModal(p)} style={{ color: 'var(--t-primary)', textTransform: 'capitalize' }}>{p}</button></React.Fragment>)}</p>
       </>}
 
-      {tab === 'stats' && <StatisticsPanel />}
+      {tab === 'mosques' && <MosqueTab user={user} />}
+      {tab === 'travel'  && <TravelTab user={user} />}
+      {tab === 'stats'   && <StatisticsPanel />}
 
       <LogModal prayerName={logModal} onClose={() => setLogModal(null)} onSave={logPrayer} isPending={isPending} />
     </div>
