@@ -1,0 +1,19 @@
+{
+  "name": "Deen — Islamic Lifestyle",
+  "short_name": "Deen",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#051C14",
+  "theme_color": "#0a3d24",
+  "description": "Your Islamic lifestyle companion. Prayer, Quran, Habits & Wellness. Free forever.",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/deen-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" },
+    { "src": "/deen-icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/deen-icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "screenshots": [],
+  "categories": ["lifestyle", "religion", "health"],
+  "lang": "en",
+  "dir": "ltr"
+}

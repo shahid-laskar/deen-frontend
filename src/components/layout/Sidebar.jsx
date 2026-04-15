@@ -4,7 +4,8 @@ import { clsx } from 'clsx'
 import {
   LayoutDashboard, Clock, BookOpen, Target, BookMarked,
   CheckSquare, Sparkles, Settings, Moon, Sun, Heart, LogOut,
-  Utensils, Dumbbell, Baby, Compass, Users, HandHeart, ChevronRight
+  Utensils, Dumbbell, Baby, Compass, Users, HandHeart, ChevronRight,
+  DollarSign, Activity, Shield, Crown
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useAppStore } from '../../store/appStore'
@@ -31,8 +32,11 @@ const V2_NAV = [
 ]
 
 const V3_NAV = [
-  { to: '/community', icon: Users,     label: 'Community' },
-  { to: '/waqf',      icon: HandHeart, label: 'Waqf & Sadaqah' },
+  { to: '/community', icon: Users,       label: 'Community' },
+  { to: '/waqf',      icon: HandHeart,   label: 'Waqf & Sadaqah' },
+  { to: '/finance',   icon: DollarSign,  label: 'Islamic Finance' },
+  { to: '/family',    icon: Baby,        label: 'Family & Home' },
+  { to: '/wellness',  icon: Activity,    label: 'Wellness' },
 ]
 
 const FEMALE_NAV = [{ to: '/female', icon: Heart, label: "Sister's Space" }]
@@ -120,7 +124,9 @@ export default function Sidebar() {
 
         {/* Bottom */}
         <div className="px-3 py-4 border-t border-emerald-900/50 space-y-0.5">
+          <NavItem to="/subscription" icon={Crown} label="Upgrade Plan" />
           <NavItem to="/settings" icon={Settings} label="Settings" />
+          {user?.role === 'admin' && <NavItem to="/admin" icon={Shield} label="Admin" />}
           <button onClick={toggleTheme} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-emerald-400 hover:bg-emerald-900/50 hover:text-emerald-200 transition-all">
             {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             {theme === 'dark' ? 'Light mode' : 'Dark mode'}

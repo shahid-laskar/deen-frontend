@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/deen-icon.svg" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0a3d24" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="description" content="Deen — Your Islamic lifestyle companion. Free forever." />
+    <title>Deen — Islamic Lifestyle</title>
+
+    <!-- Google Fonts: Playfair Display + DM Sans + Amiri -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=Amiri:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <script type="module" crossorigin src="/assets/index-DkmoQbsI.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BltUQM5Y.css">
+  </head>
+  <body class="font-body">
+    <div id="root"></div>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').then(reg => {
+            console.log('[SW] Registered:', reg.scope)
+          }).catch(err => {
+            console.warn('[SW] Registration failed:', err)
+          })
+        })
+      }
+    </script>
+  </body>
+</html>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
-import { Palette, User, Globe, Bell, Lock, Check } from 'lucide-react'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { Palette, User, Globe, Bell, Lock, Check, Shield, Crown, Download } from 'lucide-react'
 import api from '../lib/api'
 import { useAuthStore } from '../store/authStore'
 import { useThemeStore, FONT_OPTIONS, TEXT_SCALES, LINE_HEIGHTS } from '../store/themeStore'
@@ -9,11 +9,12 @@ import { Card, Button, Input, Toggle } from '../components/ui/index'
 import toast from 'react-hot-toast'
 
 const TABS = [
-  { id: 'appearance', label: 'Appearance', icon: Palette },
-  { id: 'profile',    label: 'Profile',    icon: User },
-  { id: 'prayer',     label: 'Prayer',     icon: Globe },
-  { id: 'notifications', label: 'Alerts', icon: Bell },
-  { id: 'privacy',    label: 'Privacy',    icon: Lock },
+  { id: 'appearance',    label: 'Appearance',    icon: Palette },
+  { id: 'profile',       label: 'Profile',       icon: User },
+  { id: 'prayer',        label: 'Prayer',        icon: Globe },
+  { id: 'notifications', label: 'Alerts',        icon: Bell },
+  { id: 'privacy',       label: 'Privacy',       icon: Lock },
+  { id: 'subscription',  label: 'Plan',          icon: Crown },
 ]
 
 function ThemeGrid({ themeId, setTheme }) {
@@ -234,6 +235,145 @@ function PrayerTab() {
   )
 }
 
+function NotificationsTab() {
+  const [prefs, setPrefs] = useState({
+    prayer_adhan: true, prayer_pre_adhan: true, prayer_qada_reminder: true,
+    quran_daily_reminder: true, hifz_review_due: true, habit_streaks: true,
+    islamic_calendar: true, zakat_reminders: true, journal_wellbeing: true,
+    community_replies: true, dnd_start: '22:00', dnd_end: '07:00',
+  })
+
+  const { mutate: save, isPending } = useMutation({
+    mutationFn: () => api.put('/notifications/preferences', prefs),
+    onSuccess: () => toast.success('Notification preferences saved!'),
+  })
+
+  const toggle = (key) => setPrefs(p => ({ ...p, [key]: !p[key] }))
+
+  const GROUPS = [
+    { label: 'Prayer', keys: ['prayer_adhan', 'prayer_pre_adhan', 'prayer_qada_reminder'], labels: ['Adhan reminder', 'Pre-adhan (10 min)', 'Missed prayer reminder'] },
+    { label: 'Quran & Hifz', keys: ['quran_daily_reminder', 'hifz_review_due'], labels: ['Daily Quran reminder', 'Hifz review due'] },
+    { label: 'Habits & Streaks', keys: ['habit_streaks'], labels: ['Habit streak alerts'] },
+    { label: 'Islamic Calendar', keys: ['islamic_calendar', 'zakat_reminders'], labels: ['Ramadan, Eid & events', 'Zakat hawl reminder'] },
+    { label: 'Wellbeing', keys: ['journal_wellbeing', 'community_replies'], labels: ['Journal nudges', 'Community replies'] },
+  ]
+
+  return (
+    <div className="space-y-6">
+      {GROUPS.map(group => (
+        <Card key={group.label} className="space-y-0">
+          <p className="text-xs font-semibold uppercase tracking-wider text-emerald-600 mb-3">{group.label}</p>
+          {group.keys.map((key, i) => (
+            <div key={key} className="flex items-center justify-between py-3 border-b last:border-0" style={{ borderColor: 'var(--t-border)' }}>
+              <span className="text-sm" style={{ color: 'var(--t-text)' }}>{group.labels[i]}</span>
+              <Toggle checked={prefs[key]} onChange={() => toggle(key)} />
+            </div>
+          ))}
+        </Card>
+      ))}
+      <Card className="space-y-3">
+        <p className="text-xs font-semibold uppercase tracking-wider text-emerald-600">Do Not Disturb</p>
+        <p className="text-xs" style={{ color: 'var(--t-text-muted)' }}>Prayer adhan will always override DND.</p>
+        <div className="flex gap-3">
+          <div className="flex-1">
+            <label className="label text-xs">DND Start</label>
+            <input type="time" className="input" value={prefs.dnd_start} onChange={e => setPrefs(p => ({ ...p, dnd_start: e.target.value }))} />
+          </div>
+          <div className="flex-1">
+            <label className="label text-xs">DND End</label>
+            <input type="time" className="input" value={prefs.dnd_end} onChange={e => setPrefs(p => ({ ...p, dnd_end: e.target.value }))} />
+          </div>
+        </div>
+      </Card>
+      <Button variant="primary" className="w-full" onClick={() => save()} loading={isPending}>Save Alert Settings</Button>
+    </div>
+  )
+}
+
+function PrivacyTab() {
+  const { logout } = useAuthStore()
+  const [analyticsOptOut, setAnalyticsOptOut] = useState(false)
+  const [exportPending, setExportPending] = useState(false)
+
+  const requestExport = async () => {
+    setExportPending(true)
+    try {
+      await api.post('/user/data-export')
+      toast.success('✅ Export queued! You\'ll receive a download link within 10 minutes.')
+    } catch { toast.error('Export failed. Please try again.') }
+    finally { setExportPending(false) }
+  }
+
+  const deleteAccount = () => {
+    if (window.confirm('This will permanently delete your account after 30 days. Are you sure?')) {
+      api.delete('/user/account').then(() => { toast.success('Account scheduled for deletion.'); logout() })
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card className="space-y-4">
+        <p className="text-xs font-semibold uppercase tracking-wider text-emerald-600">Analytics</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium" style={{ color: 'var(--t-text)' }}>Usage analytics</p>
+            <p className="text-xs" style={{ color: 'var(--t-text-muted)' }}>Anonymous usage data to improve the app. No PII ever shared.</p>
+          </div>
+          <Toggle checked={!analyticsOptOut} onChange={() => setAnalyticsOptOut(p => !p)} />
+        </div>
+      </Card>
+
+      <Card className="space-y-4">
+        <p className="text-xs font-semibold uppercase tracking-wider text-emerald-600">Your Data (GDPR)</p>
+        <p className="text-sm" style={{ color: 'var(--t-text-muted)' }}>
+          You own your data. Export everything or permanently delete your account.
+        </p>
+        <Button variant="secondary" className="w-full flex items-center gap-2 justify-center"
+          onClick={requestExport} loading={exportPending}>
+          <Download size={15} /> Export All My Data (ZIP)
+        </Button>
+        <p className="text-xs text-center" style={{ color: 'var(--t-text-muted)' }}>Includes: prayer logs, journal, habits, Quran progress, health data and more in JSON format</p>
+      </Card>
+
+      <Card className="space-y-4 border-red-200 dark:border-red-900/30">
+        <p className="text-xs font-semibold uppercase tracking-wider text-red-500">Danger Zone</p>
+        <p className="text-sm" style={{ color: 'var(--t-text-muted)' }}>Deleting your account is permanent after 30 days. Your data will be fully erased.</p>
+        <Button variant="secondary" className="w-full text-red-500 border-red-200 hover:bg-red-50" onClick={deleteAccount}>
+          🗑️ Delete My Account
+        </Button>
+      </Card>
+    </div>
+  )
+}
+
+function SubscriptionTab() {
+  const currentPlan = 'free'
+  return (
+    <div className="space-y-5">
+      <Card className="p-5">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 bg-emerald-700 rounded-xl flex items-center justify-center"><Crown size={18} className="text-white" /></div>
+          <div>
+            <p className="font-semibold" style={{ color: 'var(--t-text)' }}>Current Plan: <span className="capitalize">{currentPlan}</span></p>
+            <p className="text-xs" style={{ color: 'var(--t-text-muted)' }}>Seeker — free forever</p>
+          </div>
+        </div>
+        <Button variant="primary" className="w-full" onClick={() => window.location.href = '/subscription'}>
+          Upgrade to Devoted ✨
+        </Button>
+      </Card>
+      <Card>
+        <p className="text-xs font-semibold uppercase tracking-wider text-emerald-600 mb-3">Your Entitlements</p>
+        {['Prayer times & Qibla', 'Basic Quran Reader', '3 Habits', '3 Journal entries/month', 'Community feed'].map(f => (
+          <div key={f} className="flex items-center gap-2 py-2 border-b last:border-0 text-sm" style={{ borderColor: 'var(--t-border)', color: 'var(--t-text)' }}>
+            <Check size={13} className="text-emerald-500" /> {f}
+          </div>
+        ))}
+      </Card>
+    </div>
+  )
+}
+
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('appearance')
   return (
@@ -250,9 +390,9 @@ export default function Settings() {
       {activeTab === 'appearance'    && <AppearanceTab />}
       {activeTab === 'profile'       && <ProfileTab />}
       {activeTab === 'prayer'        && <PrayerTab />}
-      {activeTab === 'notifications' && <p className="text-sm" style={{ color: 'var(--t-text-muted)' }}>Notification settings — Phase 10</p>}
-      {activeTab === 'privacy'       && <p className="text-sm" style={{ color: 'var(--t-text-muted)' }}>Privacy settings — Phase 10</p>}
-
+      {activeTab === 'notifications' && <NotificationsTab />}
+      {activeTab === 'privacy'       && <PrivacyTab />}
+      {activeTab === 'subscription'  && <SubscriptionTab />}
     </div>
   )
 }
