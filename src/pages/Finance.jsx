@@ -217,7 +217,7 @@ function HalalScreener() {
               {statusConfig[result.status]?.label} — {result.ticker}
             </div>
             <p className="text-sm text-emerald-800 dark:text-emerald-300">{result.reason}</p>
-          </div>
+          </motion.div>
         )}
       </Card>
 
