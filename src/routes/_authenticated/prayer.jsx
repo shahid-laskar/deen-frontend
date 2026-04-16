@@ -307,8 +307,9 @@ function SeasonBanner({ times, ctx }) {
 
 // ─── Mosque Tab ───────────────────────────────────────────────────────────────
 function MosqueTab({ user }) {
-  const [currentLat, setCurrentLat] = useState(user?.latitude)
-  const [currentLng, setCurrentLng] = useState(user?.longitude)
+  const isMeccaDefault = user?.latitude === 21.4225 && user?.longitude === 39.8262
+  const [currentLat, setCurrentLat] = useState(isMeccaDefault ? null : user?.latitude)
+  const [currentLng, setCurrentLng] = useState(isMeccaDefault ? null : user?.longitude)
   const [detecting, setDetecting] = useState(false)
   const [locationError, setLocationError] = useState(null)
 

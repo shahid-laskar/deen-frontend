@@ -112,7 +112,9 @@ function QiblaPage() {
 
   const lat = user?.latitude
   const lng = user?.longitude
-  const hasCoords = !!(lat && lng)
+  const hasCoordsRaw = !!(lat && lng)
+  const isMeccaDefault = lat === 21.4225 && lng === 39.8262
+  const hasCoords = hasCoordsRaw && !isMeccaDefault
 
   const qiblaBearing = hasCoords ? calcBearing(lat, lng, KAABA.lat, KAABA.lng) : null
   const distKm       = hasCoords ? calcDistKm(lat, lng, KAABA.lat, KAABA.lng)  : null

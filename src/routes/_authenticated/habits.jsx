@@ -16,8 +16,8 @@ export const Route = createFileRoute('/_authenticated/habits')({
   component: HabitsPage,
 })
 
-const TABS = ['today', 'library', 'analytics']
-const TAB_LABELS = { today: 'Today', library: 'Library', analytics: 'Analytics' }
+const TABS = ['today', 'library', 'analytics', 'dhikr']
+const TAB_LABELS = { today: 'Today', library: 'Library', analytics: 'Analytics', dhikr: 'Dhikr' }
 
 const CAT_ICONS = { ibadah:'🕌', quran:'📖', dhikr:'📿', sunnah:'🌙', health:'💪', learning:'📚', personal:'✅', family:'👨‍👩‍👧', fasting:'🌙', sadaqah:'💚', avoid:'🚫' }
 const DIFF_COLOR = { easy:'text-green-500 bg-green-500/10', medium:'text-orange-500 bg-orange-500/10', hard:'text-red-500 bg-red-500/10', epic:'text-purple-500 bg-purple-500/10' }
@@ -128,7 +128,10 @@ function HabitRow({ habit, onLog, onDelete }) {
 
 function HabitsPage() {
   const qc = useQueryClient()
-  const [tab, setTab] = useState('today')
+  const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '')
+  const tTab = searchParams.get('tab')
+  const initialTab = TABS.includes(tTab) ? tTab : 'today'
+  const [tab, setTab] = useState(initialTab)
   const [modal, setModal] = useState(false)
   const [form, setForm] = useState({ name: '', category: 'ibadah', difficulty: 'easy', habit_type: 'binary', target_value: 1, icon: '' })
   
@@ -240,6 +243,8 @@ function HabitsPage() {
           </div>
         )}
 
+        {tab === 'dhikr' && <DhikrTab />}
+
         {tab === 'library' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {[
@@ -305,3 +310,105 @@ function HabitsPage() {
     </div>
   )
 }
+
+function DhikrTab() {
+  const qc = useQueryClient()
+  const [activeSession, setActiveSession] = useState(null)
+  const [customTarget, setCustomTarget] = useState(33)
+
+  const { data: presets = [] } = useQuery({ queryKey: ['dhikr','presets'], queryFn: () => api.get('/dhikr/presets').then(r => r.data).catch(() => []) })
+  const { data: sessions = [] } = useQuery({ queryKey: ['dhikr','sessions'], queryFn: () => api.get('/dhikr/sessions').then(r => r.data).catch(() => []) })
+  const { data: history = [] } = useQuery({ queryKey: ['dhikr','history'], queryFn: () => api.get('/dhikr/history').then(r => r.data).catch(() => []) })
+
+  const { mutate: startSession } = useMutation({
+    mutationFn: (preset) => api.post('/dhikr/sessions', { dhikr_type: preset.type, target_count: customTarget }),
+    onSuccess: (data) => { setActiveSession(data.data); qc.invalidateQueries({ queryKey: ['dhikr'] }) },
+  })
+
+  const { mutate: increment } = useMutation({
+    mutationFn: () => api.post(`/dhikr/sessions/${activeSession.id}/increment`, { increment: 1 }),
+    onSuccess: (data) => {
+      setActiveSession(data.data)
+      if (data.data.is_completed) { toast.success('Alhamdulillah! Session complete 🤲'); qc.invalidateQueries({ queryKey: ['dhikr'] }) }
+    },
+  })
+
+  const tap = React.useCallback(() => {
+    if (window.navigator?.vibrate) window.navigator.vibrate(8)
+    if (activeSession && !activeSession.is_completed) increment()
+  }, [activeSession, increment])
+
+  const pct = activeSession ? (activeSession.current_count / activeSession.target_count) * 100 : 0
+
+  if (activeSession && !activeSession.is_completed) {
+    const preset = presets.find(p => p.type === activeSession.dhikr_type)
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8 animate-in zoom-in-95 sequence">
+        <div className="text-center">
+          <p className="text-xs font-bold text-muted-foreground mb-2 uppercase tracking-widest">{preset?.label}</p>
+          <p className="font-amiri text-5xl leading-relaxed text-primary" dir="rtl">{preset?.arabic}</p>
+        </div>
+
+        <button onClick={tap} onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'} onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'} className="relative w-56 h-56 rounded-full border-0 cursor-pointer flex items-center justify-center shadow-md transition-transform duration-75 select-none" style={{ background: `conic-gradient(var(--t-primary) ${pct}%, oklch(var(--border)) ${pct}%)` }}>
+          <div className="w-48 h-48 rounded-full bg-card flex flex-col items-center justify-center border-4 border-background">
+            <span className="text-6xl font-black text-foreground leading-none mb-1">{activeSession.current_count}</span>
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">of {activeSession.target_count}</span>
+          </div>
+        </button>
+
+        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-4">Tap the circle to count</p>
+
+        <Button variant="outline" onClick={() => setActiveSession(null)}>← Save & Pause</Button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-lg font-bold text-foreground">Dhikr Counter</h2>
+        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-0.5">Keep your tongue moist with remembrance</p>
+      </div>
+
+      <Card className="p-5">
+        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-3 block">Target count</p>
+        <div className="flex gap-2 mb-4">
+          {[33, 99, 100, 1000].map(n => (
+            <button key={n} onClick={() => setCustomTarget(n)} className={cn("flex-1 py-2 rounded-lg text-sm font-bold transition-all", customTarget===n ? 'bg-primary/10 text-primary border border-primary/30' : 'bg-muted text-muted-foreground hover:bg-muted/80')}>{n}</button>
+          ))}
+        </div>
+        <Input type="number" placeholder="Custom target" value={customTarget} onChange={e => setCustomTarget(Number(e.target.value) || 33)} />
+      </Card>
+
+      <div className="grid gap-3">
+        {presets.map(preset => (
+          <button key={preset.type} onClick={() => startSession(preset)} className="w-full flex items-center gap-4 p-4 rounded-xl border border-border bg-card hover:border-primary/40 transition-colors text-left group">
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-sm text-foreground">{preset.label}</p>
+              <p className="font-amiri text-xl text-primary text-right rtl mt-2">{preset.arabic}</p>
+            </div>
+            <Badge variant="secondary" className="shrink-0 text-[10px] uppercase tracking-widest font-black">×{customTarget}</Badge>
+          </button>
+        ))}
+      </div>
+
+      {sessions.length > 0 && (
+        <div className="pt-4 border-t border-border mt-4">
+          <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-3">Today's active/completed</h3>
+          <div className="space-y-2">
+            {sessions.filter(s => s.session_date === format(new Date(), 'yyyy-MM-dd')).map(s => (
+              <Card key={s.id} className="p-3 flex items-center justify-between">
+                <span className="text-sm font-bold text-foreground capitalize truncate">{s.dhikr_type.replace(/_/g,' ')}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{s.current_count}/{s.target_count}</span>
+                  {s.is_completed && <Check className="h-4 w-4 text-primary" />}
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+

@@ -295,7 +295,7 @@ function HabitsSummary({ habits }) {
 // ─── Quick Actions ────────────────────────────────────────────────────────────
 const ACTIONS = [
   { title: 'Quran',     icon: BookOpen,    color: 'bg-primary/10 text-primary', to: '/quran',     desc: 'Read & Listen' },
-  { title: 'Dhikr',     icon: Sparkles,    color: 'bg-gold/15 text-gold',       to: '/habits',    desc: 'Tasbeeh Counter' },
+  { title: 'Dhikr',     icon: Sparkles,    color: 'bg-gold/15 text-gold',       to: '/habits',    search: { tab: 'dhikr' }, desc: 'Tasbeeh Counter' },
   { title: 'Journal',   icon: NotebookPen, color: 'bg-sage/15 text-sage',       to: '/journal',   desc: 'Daily Reflection' },
   { title: 'Habits',    icon: Heart,       color: 'bg-warm/10 text-warm',       to: '/habits',    desc: 'Track Progress' },
   { title: 'Qibla',     icon: Compass,     color: 'bg-primary/10 text-primary', to: '/qibla',     desc: 'Find Direction' },
@@ -313,6 +313,7 @@ function QuickActions() {
           <Link
             key={action.title}
             to={action.to}
+            search={action.search}
             className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-4 transition-all duration-200 hover:shadow-md hover:border-primary/20 hover:-translate-y-0.5"
           >
             <div className={cn('flex h-11 w-11 items-center justify-center rounded-xl transition-transform group-hover:scale-110', action.color)}>
