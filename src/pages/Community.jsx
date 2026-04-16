@@ -10,7 +10,7 @@ import { Card, Button, Input, Modal, Badge, EmptyState, Skeleton, Textarea } fro
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
 import { clsx } from 'clsx'
-import { motion, AnimatePresence } from 'framer-motion'
+
 
 const TABS = [
   { id: 'feed', label: 'Feed', icon: MessageSquare },
@@ -534,14 +534,14 @@ export default function Community() {
         ))}
       </div>
 
-      <AnimatePresence mode="wait">
-        <motion.div key={tab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+      
+        <div>
           {tab === 'feed' && <CommunityFeed />}
           {tab === 'qa' && <ScholarQA />}
           {tab === 'circles' && <AccountabilityCircles />}
           {tab === 'halaqah' && <HalaqahCircles />}
-        </motion.div>
-      </AnimatePresence>
+        </div>
+      
     </div>
   )
 }

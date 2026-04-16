@@ -9,7 +9,7 @@ import api from '../lib/api'
 import { Card, Button, Input, Badge, Skeleton } from '../components/ui/index'
 import toast from 'react-hot-toast'
 import { clsx } from 'clsx'
-import { motion, AnimatePresence } from 'framer-motion'
+
 
 const TABS = [
   { id: 'zakat', label: 'Zakat', icon: Calculator },
@@ -88,8 +88,8 @@ function ZakatCalculator() {
         ))}
       </div>
 
-      <AnimatePresence mode="wait">
-        <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+      
+        <div>
           {step === 0 && (
             <Card className="p-6 space-y-5">
               <div>
@@ -170,8 +170,8 @@ function ZakatCalculator() {
               </div>
             </div>
           )}
-        </motion.div>
-      </AnimatePresence>
+        </div>
+      
     </div>
   )
 }
@@ -217,7 +217,7 @@ function HalalScreener() {
               {statusConfig[result.status]?.label} — {result.ticker}
             </div>
             <p className="text-sm text-emerald-800 dark:text-emerald-300">{result.reason}</p>
-          </motion.div>
+          </div>
         )}
       </Card>
 
@@ -280,7 +280,7 @@ function MortgageCalculator() {
       </Card>
 
       {result && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 gap-4">
+        <div>
           <Card className="p-5 border-2 border-red-200 dark:border-red-900/30">
             <div className="text-xs text-red-500 font-semibold uppercase tracking-wide mb-3">Conventional (Riba)</div>
             <div className="text-2xl font-display font-bold text-red-600">${result.conventional.monthly_payment.toLocaleString()}<span className="text-sm text-muted">/mo</span></div>
@@ -293,7 +293,7 @@ function MortgageCalculator() {
             <div className="text-sm text-muted mt-1">Total: ${result.islamic.total_cost.toLocaleString()}</div>
             <Badge variant="green" className="mt-3 text-xs">{result.islamic.type}</Badge>
           </Card>
-        </motion.div>
+        </div>
       )}
 
       <Card className="p-5 text-sm text-muted space-y-2">
@@ -392,14 +392,14 @@ export default function Finance() {
         ))}
       </div>
 
-      <AnimatePresence mode="wait">
-        <motion.div key={tab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+      
+        <div>
           {tab === 'zakat' && <ZakatCalculator />}
           {tab === 'screener' && <HalalScreener />}
           {tab === 'mortgage' && <MortgageCalculator />}
           {tab === 'charity' && <CharityDirectory />}
-        </motion.div>
-      </AnimatePresence>
+        </div>
+      
     </div>
   )
 }
