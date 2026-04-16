@@ -89,6 +89,8 @@ export default function App() {
             <Route path="/dashboard"     element={<Dashboard />} />
             <Route path="/prayer"        element={<Prayer />} />
             <Route path="/quran"         element={<Quran />} />
+            <Route path="/quran/:surahId" element={<Quran />} />
+            <Route path="/quran/:surahId/:ayahId" element={<Quran />} />
             <Route path="/habits"        element={<Habits />} />
             <Route path="/journal"       element={<Journal />} />
             <Route path="/tasks"         element={<Tasks />} />

@@ -13,7 +13,7 @@
  */
 
 const DB_NAME    = 'deen-offline'
-const DB_VERSION = 1
+const DB_VERSION = 2
 
 // Object store definitions
 const STORES = {
@@ -23,6 +23,7 @@ const STORES = {
   quranPosition: { keyPath: 'user_id' },         // { user_id, surah, ayah, juz, updated_at }
   hifzQueue:     { keyPath: 'entry_id' },        // { entry_id, surah, ayah_from, due_date }
   settings:      { keyPath: 'key' },             // generic key-value store
+  recordings:    { keyPath: 'id', autoIncrement: true }, // { id, surah_id, ayah_id, blob, created_at, uploaded }
 }
 
 let _db = null
@@ -161,6 +162,24 @@ export const offlineDB = {
   async getSetting(key) {
     const record = await get('settings', key)
     return record?.value ?? null
+  },
+
+  // ── Recitation Recordings ────────────────────────────────────────────────
+  async saveRecitation(recording) {
+    return put('recordings', {
+      ...recording,
+      created_at: recording.created_at || Date.now(),
+      uploaded: Boolean(recording.uploaded),
+    })
+  },
+  async getRecentRecitations(limit = 20) {
+    const records = await getAll('recordings')
+    return records
+      .sort((a, b) => (b.created_at || 0) - (a.created_at || 0))
+      .slice(0, limit)
+  },
+  async deleteRecitation(id) {
+    return del('recordings', id)
   },
 
   // ── Utility ───────────────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { BookOpen, Search, ChevronLeft, Play, Pause, Maximize2, Minimize2, BookMarked, ChevronDown, Plus, Star, Mic, Timer, ChevronRight, StopCircle, CheckCircle, AlertTriangle } from 'lucide-react'
+import { useQuery, useQueries, useMutation, useQueryClient } from '@tanstack/react-query'
+import { BookOpen, Search, ChevronLeft, Play, Pause, Maximize2, Minimize2, BookMarked, ChevronDown, Plus, Star, Mic, Timer, ChevronRight, StopCircle, CheckCircle, AlertTriangle, Link2, ImageDown, Flame } from 'lucide-react'
 import api from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
 import { Card } from '@/components/ui/card'
@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge'
 import { Select } from '@/components/ui/compat'
 import { getIslamicContext } from '@/lib/hijri'
 import { cn } from '@/lib/utils'
+import offlineDB from '@/lib/db'
 import toast from 'react-hot-toast'
 import CalendarHeatmap from 'react-calendar-heatmap';
 import 'react-calendar-heatmap/dist/styles.css';
@@ -62,6 +63,100 @@ const GRADE_STYLES = {
   daif:    { bg: 'bg-orange-500/10 text-orange-600 border-orange-500/20', label: "Da'if ⚠" },
   mawdu:   { bg: 'bg-red-500/10 text-red-500 border-red-500/20', label: 'Mawdu ✗' },
   unknown: { bg: 'bg-muted text-muted-foreground border-border', label: 'Unknown' },
+}
+
+const SEARCH_TOPIC_CHIPS = ['Sabr', 'Rahmah', 'Tawakkul', 'Jannah', 'Dua']
+const TRANSLATION_OPTIONS = [
+  { id: 20, label: 'Sahih Intl' },
+  { id: 131, label: 'Clear Quran' },
+]
+
+function stripHtml(value = '') {
+  return value.replace(/<[^>]+>/g, '')
+}
+
+function normalizeArabic(value = '') {
+  return value
+    .normalize('NFKD')
+    .replace(/[\u064B-\u065F\u0670]/g, '')
+    .replace(/[^\u0621-\u064A0-9\s]/g, '')
+    .trim()
+}
+
+function buildBlankMask(words, density = 0.3) {
+  return words.map((word, index) => index > 0 && Math.random() < density && Boolean(word.text_uthmani || word.text))
+}
+
+function getQuranUrlState() {
+  const params = new URLSearchParams(window.location.search)
+  return {
+    tab: params.get('tab') || 'reader',
+    surahId: Number(params.get('surah')) || null,
+    ayahId: Number(params.get('ayah')) || null,
+  }
+}
+
+function syncQuranUrl({ tab, surahId, ayahId }) {
+  const url = new URL(window.location.href)
+  if (tab && tab !== 'reader') url.searchParams.set('tab', tab)
+  else url.searchParams.delete('tab')
+  if (surahId) url.searchParams.set('surah', String(surahId))
+  else url.searchParams.delete('surah')
+  if (ayahId) url.searchParams.set('ayah', String(ayahId))
+  else url.searchParams.delete('ayah')
+  const search = url.searchParams.toString()
+  window.history.replaceState({}, '', search ? `${url.pathname}?${search}` : url.pathname)
+}
+
+function getReadingStreak(readingLogs = []) {
+  const uniqueDays = [...new Set(readingLogs.map((log) => log.log_date))].sort().reverse()
+  if (uniqueDays.length === 0) return 0
+  let streak = 0
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  for (let index = 0; index < uniqueDays.length; index += 1) {
+    const expected = new Date(today)
+    expected.setDate(today.getDate() - index)
+    const expectedKey = expected.toISOString().slice(0, 10)
+    if (index === 0 && uniqueDays[index] !== expectedKey) {
+      const yesterday = new Date(today)
+      yesterday.setDate(today.getDate() - 1)
+      if (uniqueDays[index] !== yesterday.toISOString().slice(0, 10)) break
+      today.setDate(today.getDate() - 1)
+    }
+    const adjusted = new Date(today)
+    adjusted.setDate(today.getDate() - index)
+    if (uniqueDays[index] !== adjusted.toISOString().slice(0, 10)) break
+    streak += 1
+  }
+  return streak
+}
+
+function downloadAyahCard({ surahName, ayahNum, arabicText, translation }) {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200">
+      <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#0f3b2f"/>
+          <stop offset="100%" stop-color="#b68b2c"/>
+        </linearGradient>
+      </defs>
+      <rect width="1200" height="1200" fill="url(#bg)"/>
+      <rect x="70" y="70" width="1060" height="1060" rx="40" fill="rgba(255,255,255,0.92)"/>
+      <text x="1020" y="250" text-anchor="end" font-size="64" font-family="Amiri, serif" fill="#12251d">${arabicText.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</text>
+      <foreignObject x="110" y="330" width="980" height="380">
+        <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: Georgia, serif; font-size: 36px; line-height: 1.45; color: #243b33;">${translation.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</div>
+      </foreignObject>
+      <text x="110" y="1030" font-size="34" font-family="system-ui, sans-serif" fill="#6b7280">${surahName} • Ayah ${ayahNum}</text>
+    </svg>
+  `
+  const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `${surahName.toLowerCase().replace(/\s+/g, '-')}-${ayahNum}.svg`
+  link.click()
+  URL.revokeObjectURL(url)
 }
 
 function useAudio() {
@@ -149,7 +244,14 @@ function MiniPlayer({ audio, surahName }) {
 
 function SurahPicker({ onSelect }) {
   const [search, setSearch] = useState('')
+  const trimmedSearch = search.trim()
   const { data: surahs=[], isLoading } = useQuery({ queryKey:['quran','surahs'], queryFn: ()=>api.get('/quran/surahs').then(r=>r.data), staleTime: 24*60*60_000 })
+  const { data: searchResults = [], isFetching: searchingAyahs } = useQuery({
+    queryKey:['quran','search', trimmedSearch],
+    queryFn: ()=>api.get('/quran/search', { params: { q: trimmedSearch }}).then(r => r.data?.search?.results || []).catch(() => []),
+    enabled: trimmedSearch.length >= 2,
+    staleTime: 5*60_000,
+  })
   const filtered = surahs.filter(s => s.name_simple.toLowerCase().includes(search.toLowerCase()) || String(s.id).includes(search) || s.translated_name?.name?.toLowerCase().includes(search.toLowerCase()))
   
   return (
@@ -157,10 +259,41 @@ function SurahPicker({ onSelect }) {
       <div className="mb-4">
         <Input placeholder="Search surah..." value={search} onChange={e=>setSearch(e.target.value)} icon={<Search className="h-4 w-4 text-muted-foreground" />} />
       </div>
+      <div className="flex gap-2 overflow-x-auto scrollbar-none mb-4">
+        {SEARCH_TOPIC_CHIPS.map((topic) => (
+          <button key={topic} onClick={() => setSearch(topic)} className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/30 whitespace-nowrap">
+            {topic}
+          </button>
+        ))}
+      </div>
+      {trimmedSearch.length >= 2 && (
+        <Card className="p-4 mb-4 bg-primary/5 border-primary/20">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[10px] font-black uppercase tracking-widest text-primary">Ayah Search</p>
+            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{searchingAyahs ? 'Searching' : `${searchResults.length} matches`}</span>
+          </div>
+          <div className="space-y-2">
+            {searchResults.slice(0, 5).map((result) => {
+              const [surahId, ayahId] = String(result.verse_key || '').split(':').map(Number)
+              return (
+                <button
+                  key={result.verse_key}
+                  onClick={() => onSelect({ surahId, ayahId })}
+                  className="w-full text-left rounded-xl border border-border bg-background/80 p-3 hover:border-primary/30 transition-colors"
+                >
+                  <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">{result.verse_key}</p>
+                  <p className="text-sm font-medium text-foreground leading-relaxed">{stripHtml(result.text || result.translated_text || '')}</p>
+                </button>
+              )
+            })}
+            {!searchingAyahs && searchResults.length === 0 && <p className="text-sm font-medium text-muted-foreground">No ayah matches yet.</p>}
+          </div>
+        </Card>
+      )}
       {isLoading ? <div className="space-y-2">{[...Array(8)].map((_,i)=><Skeleton key={i} className="h-14 rounded-xl" />)}</div> : (
         <div className="space-y-2 max-h-[65vh] overflow-y-auto pr-1">
           {filtered.map(s => (
-            <button key={s.id} onClick={()=>onSelect(s)} className="w-full flex items-center gap-3 p-3 rounded-xl border border-transparent hover:border-border hover:bg-muted/50 transition-colors text-left group">
+            <button key={s.id} onClick={()=>onSelect({ surahId: s.id })} className="w-full flex items-center gap-3 p-3 rounded-xl border border-transparent hover:border-border hover:bg-muted/50 transition-colors text-left group">
               <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground group-hover:bg-background group-hover:text-primary transition-colors border border-border/50 shrink-0">{s.id}</div>
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-sm text-foreground">{s.name_simple}</p>
@@ -177,77 +310,187 @@ function SurahPicker({ onSelect }) {
 
 
 
-const AyahRow = ({ v, surah, audio, bookmarks, addBookmark, setTafsirVerse, readingMode, showGrammar, showTranslit, showTrans, showTajweed }) => {
+const AyahWord = ({ word, showTajweed, showTranslit }) => (
+  <Tooltip.Root>
+    <Tooltip.Trigger asChild>
+      <button className="px-2 py-1 rounded-xl bg-primary/5 hover:bg-primary/10 border border-primary/10 flex flex-col items-center gap-1 transition-colors text-center max-w-[132px]">
+        {showTajweed && word.text_tajweed
+          ? <span className="font-amiri text-2xl text-foreground" dangerouslySetInnerHTML={{ __html: word.text_tajweed }} />
+          : <span className="font-amiri text-2xl text-foreground">{word.text_uthmani || word.text}</span>
+        }
+        {showTranslit && word.transliteration?.text && <span className="text-[9px] font-bold text-primary italic truncate w-full">{word.transliteration.text}</span>}
+        <span className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground truncate w-full">{word.translation?.text || '—'}</span>
+      </button>
+    </Tooltip.Trigger>
+    <Tooltip.Portal>
+      <Tooltip.Content sideOffset={6} className="z-50 rounded-lg bg-popover border border-border shadow-md p-3 text-sm max-w-[220px]">
+        <p className="font-amiri text-2xl text-right mb-1 text-foreground">{word.text_uthmani || word.text}</p>
+        <p className="text-primary text-xs font-bold">{word.transliteration?.text || '—'}</p>
+        <p className="font-medium mt-1 text-foreground">{word.translation?.text || '—'}</p>
+        <p className="text-[11px] text-muted-foreground mt-2">{word.root_arabic ? `Root: ${word.root_arabic}` : 'Tap words for quick lexical context.'}{word.grammar_info ? ` · ${word.grammar_info}` : ''}</p>
+        <Tooltip.Arrow className="fill-popover" />
+      </Tooltip.Content>
+    </Tooltip.Portal>
+  </Tooltip.Root>
+)
+
+const AyahRow = ({ v, surah, audio, bookmarks, addBookmark, setTafsirVerse, readingMode, showGrammar, showTranslit, showTrans, showTajweed, translationIds, fontSize, onVerseRead }) => {
   const ayahNum = v.verse_number
   const isPlaying = audio.currentV?.surah===surah.id&&audio.currentV?.ayah===ayahNum&&audio.playing
   const isHighlighted = audio.currentV?.surah===surah.id&&audio.currentV?.ayah===ayahNum
   const isBookmarked = bookmarks.some(b=>b.surah_number===surah.id&&b.ayah_number===ayahNum)
   const [revealed, setRevealed] = useState(false)
+  const [challengeMode, setChallengeMode] = useState('guided')
+  const [guidedCount, setGuidedCount] = useState(1)
+  const [blankMask, setBlankMask] = useState([])
+  const [blankInputs, setBlankInputs] = useState({})
   const arabicText = v.text_uthmani||v.text_imlaei||''
   const words = v.words?.filter(w => w.char_type_name === 'word') || arabicText.split(' ').map(w => ({ text_uthmani: w }))
-  
-  let tajweedHtml = v.text_tajweed || arabicText;
+  const translationEntries = (translationIds || []).map((id) => v.translationMap?.[id]).filter(Boolean)
+  const tajweedHtml = v.text_tajweed || arabicText
+
+  useEffect(() => {
+    setBlankMask(buildBlankMask(words))
+    setBlankInputs({})
+    setGuidedCount(1)
+    setRevealed(false)
+    setChallengeMode('guided')
+  }, [ayahNum, words])
+
+  const handleCopyLink = async () => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('surah', String(surah.id))
+    url.searchParams.set('ayah', String(ayahNum))
+    url.searchParams.set('tab', 'reader')
+    try {
+      await navigator.clipboard.writeText(url.toString())
+      toast.success('Ayah link copied')
+    } catch {
+      toast.error('Could not copy link')
+    }
+  }
+
+  const onPlay = () => {
+    onVerseRead?.(ayahNum)
+    isPlaying ? audio.pause() : audio.playVerse(surah.id, ayahNum, v.audio?.url)
+  }
 
   return (
-    <div className={cn("py-6 border-b border-border/50 transition-colors", isHighlighted ? 'bg-gold/5' : 'bg-transparent')}>
+    <div id={`ayah-${ayahNum}`} className={cn("py-6 border-b border-border/50 transition-colors", isHighlighted ? 'bg-gold/5' : 'bg-transparent')}>
       <div className="flex items-center justify-between mb-4">
-        <div className="flex gap-2">
-          <button onClick={()=>{isPlaying?audio.pause():audio.playVerse(surah.id,ayahNum, v.audio?.url)}} className={cn("w-8 h-8 rounded-full flex items-center justify-center transition-colors", isPlaying ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-border")}>
+        <div className="flex gap-2 flex-wrap">
+          <button onClick={onPlay} className={cn("w-8 h-8 rounded-full flex items-center justify-center transition-colors", isPlaying ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-border")}>
             {isPlaying ? <Pause className="h-3 w-3 fill-current"/> : <Play className="h-3 w-3 fill-current ml-0.5" />}
           </button>
           <button onClick={()=>addBookmark(surah.id,ayahNum)} className={cn("w-8 h-8 rounded-full flex items-center justify-center transition-colors", isBookmarked ? "text-primary" : "text-muted-foreground hover:bg-muted")}>
             <BookMarked className="h-4 w-4" fill={isBookmarked ? 'currentColor' : 'none'}/>
           </button>
-          <button onClick={()=>setTafsirVerse({surahNum: surah.id, ayahNum, text: arabicText, trans: v.translations?.[0]?.text?.replace(/<[^>]+>/g,'')})} className="w-8 h-8 rounded-full flex items-center justify-center text-xs hover:bg-muted text-muted-foreground" title="View Tafsir">📖</button>
+          <button onClick={()=>setTafsirVerse({surahNum: surah.id, ayahNum, text: arabicText, trans: stripHtml(v.translations?.[0]?.text || '')})} className="w-8 h-8 rounded-full flex items-center justify-center text-xs hover:bg-muted text-muted-foreground" title="View Tafsir">📖</button>
+          <button onClick={handleCopyLink} className="w-8 h-8 rounded-full flex items-center justify-center text-xs hover:bg-muted text-muted-foreground" title="Copy verse link"><Link2 className="h-4 w-4" /></button>
+          <button onClick={() => downloadAyahCard({ surahName: surah.name_simple, ayahNum, arabicText, translation: translationEntries[0]?.text || stripHtml(v.translations?.[0]?.text || '') })} className="w-8 h-8 rounded-full flex items-center justify-center text-xs hover:bg-muted text-muted-foreground" title="Download verse card"><ImageDown className="h-4 w-4" /></button>
         </div>
-        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-black border border-primary/20 text-primary">{ayahNum}</div>
+        <div className="flex items-center gap-2">
+          {(v.v1_page || v.page_number || v.page) && <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">p. {v.v1_page || v.page_number || v.page}</span>}
+          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-black border border-primary/20 text-primary">{ayahNum}</div>
+        </div>
       </div>
       {readingMode==='hifz' ? (
-        <div onClick={()=>setRevealed(r=>!r)} className="cursor-pointer">
-          {revealed ? (
-            showTajweed 
-              ? <div className="font-amiri text-3xl leading-loose text-right rtl mb-4" dangerouslySetInnerHTML={{ __html: tajweedHtml }} />
-              : <p className="font-amiri text-3xl leading-loose text-right rtl text-foreground mb-4">{arabicText}</p>
-          ) : <div className="rounded-xl h-14 bg-muted/50 border border-border flex items-center justify-center text-xs font-bold text-muted-foreground uppercase tracking-widest hover:bg-muted transition-colors">Tap to reveal</div>}
+        <div className="space-y-3">
+          <div className="flex gap-2 flex-wrap">
+            {[
+              ['guided', 'Guided'],
+              ['blanks', 'Blank 30%'],
+              ['hidden', 'Full Hide'],
+            ].map(([id, label]) => (
+              <button key={id} onClick={() => setChallengeMode(id)} className={cn("px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest border transition-colors", challengeMode === id ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-card border-border text-muted-foreground hover:bg-muted')}>
+                {label}
+              </button>
+            ))}
+          </div>
+          {challengeMode === 'guided' && (
+            <div onClick={()=>setGuidedCount((count) => Math.min(words.length, count + 1))} className="cursor-pointer text-right rtl leading-[3] flex flex-wrap flex-row-reverse gap-2">
+              {words.map((word, index) => (
+                <span key={index} className="font-amiri text-3xl" style={{ color: index < guidedCount ? 'inherit' : 'transparent', textShadow: index < guidedCount ? 'none' : '0 0 10px rgba(148, 163, 184, 0.9)', fontSize: `${fontSize || 30}px` }}>
+                  {word.text_uthmani || word.text}
+                </span>
+              ))}
+            </div>
+          )}
+          {challengeMode === 'blanks' && (
+            <div className="text-right rtl leading-[3] flex flex-wrap flex-row-reverse gap-2 items-center">
+              {words.map((word, index) => {
+                const token = word.text_uthmani || word.text
+                if (!blankMask[index]) return <span key={index} className="font-amiri text-3xl text-foreground" style={{ fontSize: `${fontSize || 30}px` }}>{token}</span>
+                const answer = blankInputs[index] || ''
+                const correct = answer && normalizeArabic(answer) === normalizeArabic(token)
+                return (
+                  <input
+                    key={index}
+                    value={answer}
+                    onChange={(event) => setBlankInputs((current) => ({ ...current, [index]: event.target.value }))}
+                    placeholder="___"
+                    className={cn("w-24 rounded-lg border bg-background px-2 py-1 text-right", correct ? 'border-green-500 text-green-600' : 'border-border text-foreground')}
+                  />
+                )
+              })}
+            </div>
+          )}
+          {challengeMode === 'hidden' && (
+            <div onClick={()=>setRevealed(r=>!r)} className="cursor-pointer">
+              {revealed
+                ? (showTajweed ? <div className="font-amiri leading-loose text-right rtl mb-4" style={{ fontSize: `${fontSize || 30}px` }} dangerouslySetInnerHTML={{ __html: tajweedHtml }} /> : <p className="font-amiri leading-loose text-right rtl text-foreground mb-4" style={{ fontSize: `${fontSize || 30}px` }}>{arabicText}</p>)
+                : <div className="rounded-xl h-14 bg-muted/50 border border-border flex items-center justify-center text-xs font-bold text-muted-foreground uppercase tracking-widest hover:bg-muted transition-colors">Tap to reveal</div>}
+            </div>
+          )}
         </div>
       ) : showGrammar ? (
         <div className="text-right rtl leading-[3] flex flex-wrap flex-row-reverse gap-2 mb-4">
           <Tooltip.Provider delayDuration={150}>
-            {words.map((w, wi) => (
-              <Tooltip.Root key={wi}>
-                <Tooltip.Trigger asChild>
-                  <button className="px-2 py-1 rounded-xl bg-primary/5 hover:bg-primary/10 border border-primary/10 flex flex-col items-center gap-1 transition-colors text-center max-w-[120px]">
-                    {showTajweed && w.text_tajweed
-                      ? <span className="font-amiri text-2xl text-foreground" dangerouslySetInnerHTML={{ __html: w.text_tajweed }} />
-                      : <span className="font-amiri text-2xl text-foreground">{w.text_uthmani || w.text}</span>
-                    }
-                    {showTranslit && w.transliteration?.text && <span className="text-[9px] font-bold text-primary italic truncate w-full">{w.transliteration.text}</span>}
-                    <span className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground truncate w-full">{w.translation?.text || '—'}</span>
-                  </button>
-                </Tooltip.Trigger>
-                <Tooltip.Portal>
-                  <Tooltip.Content sideOffset={6} className="z-50 rounded-lg bg-popover border border-border shadow-md p-3 text-sm max-w-[200px]">
-                    <p className="font-amiri text-2xl text-right mb-1 text-foreground">{w.text_uthmani || w.text}</p>
-                    <p className="text-primary text-xs font-bold">{w.transliteration?.text || '—'}</p>
-                    <p className="font-medium mt-1 text-foreground">{w.translation?.text || '—'}</p>
-                    <Tooltip.Arrow className="fill-popover" />
-                  </Tooltip.Content>
-                </Tooltip.Portal>
-              </Tooltip.Root>
-            ))}
+            {words.map((word, index) => <AyahWord key={index} word={word} showTajweed={showTajweed} showTranslit={showTranslit} />)}
           </Tooltip.Provider>
         </div>
       ) : (
         showTajweed 
-          ? <div className="font-amiri text-3xl leading-[2.5] text-right rtl mb-5" style={{wordSpacing:'0.15em'}} dangerouslySetInnerHTML={{ __html: tajweedHtml }} />
-          : <p className="font-amiri text-3xl leading-[2.5] text-right rtl text-foreground mb-5" style={{wordSpacing:'0.15em'}}>{arabicText}</p>
+          ? <div className="font-amiri leading-[2.5] text-right rtl mb-5" style={{wordSpacing:'0.15em', fontSize: `${fontSize || 30}px`}} dangerouslySetInnerHTML={{ __html: tajweedHtml }} />
+          : <p className="font-amiri leading-[2.5] text-right rtl text-foreground mb-5" style={{wordSpacing:'0.15em', fontSize: `${fontSize || 30}px`}}>{arabicText}</p>
       )}
-      {showTrans&&v.translations?.[0] && <p className="text-[13px] font-medium text-muted-foreground/90 leading-relaxed border-l-2 border-primary/30 pl-3">{v.translations[0].text?.replace(/<[^>]+>/g,'')}</p>}
+      {showTrans && translationEntries.length > 0 && (
+        <div className={cn("grid gap-3", translationEntries.length > 1 ? 'md:grid-cols-2' : 'grid-cols-1')}>
+          {translationEntries.map((translation) => (
+            <div key={translation.id} className="border-l-2 border-primary/30 pl-3">
+              <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">{translation.label}</p>
+              <p className="text-[13px] font-medium text-muted-foreground/90 leading-relaxed">{translation.text}</p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
 
-const VirtualAyahList = ({ verses, surah, audio, bookmarks, addBookmark, setTafsirVerse, readingMode, showGrammar, showTranslit, showTrans, showTajweed, focusMode }) => {
+const MushafViewer = ({ verses, surah }) => {
+  const pages = [...new Set(verses.map((verse) => verse.v1_page || verse.page_number || verse.page).filter(Boolean))]
+  const [pageIndex, setPageIndex] = useState(0)
+  const currentPage = pages[pageIndex]
+  if (pages.length === 0) {
+    return <Card className="p-5 text-sm font-medium text-muted-foreground">Mushaf page images are not available for this surah payload yet.</Card>
+  }
+  const pageUrl = `https://static.qurancdn.com/images/quran/pages/page${String(currentPage).padStart(3, '0')}.png`
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <Button variant="outline" size="sm" onClick={() => setPageIndex((index) => Math.max(0, index - 1))} disabled={pageIndex === 0}>Prev Page</Button>
+        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{surah.name_simple} • Page {currentPage}</p>
+        <Button variant="outline" size="sm" onClick={() => setPageIndex((index) => Math.min(pages.length - 1, index + 1))} disabled={pageIndex === pages.length - 1}>Next Page</Button>
+      </div>
+      <Card className="p-3 bg-card">
+        <img src={pageUrl} alt={`Quran page ${currentPage}`} className="w-full rounded-xl border border-border bg-background" loading="lazy" />
+      </Card>
+    </div>
+  )
+}
+
+const VirtualAyahList = ({ verses, surah, audio, bookmarks, addBookmark, setTafsirVerse, readingMode, showGrammar, showTranslit, showTrans, showTajweed, focusMode, translationIds, fontSize, scrollToAyah, onVerseRead }) => {
   const parentRef = useRef(null)
   
   const rowVirtualizer = useVirtualizer({
@@ -256,6 +499,16 @@ const VirtualAyahList = ({ verses, surah, audio, bookmarks, addBookmark, setTafs
     estimateSize: () => 200,
     overscan: 4,
   })
+
+  useEffect(() => {
+    if (!scrollToAyah) return
+    const targetIndex = verses.findIndex((verse) => verse.verse_number === Number(scrollToAyah))
+    if (targetIndex >= 0) rowVirtualizer.scrollToIndex(targetIndex, { align: 'center' })
+  }, [rowVirtualizer, scrollToAyah, verses])
+
+  if (readingMode === 'page') {
+    return <MushafViewer verses={verses} surah={surah} />
+  }
 
   return (
     <div ref={parentRef} className={cn("overflow-y-auto pr-2", focusMode ? "h-[80vh]" : "h-[calc(100vh-280px)]")}>
@@ -287,6 +540,9 @@ const VirtualAyahList = ({ verses, surah, audio, bookmarks, addBookmark, setTafs
                 showTranslit={showTranslit} 
                 showTrans={showTrans} 
                 showTajweed={showTajweed} 
+                translationIds={translationIds}
+                fontSize={fontSize}
+                onVerseRead={onVerseRead}
               />
             </div>
           )
@@ -297,35 +553,62 @@ const VirtualAyahList = ({ verses, surah, audio, bookmarks, addBookmark, setTafs
 }
 
 
-function SurahReader({ surah, onBack, audio }) {
+function SurahReader({ surah, onBack, audio, scrollToAyah }) {
   const qc = useQueryClient()
   const [showTrans, setShowTrans] = useStickyState(true, 'q_show_trans')
   const [showTranslit, setShowTranslit] = useStickyState(false, 'q_show_translit')
   const [showGrammar, setShowGrammar] = useStickyState(false, 'q_show_grammar')
   const [showTajweed, setShowTajweed] = useStickyState(true, 'q_show_tajweed')
   const [readingMode, setReadingMode] = useStickyState('scroll', 'q_reading_mode')
+  const [fontSize, setFontSize] = useStickyState(30, 'q_font_size')
+  const [translationIds, setTranslationIds] = useStickyState([20], 'q_translation_ids')
+  const normalizedTranslationIds = Array.isArray(translationIds) ? translationIds : [Number(translationIds) || 20]
   const [focusMode, setFocusMode] = useState(false)
   const [bookmarkSheet,setBookmarkSheet]= useState(null)
   const [noteText, setNoteText] = useState('')
   const [hlColor, setHlColor] = useState('gold')
   const [tafsirVerse, setTafsirVerse] = useState(null)
-  const [grammarWord, setGrammarWord] = useState(null)
-  const [translationId, setTranslationId] = useStickyState(20, 'q_translation_id')
   const [showSleepTimer, setShowSleepTimer] = useState(false)
   const sessionStart = useRef(Date.now())
-  const versesRead = useRef(0)
+  const versesRead = useRef(new Set())
 
-  const { data: verseData, isLoading } = useQuery({ queryKey:['quran','surah',surah.id, translationId], queryFn: ()=>api.get(`/quran/surah/${surah.id}?translation_id=${translationId}`).then(r=>r.data), staleTime:30*60_000 })
+  const surahQueries = useQueries({
+    queries: normalizedTranslationIds.map((translationId) => ({
+      queryKey:['quran','surah',surah.id, translationId],
+      queryFn: ()=>api.get(`/quran/surah/${surah.id}?translation_id=${translationId}`).then(r=>r.data),
+      staleTime:30*60_000,
+    })),
+  })
   const { data: bookmarks=[] } = useQuery({ queryKey:['quran','bookmarks'], queryFn: ()=>api.get('/quran/bookmarks').then(r=>r.data).catch(()=>[]) })
+  const isLoading = surahQueries.some((query) => query.isLoading)
+  const verseData = surahQueries[0]?.data
+  const verses = useMemo(() => {
+    const baseVerses = verseData?.verses || []
+    return baseVerses.map((verse) => {
+      const translationMap = {}
+      surahQueries.forEach((query, index) => {
+        const translationId = normalizedTranslationIds[index]
+        const matched = query.data?.verses?.find((entry) => entry.verse_key === verse.verse_key)
+        if (matched?.translations?.[0]) {
+          translationMap[translationId] = {
+            id: translationId,
+            label: TRANSLATION_OPTIONS.find((option) => option.id === translationId)?.label || `Translation ${translationId}`,
+            text: stripHtml(matched.translations[0].text),
+          }
+        }
+      })
+      return { ...verse, translationMap }
+    })
+  }, [normalizedTranslationIds, surahQueries, verseData])
 
   useEffect(()=>{
     return ()=>{
       const mins = Math.round((Date.now()-sessionStart.current)/60_000)
-      const v = verseData?.verses?.length || 0
-      if (mins<1||versesRead.current<1) return
-      api.post('/quran/reading-log',{surah_from:surah.id,ayah_from:1,surah_to:surah.id,ayah_to:v,verses_read:Math.min(versesRead.current,v),minutes_read:mins,mode:'reading'}).catch(()=>{})
+      const v = verses.length || 0
+      if (mins<1||versesRead.current.size<1) return
+      api.post('/quran/reading-log',{surah_from:surah.id,ayah_from:1,surah_to:surah.id,ayah_to:v,verses_read:Math.min(versesRead.current.size,v),minutes_read:mins,mode:'reading'}).catch(()=>{})
     }
-  },[surah.id,verseData])
+  },[surah.id, verses])
 
   const addBookmark = async (surahNum, ayahNum) => {
     const existing = bookmarks.find(b=>b.surah_number===surahNum&&b.ayah_number===ayahNum)
@@ -337,10 +620,6 @@ function SurahReader({ surah, onBack, audio }) {
     await api.post('/quran/bookmarks',{surah_number:bookmarkSheet.surahNum,ayah_number:bookmarkSheet.ayahNum,note:noteText||null,highlight_color:hlColor})
     qc.invalidateQueries({queryKey:['quran','bookmarks']}); toast.success('Bookmarked!'); setBookmarkSheet(null)
   }
-
-  const verses = verseData?.verses || []
-
-
 
   return (
     <div className="animate-in fade-in">
@@ -354,16 +633,37 @@ function SurahReader({ surah, onBack, audio }) {
           {[['Trans',showTrans,setShowTrans],['Latin',showTranslit,setShowTranslit],['Grammar',showGrammar,setShowGrammar],['Tajweed',showTajweed,setShowTajweed]].map(([label,active,toggle])=>(
             <button key={label} onClick={()=>toggle(v=>!v)} className={cn('px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border', active ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-card border-border text-muted-foreground hover:bg-muted')}>{label}</button>
           ))}
-          <Select value={translationId} onChange={e=>setTranslationId(Number(e.target.value))} options={[{label:'Sahih Intl',value:20},{label:'Clear Quran',value:131}]} className="h-7 text-[10px] uppercase font-black" />
+          <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1">
+            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Font</span>
+            <input type="range" min="24" max="40" value={fontSize} onChange={(e)=>setFontSize(Number(e.target.value))} />
+          </div>
           <button onClick={()=>setShowSleepTimer(v=>!v)} className={cn("p-1.5 rounded-lg transition-colors border", audio.sleepTimer ? "bg-purple-500/10 text-purple-600 border-purple-500/30" : "bg-card border-border text-muted-foreground")} title="Sleep timer"><Timer className="h-4 w-4"/></button>
           <button onClick={()=>setFocusMode(true)} className="p-1.5 rounded-lg bg-card border border-border text-muted-foreground"><Maximize2 className="h-4 w-4"/></button>
         </div>
       )}
 
+      <div className="flex gap-2 flex-wrap mb-4">
+        {TRANSLATION_OPTIONS.map((option) => (
+          <button
+            key={option.id}
+            onClick={() => setTranslationIds((current) => {
+              const currentIds = Array.isArray(current) ? current : [Number(current) || 20]
+              const has = currentIds.includes(option.id)
+              if (has && currentIds.length === 1) return currentIds
+              if (has) return currentIds.filter((id) => id !== option.id)
+              return [...currentIds, option.id].slice(0, 2)
+            })}
+            className={cn("px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest border transition-colors", normalizedTranslationIds.includes(option.id) ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-card border-border text-muted-foreground hover:bg-muted')}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+
       {focusMode && (
         <div className="fixed inset-0 bg-background z-50 overflow-y-auto px-4 py-6 text-foreground animate-in slide-in-from-bottom-4">
           <button onClick={()=>setFocusMode(false)} className="fixed top-4 right-4 bg-muted border border-border rounded-xl p-2.5 text-muted-foreground hover:text-foreground"><Minimize2 className="h-4 w-4"/></button>
-          <div className="max-w-2xl mx-auto pt-10">{isLoading ? <div className="space-y-4">{[...Array(5)].map((_,i)=><Skeleton key={i} className="h-24 rounded-2xl" />)}</div> : <VirtualAyahList focusMode={true} verses={verses} surah={surah} audio={audio} bookmarks={bookmarks} addBookmark={addBookmark} setTafsirVerse={setTafsirVerse} readingMode={readingMode} showGrammar={showGrammar} showTranslit={showTranslit} showTrans={showTrans} showTajweed={showTajweed} />}</div>
+          <div className="max-w-2xl mx-auto pt-10">{isLoading ? <div className="space-y-4">{[...Array(5)].map((_,i)=><Skeleton key={i} className="h-24 rounded-2xl" />)}</div> : <VirtualAyahList focusMode={true} verses={verses} surah={surah} audio={audio} bookmarks={bookmarks} addBookmark={addBookmark} setTafsirVerse={setTafsirVerse} readingMode={readingMode} showGrammar={showGrammar} showTranslit={showTranslit} showTrans={showTrans} showTajweed={showTajweed} translationIds={normalizedTranslationIds} fontSize={fontSize} scrollToAyah={scrollToAyah} onVerseRead={(ayah)=>versesRead.current.add(ayah)} />}</div>
         </div>
       )}
 
@@ -373,7 +673,32 @@ function SurahReader({ surah, onBack, audio }) {
         ))}
       </div>
 
-      {!focusMode && <div>{isLoading ? <div className="space-y-4">{[...Array(5)].map((_,i)=><Skeleton key={i} className="h-24 rounded-xl" />)}</div> : <AyahList/>}</div>}
+      {!focusMode && (
+        <div>
+          {isLoading ? (
+            <div className="space-y-4">{[...Array(5)].map((_,i)=><Skeleton key={i} className="h-24 rounded-xl" />)}</div>
+          ) : (
+            <VirtualAyahList
+              focusMode={false}
+              verses={verses}
+              surah={surah}
+              audio={audio}
+              bookmarks={bookmarks}
+              addBookmark={addBookmark}
+              setTafsirVerse={setTafsirVerse}
+              readingMode={readingMode}
+              showGrammar={showGrammar}
+              showTranslit={showTranslit}
+              showTrans={showTrans}
+              showTajweed={showTajweed}
+              translationIds={normalizedTranslationIds}
+              fontSize={fontSize}
+              scrollToAyah={scrollToAyah}
+              onVerseRead={(ayah)=>versesRead.current.add(ayah)}
+            />
+          )}
+        </div>
+      )}
 
       {showSleepTimer && (
         <div className="mb-4 p-4 rounded-2xl bg-purple-500/5 border border-purple-500/20 animate-in fade-in zoom-in-95">
@@ -439,15 +764,17 @@ function TafsirViewer({ surahNum, ayahNum, arabicText, translation }) {
 
 
 
-function HifzProgressMap({ entries }) {
+function HifzProgressMap({ entries, dueToday }) {
   const getStatus = (surahId) => {
     const entry = entries.find(h => h.surah_number === surahId)
     if (!entry) return 'not_started'
+    if (dueToday.some((item) => item.surah_number === surahId)) return 'due'
     if (entry.status === 'memorised') return 'memorized'
     return 'in_progress'
   }
   const STATUS_COLORS = {
     memorized: 'bg-green-500 text-white border-green-600',
+    due: 'bg-blue-500 text-white border-blue-600',
     in_progress: 'bg-orange-400 text-white border-orange-500',
     not_started: 'bg-muted text-muted-foreground border-border/50',
   }
@@ -467,6 +794,7 @@ function HifzProgressMap({ entries }) {
       </div>
       <div className="flex gap-4 mt-1 text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-green-500" /> Memorized</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-blue-500" /> Due</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-orange-400" /> In Progress</span>
       </div>
     </Card>
@@ -518,7 +846,7 @@ function HifzTab() {
         {dailyTarget > 0 && <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest relative z-10 mt-2">Est. completion: <strong className="text-primary">{Math.ceil((6236 * (1 - pctDone/100)) / dailyTarget)} days</strong></p>}
       </Card>
 
-      <HifzProgressMap entries={entries} />
+      <HifzProgressMap entries={entries} dueToday={dueToday} />
 
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none w-fit">
         {HIFZ_MODES.map((m,i)=><button key={i} onClick={()=>setHifzMode(i)} className={cn("px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap border", hifzMode===i ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-card border-border text-muted-foreground hover:bg-muted')}>{m}</button>)}
@@ -724,13 +1052,25 @@ function HadithTab() {
 function StatsTab() {
   const { data: stats } = useQuery({queryKey:['quran','stats'],queryFn:()=>api.get('/quran/stats').then(r=>r.data).catch(()=>null)})
   const { data: hifz=[] } = useQuery({queryKey:['quran','hifz'],queryFn:()=>api.get('/quran/hifz').then(r=>r.data).catch(()=>[])})
+  const { data: readingLogs=[] } = useQuery({queryKey:['quran','reading-log'], queryFn:()=>api.get('/quran/reading-log', { params: { days: 120 }}).then(r=>r.data).catch(()=>[])})
   const memorised  = hifz.filter(h=>h.status==='memorised').length
   const inProgress = hifz.filter(h=>h.status==='in_progress').length
+  const streak = getReadingStreak(readingLogs)
+  const heatmapData = Object.entries(readingLogs.reduce((acc, log) => {
+    acc[log.log_date] = (acc[log.log_date] || 0) + (log.verses_read || 0)
+    return acc
+  }, {})).map(([date, count]) => ({ date, count }))
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
       <Card className="p-5 sm:p-6 bg-gradient-to-br from-primary/10 to-teal-500/5 border-primary/20">
-        <h3 className="text-sm font-black uppercase tracking-widest text-primary mb-6">Khatam progress</h3>
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-sm font-black uppercase tracking-widest text-primary">Khatam progress</h3>
+          <div className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 bg-red-500/10 text-red-500">
+            <Flame className="h-4 w-4" />
+            <span className="text-[10px] font-black uppercase tracking-widest">{streak} day streak</span>
+          </div>
+        </div>
         <div className="flex items-center gap-6">
           <div className="shrink-0 relative w-24 h-24 flex items-center justify-center rounded-full bg-background border border-border shadow-sm">
              <svg className="absolute inset-0 w-full h-full -rotate-90">
@@ -767,6 +1107,28 @@ function StatsTab() {
         </Card>
       )}
 
+      <Card className="p-5 sm:p-6 overflow-hidden">
+        <h3 className="text-sm font-black uppercase tracking-widest text-foreground mb-4">Reading Activity</h3>
+        <div className="w-[150%] md:w-full -ml-[25%] md:ml-0">
+          <CalendarHeatmap
+            startDate={new Date(Date.now() - 119 * 24 * 60 * 60 * 1000)}
+            endDate={new Date()}
+            values={heatmapData}
+            classForValue={(value) => {
+              if (!value) return 'color-empty opacity-20 fill-border'
+              if (value.count < 25) return 'fill-primary opacity-30'
+              if (value.count < 75) return 'fill-primary opacity-50'
+              if (value.count < 150) return 'fill-primary opacity-70'
+              return 'fill-primary opacity-100'
+            }}
+          />
+        </div>
+        <div className="flex justify-between items-center mt-3">
+          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Less</span>
+          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">More</span>
+        </div>
+      </Card>
+
       <Card className="p-5 sm:p-6">
         <h3 className="text-sm font-black uppercase tracking-widest text-foreground mb-4">Hifz summary</h3>
         <div className="grid grid-cols-2 gap-4">
@@ -789,8 +1151,13 @@ function PracticeTab() {
   const [selectedSurah, setSelectedSurah] = useState(1)
   const [selectedAyah, setSelectedAyah] = useState(1)
   const [processing, setProcessing] = useState(false)
+  const [localSessions, setLocalSessions] = useState([])
   const { data: surahs=[] } = useQuery({ queryKey:['quran','surahs'], queryFn:()=>api.get('/quran/surahs').then(r=>r.data), staleTime: 24*60*60_000 })
   const { data: mySessions=[] } = useQuery({ queryKey:['recitation','sessions'], queryFn:()=>api.get('/recitation/sessions').then(r=>r.data).catch(()=>[]) })
+
+  useEffect(() => {
+    offlineDB.getRecentRecitations(10).then(setLocalSessions).catch(() => {})
+  }, [])
 
   const startRecording = async () => {
     try {
@@ -801,6 +1168,11 @@ function PracticeTab() {
       rec.onstop = async () => {
         setProcessing(true)
         const blob = new Blob(chunks, { type: 'audio/webm' })
+        try {
+          await offlineDB.saveRecitation({ surah_id: selectedSurah, ayah_id: selectedAyah, blob, uploaded: false })
+          const recent = await offlineDB.getRecentRecitations(10)
+          setLocalSessions(recent)
+        } catch {}
         const form = new FormData()
         form.append('audio', blob, 'recitation.webm')
         form.append('surah_number', selectedSurah)
@@ -846,6 +1218,23 @@ function PracticeTab() {
         </Button>
       </Card>
 
+      {localSessions.length > 0 && (
+        <Card className="p-5 sm:p-6">
+          <h3 className="text-sm font-black uppercase tracking-widest text-foreground mb-4">Offline Recordings</h3>
+          <div className="space-y-2">
+            {localSessions.map((session) => (
+              <div key={session.id} className="flex items-center justify-between rounded-xl border border-border bg-muted/30 px-3 py-2">
+                <div>
+                  <p className="text-sm font-bold text-foreground">Surah {session.surah_id} • Ayah {session.ayah_id}</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{new Date(session.created_at).toLocaleString()}</p>
+                </div>
+                <Badge variant="secondary" className="text-[9px] uppercase font-black tracking-widest">{session.uploaded ? 'Synced' : 'Local'}</Badge>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
       {allSessions.length > 0 && (
         <div className="space-y-4">
           <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Recent Sessions</h3>
@@ -890,41 +1279,15 @@ function PracticeTab() {
   )
 }
 
-function ActivityHeatmap() {
-    const today = new Date();
-    // Dummy reading history for visual demonstration
-    const randomDays = Array.from({length: 40}).map(() => {
-        const d = new Date();
-        d.setDate(d.getDate() - Math.floor(Math.random() * 120));
-        return { date: d.toISOString().split('T')[0], count: Math.floor(Math.random() * 5) + 1 };
-    });
-    return (
-      <Card className="p-5 mt-6 mb-6 overflow-hidden">
-        <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4">Reading Activity Heatmap</h3>
-        <div className="w-[150%] md:w-full -ml-[25%] md:ml-0 opacity-80" style={{transform: "scale(1)", transformOrigin: "left center"}}>
-          <CalendarHeatmap
-            startDate={new Date(today.getFullYear(), today.getMonth() - 4, today.getDate())}
-            endDate={today}
-            values={randomDays}
-            classForValue={(value) => {
-              if (!value) return 'color-empty opacity-20 fill-border';
-              return `fill-primary opacity-${Math.min(100, value.count * 20)}`;
-            }}
-          />
-        </div>
-        <div className="flex justify-between items-center mt-3">
-            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Less</span>
-             <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">More</span>
-        </div>
-      </Card>
-    )
-  }
-
 export default function QuranPage() {
-  const [tab, setTab] = useStickyState('reader', 'q_tab')
-  const [activeSurah, setActiveSurah] = useState(null)
+  const urlState = useMemo(() => (typeof window !== 'undefined' ? getQuranUrlState() : { tab: 'reader', surahId: null, ayahId: null }), [])
+  const [tab, setTab] = useStickyState(urlState.tab || 'reader', 'q_tab')
+  const [activeSurahId, setActiveSurahId] = useState(urlState.surahId)
+  const [activeAyahId, setActiveAyahId] = useState(urlState.ayahId)
   const audio = useAudio()
   const ctx = getIslamicContext()
+  const { data: surahs=[] } = useQuery({ queryKey:['quran','surahs'], queryFn: ()=>api.get('/quran/surahs').then(r=>r.data), staleTime: 24*60*60_000 })
+  const activeSurah = surahs.find((surah) => surah.id === activeSurahId) || null
 
   useEffect(()=>{
     const token = localStorage.getItem('access_token')
@@ -933,8 +1296,36 @@ export default function QuranPage() {
     api.post('/quran/hadith/seed').catch(()=>{})
   },[])
 
+  useEffect(() => {
+    syncQuranUrl({ tab, surahId: activeSurahId, ayahId: activeAyahId })
+  }, [tab, activeAyahId, activeSurahId])
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const state = getQuranUrlState()
+      setTab(state.tab || 'reader')
+      setActiveSurahId(state.surahId)
+      setActiveAyahId(state.ayahId)
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [setTab])
+
+  const openReader = ({ surahId, ayahId = null }) => {
+    setTab('reader')
+    setActiveSurahId(surahId)
+    setActiveAyahId(ayahId)
+    offlineDB.saveQuranPosition('me', surahId, ayahId || 1, null).catch(() => {})
+  }
+
+  const closeReader = () => {
+    setActiveSurahId(null)
+    setActiveAyahId(null)
+  }
+
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 md:py-8 space-y-6">
+      <style>{TAJWEED_CSS}</style>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Quran</h1>
@@ -963,7 +1354,7 @@ export default function QuranPage() {
              </div>
           </div>
         )}
-        {tab==='reader' && (activeSurah ? <SurahReader surah={activeSurah} onBack={()=>setActiveSurah(null)} audio={audio}/> : <SurahPicker onSelect={setActiveSurah}/>)}
+        {tab==='reader' && (activeSurah ? <SurahReader surah={activeSurah} onBack={closeReader} audio={audio} scrollToAyah={activeAyahId}/> : <SurahPicker onSelect={openReader}/>)}
         {tab==='hifz' && <HifzTab/>}
         {tab==='duas' && <DuaTab/>}
         {tab==='hadith' && <HadithTab/>}
