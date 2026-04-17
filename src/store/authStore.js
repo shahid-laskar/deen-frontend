@@ -26,6 +26,7 @@ export const useAuthStore = create(
       isOnboardingComplete: () => get().user?.onboarding_completed ?? false,
       isFemale: () => get().user?.gender === 'female',
       getMadhab: () => get().user?.madhab ?? 'hanafi',
+      isAdmin: () => get().user?.role === 'admin',
       hasLocation: () => !!(get().user?.latitude && get().user?.longitude),
     }),
     {

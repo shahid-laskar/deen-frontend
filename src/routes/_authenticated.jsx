@@ -32,7 +32,7 @@ function AuthenticatedLayout() {
   }, [])
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="flex h-screen w-full bg-background overflow-hidden">
       {/* Desktop sidebar */}
       <Sidebar />
 

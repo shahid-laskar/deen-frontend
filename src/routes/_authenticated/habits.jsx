@@ -139,7 +139,12 @@ function HabitsPage() {
   const { data: analytics } = useQuery({ queryKey:['habits','analytics'], queryFn: () => api.get('/habits/analytics/summary').then(r=>r.data).catch(()=>null) })
   
   const { mutate: logHabit } = useMutation({
-    mutationFn: (habit) => api.post(`/habits/${habit.id}/log`, { value: habit.target_value }),
+    mutationFn: (habit) => api.post('/habits/log', {
+      habit_id: habit.id,
+      log_date: format(new Date(), 'yyyy-MM-dd'),
+      count: 1,
+      completed: true
+    }),
     onSuccess: () => { qc.invalidateQueries({ queryKey:['habits'] }); toast.success('Alhamdulillah, habit logged!') },
     onError: (e) => toast.error(e.response?.data?.detail || 'Failed to log habit')
   })

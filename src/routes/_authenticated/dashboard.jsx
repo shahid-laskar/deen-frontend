@@ -5,7 +5,7 @@ import { format } from 'date-fns'
 import {
   Clock, BookOpen, Sparkles, NotebookPen, Heart, Compass, Users,
   Dumbbell, Apple, Check, Circle, RefreshCw, ChevronRight,
-  ThumbsUp, X, HandHeart,
+  ThumbsUp, X, MapPin
 } from 'lucide-react'
 import api from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
@@ -20,7 +20,7 @@ export const Route = createFileRoute('/_authenticated/dashboard')({
 
 function getGreeting() {
   const h = new Date().getHours()
-  if (h < 5)  return 'Peace be upon you'
+  if (h < 5) return 'Peace be upon you'
   if (h < 12) return 'Good Morning'
   if (h < 17) return 'Good Afternoon'
   if (h < 21) return 'Good Evening'
@@ -48,14 +48,16 @@ function findNextPrayer(times) {
   return { name: 'Fajr', time: times?.fajr, index: 0 }
 }
 
-function pad(n) { return String(n).padStart(2, '0') }
-
 function formatCountdown(ms) {
-  if (ms <= 0) return '00:00:00'
+  if (ms <= 0) return { h: '00', m: '00', s: '00' }
   const h = Math.floor(ms / 3_600_000)
   const m = Math.floor((ms % 3_600_000) / 60_000)
   const s = Math.floor((ms % 60_000) / 1_000)
-  return `${pad(h)}:${pad(m)}:${pad(s)}`
+  return {
+    h: String(h).padStart(2, '0'),
+    m: String(m).padStart(2, '0'),
+    s: String(s).padStart(2, '0'),
+  }
 }
 
 // ─── Geometric Divider (from enhanced) ───────────────────────────────────────
@@ -78,12 +80,12 @@ function IslamicHeader({ displayName }) {
   return (
     <div className="space-y-1">
       <p className="text-sm text-muted-foreground tracking-wide">{format(new Date(), 'EEEE, MMMM d, yyyy')}</p>
-      <h1 className="text-2xl md:text-3xl font-semibold text-foreground">
+      <h1 className="text-2xl md:text-3xl font-bold text-foreground">
         {getGreeting()}{displayName ? `, ${displayName}` : ''} 🤲
       </h1>
-      <p className="font-amiri text-lg text-primary/80">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</p>
+      <p className="font-amiri text-base text-primary/80">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</p>
       <GeometricDivider />
-      <p className="text-sm font-medium text-primary">{ctx.formatted}</p>
+      <p className="text-xs font-medium text-muted-foreground tracking-wide">{ctx.formatted}</p>
     </div>
   )
 }
@@ -92,9 +94,9 @@ function IslamicHeader({ displayName }) {
 function IslamicBanner() {
   const ctx = getIslamicContext()
   const msgs = {
-    ramadan:        { icon: '🌙', text: `Ramadan Mubarak! Day ${ctx.hijri.day} of Ramadan` },
-    eid_fitr:       { icon: '🎉', text: 'Eid ul-Fitr Mubarak! May Allah accept your worship.' },
-    eid_adha:       { icon: '🐑', text: 'Eid ul-Adha Mubarak! May Allah accept your sacrifice.' },
+    ramadan: { icon: '🌙', text: `Ramadan Mubarak! Day ${ctx.hijri.day} of Ramadan` },
+    eid_fitr: { icon: '🎉', text: 'Eid ul-Fitr Mubarak! May Allah accept your worship.' },
+    eid_adha: { icon: '🐑', text: 'Eid ul-Adha Mubarak! May Allah accept your sacrifice.' },
     dhul_hijjah_10: { icon: '🕋', text: `Day ${ctx.hijri.day} of the blessed days of Dhul Hijjah` },
   }
   const msg = msgs[ctx.season]
@@ -110,7 +112,7 @@ function IslamicBanner() {
 // ─── Prayer Hero ──────────────────────────────────────────────────────────────
 function PrayerHero({ times, summary }) {
   const [next, setNext] = useState(() => findNextPrayer(times))
-  const [countdown, setCountdown] = useState('00:00:00')
+  const [countdown, setCountdown] = useState({ h: '00', m: '00', s: '00' })
   const [progress, setProgress] = useState(0)
 
   useEffect(() => {
@@ -136,72 +138,116 @@ function PrayerHero({ times, summary }) {
       }
     }
     tick()
-    const id = setInterval(tick, 1_000)
+    const id = setInterval(tick, 1000)
     return () => clearInterval(id)
   }, [times])
 
-  const radius = 58
+  const radius = 62
   const circumference = 2 * Math.PI * radius
   const strokeOffset = circumference - (progress / 100) * circumference
-
   const logged = summary?.total_logged ?? 0
 
+  if (!next) return null
+
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-card to-gold/5 border border-border p-6">
-      {/* Geometric background */}
-      <svg className="absolute top-0 right-0 w-48 h-48 text-primary/[0.04]" viewBox="0 0 200 200">
-        <polygon points="100,10 190,60 190,140 100,190 10,140 10,60" fill="none" stroke="currentColor" strokeWidth="1" />
-        <polygon points="100,30 170,70 170,130 100,170 30,130 30,70" fill="none" stroke="currentColor" strokeWidth="0.7" />
-        <polygon points="100,50 150,80 150,120 100,150 50,120 50,80" fill="none" stroke="currentColor" strokeWidth="0.5" />
+    <div className="relative overflow-hidden rounded-2xl prayer-hero-surface border border-border/70 p-6 shadow-sm">
+      {/* Decorative geometric bg */}
+      <svg className="absolute -top-4 -right-4 w-64 h-64 text-primary/[0.03]" viewBox="0 0 200 200">
+        <polygon points="100,5 195,55 195,145 100,195 5,145 5,55" fill="none" stroke="currentColor" strokeWidth="0.8" />
+        <circle cx="100" cy="100" r="30" fill="none" stroke="currentColor" strokeWidth="0.3" />
       </svg>
 
-      <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
+      <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
         {/* Progress ring */}
         <div className="relative flex-shrink-0">
-          <svg width="140" height="140" className="-rotate-90">
-            <circle cx="70" cy="70" r={radius} fill="none" strokeWidth="4" className="stroke-border stroke-current" />
+          <div className="absolute inset-2 rounded-full bg-primary/8 blur-xl animate-pulse" />
+          <svg width="148" height="148" className="-rotate-90 relative z-10">
+            <circle cx="74" cy="74" r={radius} fill="none" stroke="currentColor" strokeWidth="5" className="text-border/40" />
             <circle
-              cx="70" cy="70" r={radius}
-              fill="none" strokeWidth="4" strokeLinecap="round"
+              cx="74" cy="74" r={radius}
+              fill="none"
+              stroke="url(#prayer-gradient-hero)"
+              strokeWidth="6"
+              strokeLinecap="round"
               strokeDasharray={circumference}
               strokeDashoffset={strokeOffset}
-              className="stroke-primary stroke-current transition-all duration-1000"
+              className="transition-all duration-1000 ease-linear"
+              style={{ filter: "drop-shadow(0 0 6px oklch(var(--primary) / 0.3))" }}
             />
+            <defs>
+              <linearGradient id="prayer-gradient-hero" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="oklch(var(--primary))" />
+                <stop offset="100%" stopColor="oklch(var(--gold))" />
+              </linearGradient>
+            </defs>
           </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="font-amiri text-xl text-primary">{next ? ARABIC_NAMES[next.name] : '—'}</span>
-            <span className="text-[11px] font-medium text-muted-foreground mt-0.5">{next?.time ?? ''}</span>
+          <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+            <span className="font-amiri text-2xl text-primary leading-none">{ARABIC_NAMES[next.name]}</span>
+            <span className="text-[11px] font-semibold text-muted-foreground mt-1 tracking-wide">{next.time}</span>
           </div>
         </div>
 
         {/* Info */}
-        <div className="flex-1 text-center md:text-left space-y-2">
+        <div className="flex-1 text-center md:text-left space-y-3">
           <div className="flex items-center justify-center md:justify-start gap-2 text-muted-foreground">
-            <Clock className="h-4 w-4" />
-            <span className="text-xs uppercase tracking-wider font-medium">Next Prayer</span>
+            <Clock className="h-3.5 w-3.5" />
+            <span className="text-[11px] uppercase tracking-[0.2em] font-semibold">Next Prayer</span>
           </div>
-          <h3 className="text-3xl font-bold text-foreground">{next?.name ?? '—'}</h3>
-          <p className="text-2xl font-mono font-semibold text-primary tabular-nums">{countdown}</p>
-          <p className="text-xs text-muted-foreground">{logged}/5 prayers logged today</p>
+          <h3 className="text-4xl font-extrabold tracking-tight text-foreground">{next.name}</h3>
+
+          {/* Countdown digits */}
+          <div className="flex items-center justify-center md:justify-start gap-1.5">
+            {[
+              { value: countdown.h, label: "hr" },
+              { value: countdown.m, label: "min" },
+              { value: countdown.s, label: "sec" },
+            ].map((unit, i) => (
+              <div key={unit.label} className="flex items-center gap-1.5">
+                <div className="flex flex-col items-center">
+                  <span className="text-3xl md:text-4xl font-mono font-bold tabular-nums text-primary leading-none">
+                    {unit.value}
+                  </span>
+                  <span className="text-[9px] uppercase tracking-wider text-muted-foreground mt-0.5">{unit.label}</span>
+                </div>
+                {i < 2 && <span className="text-2xl font-light text-muted-foreground/40 -mt-3">:</span>}
+              </div>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-center md:justify-start gap-1.5 text-muted-foreground/60">
+            <MapPin className="h-3 w-3" />
+            <span className="text-[10px] tracking-wide">{logged}/5 prayers logged today</span>
+          </div>
         </div>
 
-        {/* Prayer dots */}
+        {/* Prayer timeline */}
         <div className="flex md:flex-col gap-3">
           {PRAYER_NAMES.map((name, i) => {
             const isPast = next ? i < next.index : false
             const isCurrent = next?.name === name
             const logKey = name.toLowerCase()
+            const timeKey = Object.keys(times || {}).find(k => k.toLowerCase() === logKey)
             const logStatus = summary?.[logKey]?.status
+            const timeStr = timeKey ? times[timeKey] : '--:--'
+
             return (
-              <div key={name} className="flex flex-col items-center gap-1">
+              <div key={name} className="flex flex-col items-center gap-1.5 group">
                 <div className={cn(
-                  'h-3 w-3 rounded-full border-2 transition-all',
-                  isCurrent ? 'border-primary bg-primary scale-110' :
-                  logStatus === 'on_time' ? 'border-sage bg-sage' :
-                  isPast ? 'border-border bg-border' :
-                  'border-border bg-transparent'
-                )} />
-                <span className="text-[9px] font-medium text-muted-foreground">{name[0]}</span>
+                  'h-3.5 w-3.5 rounded-full border-2 transition-all duration-300 relative',
+                  isCurrent ? 'border-primary bg-primary shadow-[0_0_10px_oklch(var(--primary)/0.4)] scale-110' :
+                    logStatus === 'on_time' ? 'border-sage bg-sage' :
+                      isPast ? 'border-border bg-muted/50' :
+                        'border-border bg-transparent group-hover:border-primary/30'
+                )}>
+                  {isCurrent && <div className="absolute inset-0 rounded-full bg-primary animate-ping opacity-20" />}
+                </div>
+                <div className="text-center">
+                  <span className={cn(
+                    "text-[8px] font-black uppercase tracking-tighter block leading-none mb-1",
+                    isCurrent ? "text-primary" : "text-muted-foreground/70"
+                  )}>{name}</span>
+                  <span className="text-[9px] font-bold text-foreground/90 block">{timeStr}</span>
+                </div>
               </div>
             )
           })}
@@ -249,10 +295,10 @@ function DailyVerse({ verseData }) {
 function HabitsSummary({ habits }) {
   if (!habits?.length) {
     return (
-      <div className="rounded-2xl border border-border bg-card p-6 flex flex-col items-center justify-center gap-3 min-h-[160px]">
-        <Heart className="h-8 w-8 text-muted-foreground/40" />
-        <p className="text-sm text-muted-foreground text-center">No habits yet.<br/>Start tracking your daily Islamic goals.</p>
-        <Link to="/habits" className="text-xs font-medium text-primary hover:underline">Add your first habit →</Link>
+      <div className="rounded-2xl border border-border bg-card p-6 flex flex-col items-center justify-center text-center space-y-2">
+        <NotebookPen className="h-8 w-8 text-muted-foreground/40" />
+        <p className="text-sm text-muted-foreground font-medium">No habits tracked yet</p>
+        <Link to="/habits" className="text-xs text-primary font-bold hover:underline">Start Tracking</Link>
       </div>
     )
   }
@@ -294,14 +340,14 @@ function HabitsSummary({ habits }) {
 
 // ─── Quick Actions ────────────────────────────────────────────────────────────
 const ACTIONS = [
-  { title: 'Quran',     icon: BookOpen,    color: 'bg-primary/10 text-primary', to: '/quran',     desc: 'Read & Listen' },
-  { title: 'Dhikr',     icon: Sparkles,    color: 'bg-gold/15 text-gold',       to: '/habits',    search: { tab: 'dhikr' }, desc: 'Tasbeeh Counter' },
-  { title: 'Journal',   icon: NotebookPen, color: 'bg-sage/15 text-sage',       to: '/journal',   desc: 'Daily Reflection' },
-  { title: 'Habits',    icon: Heart,       color: 'bg-warm/10 text-warm',       to: '/habits',    desc: 'Track Progress' },
-  { title: 'Qibla',     icon: Compass,     color: 'bg-primary/10 text-primary', to: '/qibla',     desc: 'Find Direction' },
-  { title: 'Community', icon: Users,       color: 'bg-sage/15 text-sage',       to: '/community', desc: 'Connect' },
-  { title: 'Wellness',  icon: Dumbbell,    color: 'bg-warm/10 text-warm',       to: '/wellness',  desc: 'Body & Mind' },
-  { title: 'Sadaqah',   icon: HandHeart,   color: 'bg-gold/15 text-gold',       to: '/waqf',      desc: 'Give & Earn Ajr' },
+  { title: 'Quran', icon: BookOpen, color: 'bg-primary/10 text-primary', to: '/quran', desc: 'Read & Listen' },
+  { title: 'Dhikr', icon: Sparkles, color: 'bg-gold/15 text-gold', to: '/habits', search: { tab: 'dhikr' }, desc: 'Tasbeeh Counter' },
+  { title: 'Journal', icon: NotebookPen, color: 'bg-sage/15 text-sage', to: '/journal', desc: 'Daily Reflection' },
+  { title: 'Habits', icon: Heart, color: 'bg-warm/10 text-warm', to: '/habits', desc: 'Track Progress' },
+  { title: 'Qibla', icon: Compass, color: 'bg-primary/10 text-primary', to: '/qibla', desc: 'Find Direction' },
+  { title: 'Community', icon: Users, color: 'bg-sage/15 text-sage', to: '/community', desc: 'Connect' },
+  { title: 'Wellness', icon: Dumbbell, color: 'bg-warm/10 text-warm', to: '/wellness', desc: 'Body & Mind' },
+  { title: 'Meals', icon: Apple, color: 'bg-gold/15 text-gold', to: '/wellness', search: { tab: 'meals' }, desc: 'Meal Nutrition' },
 ]
 
 function QuickActions() {
@@ -370,14 +416,6 @@ function InsightCard() {
   )
 }
 
-// ─── Nav Quick Links ──────────────────────────────────────────────────────────
-const NAV_LINKS = [
-  { to: '/quran',    icon: BookOpen,  label: 'Quran & Hifz',    desc: 'Continue your memorisation' },
-  { to: '/qibla',   icon: Compass,   label: 'Qibla & Mosques', desc: 'Direction + nearby mosques' },
-  { to: '/wellness',icon: Dumbbell,  label: 'Wellness Center', desc: 'Health, fasts & sleep' },
-  { to: '/waqf',    icon: HandHeart, label: 'Waqf & Sadaqah',  desc: 'Give for the sake of Allah' },
-]
-
 // ─── Pull-to-refresh ─────────────────────────────────────────────────────────
 function usePullToRefresh(onRefresh) {
   const startY = useRef(null)
@@ -422,7 +460,7 @@ function DashboardPage() {
     queryFn: () => api.get(`/prayer/summary/today?date=${today}`).then(r => r.data).catch(() => null),
   })
 
-  const { data: habits } = useQuery({
+  const { data: habits, isLoading: habitsLoading } = useQuery({
     queryKey: ['habits'],
     queryFn: () => api.get('/habits').then(r => r.data).catch(() => []),
   })
@@ -485,27 +523,10 @@ function DashboardPage() {
       {/* Habits + Verse 2-col grid */}
       <div className="grid gap-6 md:grid-cols-2">
         <DailyVerse verseData={verseData} />
-        <HabitsSummary habits={habits} />
-      </div>
-
-      {/* Quick nav links */}
-      <div className="space-y-2">
-        {NAV_LINKS.map(item => (
-          <Link
-            key={item.to}
-            to={item.to}
-            className="flex items-center gap-4 px-5 py-4 rounded-xl border border-border bg-card hover:shadow-md hover:border-primary/20 hover:-translate-y-0.5 transition-all duration-200"
-          >
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-              <item.icon className="h-5 w-5 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground">{item.label}</p>
-              <p className="text-xs text-muted-foreground">{item.desc}</p>
-            </div>
-            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-          </Link>
-        ))}
+        {habitsLoading
+          ? <div className="h-48 rounded-2xl bg-muted animate-pulse" />
+          : <HabitsSummary habits={habits} />
+        }
       </div>
 
       {/* Ayat footer */}

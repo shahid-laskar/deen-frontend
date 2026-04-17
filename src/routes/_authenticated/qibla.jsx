@@ -46,7 +46,7 @@ function CompassRose({ qiblaBearing, deviceHeading }) {
             return (
               <span key={label} className={cn('absolute font-bold text-[13px]', label === 'N' ? 'text-primary' : 'text-muted-foreground')} style={{
                 left: `calc(50% + ${r * Math.cos(rad)}px - 6px)`,
-                top:  `calc(50% + ${r * Math.sin(rad)}px - 8px)`,
+                top: `calc(50% + ${r * Math.sin(rad)}px - 8px)`,
               }}>{label}</span>
             )
           })}
@@ -59,7 +59,7 @@ function CompassRose({ qiblaBearing, deviceHeading }) {
               <div key={i} className={cn('absolute origin-top', isMajor ? 'w-[1.5px] bg-border-strong' : 'w-[0.5px] bg-border')} style={{
                 height: `${r1 - r2}px`,
                 left: `calc(50% + ${r1 * Math.cos(rad)}px)`,
-                top:  `calc(50% + ${r1 * Math.sin(rad)}px)`,
+                top: `calc(50% + ${r1 * Math.sin(rad)}px)`,
                 transform: `rotate(${angle + 90}deg)`,
               }} />
             )
@@ -117,7 +117,7 @@ function QiblaPage() {
   const hasCoords = hasCoordsRaw && !isMeccaDefault
 
   const qiblaBearing = hasCoords ? calcBearing(lat, lng, KAABA.lat, KAABA.lng) : null
-  const distKm       = hasCoords ? calcDistKm(lat, lng, KAABA.lat, KAABA.lng)  : null
+  const distKm = hasCoords ? calcDistKm(lat, lng, KAABA.lat, KAABA.lng) : null
 
   const bearingLabel = (b) => ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(b / 45) % 8]
 
@@ -163,9 +163,9 @@ function QiblaPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">Qibla & Mosques</h1>
+    <div className="mx-auto max-w-2xl px-4 py-6 space-y-6">
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-md -mx-4 px-4 py-2 border-b border-border/50">
+        <h1 className="text-2xl font-bold text-foreground">Qibla & Mosques</h1>
         <p className="text-sm text-muted-foreground mt-1">Direction toward the Kaaba in Makkah</p>
       </div>
 
@@ -246,7 +246,7 @@ function QiblaPage() {
               <p className="text-xs text-muted-foreground mt-1">Try a larger radius.</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground/30 transition-colors">
               {mosquesData?.mosques?.map(m => (
                 <MosqueCard key={m.id} mosque={m} isFavourite={favourites.some(f => f.id === m.id)} onToggleFav={toggleFav} />
               ))}

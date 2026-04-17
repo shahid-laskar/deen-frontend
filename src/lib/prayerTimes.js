@@ -81,15 +81,15 @@ export function calcPrayerTimes(latitude, longitude, methodKey = 'MWL', madhab =
   const times = new PrayerTimes(coords, date, params)
 
   return {
-    Fajr:    fmt(times.fajr),
-    Sunrise: fmt(times.sunrise),
-    Dhuhr:   fmt(times.dhuhr),
-    Asr:     fmt(times.asr),
-    Sunset:  fmt(times.sunset),
-    Maghrib: fmt(times.maghrib),
-    Isha:    fmt(times.isha),
-    Midnight: fmt(times.midnight),
-    _raw: times,   // expose for advanced use (e.g., current prayer detection)
+    fajr:     fmt(times.fajr),
+    sunrise:  fmt(times.sunrise),
+    dhuhr:    fmt(times.dhuhr),
+    asr:      fmt(times.asr),
+    sunset:   fmt(times.sunset),
+    maghrib:  fmt(times.maghrib),
+    isha:     fmt(times.isha),
+    midnight: fmt(times.midnight),
+    _raw: times,
   }
 }
 

@@ -6,7 +6,11 @@ import { Toaster } from 'react-hot-toast'
 import { routeTree } from './routeTree.gen'
 import { queryClient } from './lib/queryClient'
 import { useAuthStore } from './store/authStore'
+import { initPostHog } from './lib/posthog'
 import './index.css'
+
+// Initialize analytics
+initPostHog()
 
 // Create the router with auth context
 const router = createRouter({

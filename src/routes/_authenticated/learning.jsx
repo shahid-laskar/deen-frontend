@@ -206,7 +206,11 @@ export default function LearningPage() {
       <div>
         {!activePathId && tab === 'Courses' && (
           <div className="animate-in fade-in slide-in-from-bottom-2">
-            {paths.length === 0 ? (
+            {isLoading ? (
+              <div className="grid gap-4">
+                {[1, 2, 3].map(i => <Skeleton key={i} className="h-28 rounded-2xl w-full" />)}
+              </div>
+            ) : paths.length === 0 ? (
               <div className="text-center py-16 px-4 border-2 border-dashed border-border rounded-3xl bg-muted/30">
                 <span className="text-5xl block mb-4">📚</span>
                 <p className="text-sm font-medium text-muted-foreground mb-4">No courses available yet.</p>

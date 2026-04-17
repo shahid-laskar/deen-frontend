@@ -16,15 +16,16 @@ import {
 // ─── Nav structure (matches existing nav groups) ───────────────────────────────
 const CORE_NAV = [
   { to: '/dashboard',    icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/prayer',       icon: Clock,           label: 'Prayer' },
-  { to: '/quran',        icon: BookOpen,        label: 'Quran & Hifz' },
-  { to: '/learning',     icon: BookMarked,      label: 'Learning Hub' },
-  { to: '/habits',       icon: Target,          label: 'Habits' },
+  { to: '/prayer',       icon: Clock,           label: 'Prayer Times' },
+  { to: '/quran',        icon: BookOpen,        label: 'Quran' },
+  { to: '/habits',       icon: Sparkles,        label: 'Dhikr & Dua', search: { tab: 'dhikr' } },
+  { to: '/habits',       icon: Heart,           label: 'Habits',      search: { tab: 'today' } },
   { to: '/journal',      icon: BookMarked,      label: 'Journal' },
   { to: '/tasks',        icon: CheckSquare,     label: 'Planner' },
   { to: '/ai',           icon: Sparkles,        label: 'AI Guide' },
-  { to: '/qibla',        icon: Compass,         label: 'Qibla & Mosques' },
+  { to: '/qibla',        icon: Compass,         label: 'Qibla' },
   { to: '/gamification', icon: Trophy,          label: 'Journey' },
+  { to: '/learning',     icon: BookMarked,      label: 'Learning Hub' },
 ]
 
 const WELLNESS_NAV = [
@@ -57,24 +58,29 @@ function GeometricPattern() {
 }
 
 // ─── Individual nav link ───────────────────────────────────────────────────────
-function NavItem({ to, icon: Icon, label, collapsed, pink = false }) {
-  const { location } = useRouterState()
-  const isActive = location.pathname === to || location.pathname.startsWith(to + '/')
-
+function NavItem({ to, icon: Icon, label, collapsed, pink = false, search }) {
   return (
     <Link
       to={to}
-      className={cn(
-        'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 group relative',
-        isActive
-          ? pink ? 'bg-pink-500/10 text-pink-400' : 'bg-primary/10 text-primary'
-          : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
-      )}
+      search={search}
+      activeOptions={{ exact: true }}
+      className="group"
     >
-      <Icon className={cn('h-[18px] w-[18px] shrink-0', isActive && !pink && 'text-primary')} />
-      {!collapsed && <span className="truncate">{label}</span>}
-      {isActive && !collapsed && (
-        <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
+      {({ isActive }) => (
+        <div
+          className={cn(
+            'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 relative',
+            isActive
+              ? pink ? 'bg-pink-500/10 text-pink-400' : 'bg-primary/10 text-primary'
+              : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+          )}
+        >
+          <Icon className={cn('h-[18px] w-[18px] shrink-0', isActive && !pink && 'text-primary')} />
+          {!collapsed && <span className="truncate">{label}</span>}
+          {isActive && !collapsed && (
+            <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
+          )}
+        </div>
       )}
     </Link>
   )
@@ -111,7 +117,7 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        'hidden md:flex flex-col h-screen bg-sidebar border-r border-sidebar-border relative transition-all duration-300 overflow-hidden',
+        'hidden md:flex flex-col h-full bg-sidebar border-r border-sidebar-border relative transition-all duration-300 overflow-hidden shrink-0',
         sidebarCollapsed ? 'w-[4.5rem]' : 'w-64'
       )}
     >
@@ -120,13 +126,13 @@ export function Sidebar() {
 
       {/* Logo */}
       <div className="relative z-10 flex items-center gap-3 px-5 py-6 border-b border-sidebar-border shrink-0">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-          <span className="font-amiri text-lg font-bold leading-none">د</span>
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm shadow-primary/20">
+          <span className="font-amiri text-xl font-bold leading-none">د</span>
         </div>
         {!sidebarCollapsed && (
           <div className="overflow-hidden">
-            <h1 className="text-base font-semibold tracking-tight text-sidebar-foreground leading-none">Deen</h1>
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-0.5">Islamic Companion</p>
+            <h1 className="text-lg font-bold tracking-tight text-sidebar-foreground leading-none">Deen</h1>
+            <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60 mt-1">Your Islamic Companion</p>
           </div>
         )}
       </div>
@@ -147,8 +153,8 @@ export function Sidebar() {
       )}
 
       {/* Navigation */}
-      <nav className="relative z-10 flex-1 overflow-y-auto px-3 py-3 space-y-0.5">
-        {CORE_NAV.map(n => <NavItem key={n.to} {...n} collapsed={sidebarCollapsed} />)}
+      <nav className="relative z-10 flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+        {CORE_NAV.map(n => <NavItem key={n.label} {...n} collapsed={sidebarCollapsed} />)}
 
         <SectionLabel label="Wellness" collapsed={sidebarCollapsed} />
         {WELLNESS_NAV.map(n => <NavItem key={n.to} {...n} collapsed={sidebarCollapsed} />)}
@@ -165,11 +171,11 @@ export function Sidebar() {
       </nav>
 
       {/* Footer actions */}
-      <div className="relative z-10 border-t border-sidebar-border px-3 py-3 space-y-0.5 shrink-0">
+      <div className="relative z-10 border-t border-sidebar-border px-3 py-4 space-y-1 shrink-0 mt-auto">
         <NavItem to="/subscription" icon={Crown} label="Upgrade Plan" collapsed={sidebarCollapsed} />
         <NavItem to="/settings" icon={Settings} label="Settings" collapsed={sidebarCollapsed} />
         {user?.role === 'admin' && (
-          <NavItem to="/admin" icon={Shield} label="Admin" collapsed={sidebarCollapsed} />
+          <NavItem to="/admin" icon={Shield} label="Admin Portal" collapsed={sidebarCollapsed} />
         )}
         <button
           onClick={toggleDark}

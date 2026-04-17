@@ -172,4 +172,47 @@ export const aiApi = {
   getUsage: () => api.get('/ai/usage'),
 }
 
+export const financeApi = {
+  calculateZakat: (data) => api.post('/finance/zakat/calculate', data),
+  screenStock: (data) => api.post('/finance/screener', data),
+  compareMortgage: (data) => api.post('/finance/mortgage/compare', data),
+}
+
+export const gamificationApi = {
+  getProfile: () => api.get('/gamification/profile'),
+  getXpHistory: (params) => api.get('/gamification/xp/history', { params }),
+  awardXp: (data) => api.post('/gamification/xp/award', data),
+  getBadges: () => api.get('/gamification/badges'),
+  getMyBadges: () => api.get('/gamification/badges/mine'),
+  getQuests: () => api.get('/gamification/quests'),
+  getActiveQuests: () => api.get('/gamification/quests/active'),
+  startQuest: (id) => api.post(`/gamification/quests/${id}/start`),
+  updateQuest: (id, params) => api.post(`/gamification/quests/${id}/update`, null, { params }),
+}
+
+export const communityApi = {
+  getGroups: () => api.get('/community/groups'),
+  createGroup: (data) => api.post('/community/groups', data),
+  joinGroup: (id) => api.post(`/community/groups/${id}/join`),
+  getPosts: (groupId) => api.get(`/community/groups/${groupId}/posts`),
+  createPost: (groupId, data) => api.post(`/community/groups/${groupId}/posts`, data),
+  getScholars: () => api.get('/community/scholars'),
+  getWaqfProjects: () => api.get('/community/waqf/projects'),
+}
+
+export const learningApi = {
+  getPaths: () => api.get('/learning/paths'),
+  getPath: (id) => api.get(`/learning/paths/${id}`),
+  completeLesson: (id) => api.post(`/learning/lessons/${id}/complete`),
+  getVocabDue: () => api.get('/learning/vocab/review'),
+  reviewVocab: (id, data) => api.post(`/learning/vocab/${id}/review`, data),
+}
+
+export const recitationApi = {
+  getSessions: () => api.get('/recitation/sessions'),
+  createSession: (data) => api.post('/recitation/sessions', data),
+  getSession: (id) => api.get(`/recitation/sessions/${id}`),
+  getFeedback: (id) => api.get(`/recitation/sessions/${id}/feedback`),
+}
+
 export default api

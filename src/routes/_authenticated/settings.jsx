@@ -473,7 +473,7 @@ function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 md:px-8 md:py-8 space-y-6">
-      <h1 className="text-2xl font-semibold text-foreground">Settings</h1>
+      <h1 className="text-2xl font-bold text-foreground">Settings</h1>
 
       {/* Tab bar — scrollable on mobile */}
       <div className="inline-flex h-9 items-center rounded-lg bg-muted p-1 gap-0.5 w-full overflow-x-auto">

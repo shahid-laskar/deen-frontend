@@ -131,10 +131,10 @@ function TasksPage() {
   const totalCount = tasks?.length || 0
 
   return (
-    <div className="p-4 md:p-8 max-w-3xl mx-auto space-y-6">
+    <div className="mx-auto max-w-3xl px-4 py-6 md:px-8 md:py-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Planner</h1>
+          <h1 className="text-2xl font-bold text-foreground">Planner</h1>
           <p className="text-sm text-muted-foreground mt-0.5">{completedCount}/{totalCount} tasks done</p>
         </div>
         <Button onClick={() => { resetForm(); setModalOpen(true) }}><Plus className="h-4 w-4 mr-1.5" /> Add</Button>

@@ -27,27 +27,27 @@ export const Route = createFileRoute('/_authenticated/prayer')({
 // ─── Constants ────────────────────────────────────────────────────────────────
 const PRAYERS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha']
 const PRAYER_DISPLAY = { fajr: 'Fajr', dhuhr: 'Dhuhr', asr: 'Asr', maghrib: 'Maghrib', isha: 'Isha' }
-const PRAYER_ARABIC  = { fajr: 'الفجر', dhuhr: 'الظهر', asr: 'العصر', maghrib: 'المغرب', isha: 'العشاء' }
+const PRAYER_ARABIC = { fajr: 'الفجر', dhuhr: 'الظهر', asr: 'العصر', maghrib: 'المغرب', isha: 'العشاء' }
 
 const STATUS_OPTIONS = [
   { value: 'on_time', label: 'On time', emoji: '✅', color: 'text-sage border-sage/50 bg-sage/10' },
-  { value: 'late',    label: 'Late',    emoji: '⏰', color: 'text-gold border-gold/50 bg-gold/10' },
-  { value: 'qadha',  label: 'Qadha',   emoji: '🔄', color: 'text-blue-400 border-blue-400/50 bg-blue-400/10' },
-  { value: 'missed', label: 'Missed',  emoji: '❌', color: 'text-destructive border-destructive/50 bg-destructive/10' },
+  { value: 'late', label: 'Late', emoji: '⏰', color: 'text-gold border-gold/50 bg-gold/10' },
+  { value: 'qadha', label: 'Qadha', emoji: '🔄', color: 'text-blue-400 border-blue-400/50 bg-blue-400/10' },
+  { value: 'missed', label: 'Missed', emoji: '❌', color: 'text-destructive border-destructive/50 bg-destructive/10' },
 ]
 const STATUS_BADGE_VARIANT = { on_time: 'sage', late: 'gold', qadha: 'default', missed: 'destructive', excused: 'muted' }
 
 const TABS = [
-  { id: 'times',   label: 'Times',   icon: Clock       },
-  { id: 'mosques', label: 'Mosques', icon: Building2    },
-  { id: 'travel',  label: 'Travel',  icon: Plane        },
-  { id: 'stats',   label: 'Stats',   icon: BarChart2    },
+  { id: 'times', label: 'Times', icon: Clock },
+  { id: 'mosques', label: 'Mosques', icon: Building2 },
+  { id: 'travel', label: 'Travel', icon: Plane },
+  { id: 'stats', label: 'Stats', icon: BarChart2 },
 ]
 
 // ─── Offline times hook ───────────────────────────────────────────────────────
 function useOfflineTimes(user) {
   return useMemo(() => {
-    if (!user?.latitude || !user?.longitude) return null
+    if (typeof user?.latitude !== 'number' || typeof user?.longitude !== 'number') return null
     try {
       return calcPrayerTimes(user.latitude, user.longitude, user.prayer_method || 'MWL', user.madhab || 'hanafi')
     } catch { return null }
@@ -169,7 +169,7 @@ function LogModal({ prayerName, onClose, onSave, isPending }) {
             <div className="space-y-2">
               <p className="text-sm font-medium text-foreground">Khushu rating</p>
               <div className="flex gap-2">
-                {[1,2,3,4,5].map(n => (
+                {[1, 2, 3, 4, 5].map(n => (
                   <button
                     key={n}
                     onClick={() => setKhushu(khushu === n ? null : n)}
@@ -220,40 +220,62 @@ function LogModal({ prayerName, onClose, onSave, isPending }) {
 // ─── Prayer Row ───────────────────────────────────────────────────────────────
 function PrayerRow({ name, time, log, isNext, onLog }) {
   const display = PRAYER_DISPLAY[name]
-  const arabic  = PRAYER_ARABIC[name]
-  const variant = STATUS_BADGE_VARIANT[log?.status] ?? 'muted'
+  const arabic = PRAYER_ARABIC[name]
 
   return (
     <button
       onClick={() => onLog(name)}
       className={cn(
-        'w-full flex items-center gap-3 px-4 py-3.5 rounded-xl border transition-all duration-200 hover:shadow-sm text-left',
-        isNext ? 'border-gold/50 bg-gold/5' : log ? 'border-border bg-card' : 'border-border bg-card hover:border-primary/20'
+        'w-full group relative flex items-center justify-between gap-4 px-5 py-4 rounded-2xl border transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] text-left',
+        isNext
+          ? 'bg-primary/8 border-primary/30 shadow-sm shadow-primary/10'
+          : 'bg-card border-border/60 hover:border-border hover:shadow-md'
       )}
     >
-      {/* Arabic name + next badge */}
-      <div className="w-10 shrink-0 text-center">
-        <p className="font-amiri text-base text-primary leading-tight">{arabic}</p>
-        {isNext && <span className="text-[9px] font-bold uppercase tracking-wider text-gold">Next</span>}
-      </div>
-
-      {/* Prayer name + time */}
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-foreground">{display}</p>
-        <p className="text-xs text-muted-foreground">{time || '—'}</p>
-      </div>
-
-      {/* Status */}
-      {log ? (
-        <div className="flex items-center gap-2 shrink-0">
-          {log.with_congregation && <Users className="h-3.5 w-3.5 text-primary" />}
-          {log.khushu_rating && <span className="text-xs text-gold">{'★'.repeat(log.khushu_rating)}</span>}
-          <Badge variant={variant}>{STATUS_OPTIONS.find(s => s.value === log.status)?.label}</Badge>
-          <RotateCcw className="h-3 w-3 text-muted-foreground" />
-        </div>
-      ) : (
-        <span className="text-xs text-muted-foreground shrink-0">Log →</span>
+      {isNext && (
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-1/2 bg-primary rounded-r-full" />
       )}
+
+      <div className="flex items-center gap-4 flex-1">
+        {/* Step indicator like dashboard timeline */}
+        <div className={cn(
+          "w-3.5 h-3.5 rounded-full border-2 transition-all duration-500",
+          log?.status === 'on_time' ? "bg-sage border-sage shadow-[0_0_8px_oklch(var(--sage)/0.4)]" :
+            isNext ? "bg-primary border-primary shadow-[0_0_8px_oklch(var(--primary)/0.4)] animate-pulse" :
+              "bg-transparent border-muted-foreground/30"
+        )} />
+
+        <div className="flex flex-col">
+          <span className={cn(
+            "text-[9px] font-black uppercase tracking-[0.2em] leading-none mb-1.5",
+            isNext ? "text-primary" : "text-muted-foreground"
+          )}>
+            {display}
+          </span>
+          <span className="text-xl font-bold text-foreground tabular-nums leading-none">
+            {time || '--:--'}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3">
+        {log ? (
+          <div className="flex flex-col items-end gap-1">
+            <Badge variant={STATUS_BADGE_VARIANT[log.status]} className="capitalize px-2 py-0.5 text-[10px] font-bold">
+              {log.status.replace('_', ' ')}
+            </Badge>
+            <div className="flex items-center gap-2">
+              {log.with_congregation && <Users className="h-3 w-3 text-primary" />}
+              <RotateCcw className="h-2.5 w-2.5 text-muted-foreground/50" />
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-end opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0">
+            <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Tap to Log</span>
+            <span className="font-amiri text-lg text-primary/30 leading-none">{arabic}</span>
+          </div>
+        )}
+      </div>
     </button>
   )
 }
@@ -270,7 +292,7 @@ function SeasonBanner({ times, ctx }) {
         </div>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        {[['Suhoor ends', times?.Fajr], ['Iftar', times?.Maghrib]].map(([label, t]) => (
+        {[['Suhoor ends', times?.fajr], ['Iftar', times?.maghrib]].map(([label, t]) => (
           <div key={label} className="rounded-xl p-3 bg-white/8">
             <p className="text-purple-300 text-[10px] uppercase tracking-widest">{label}</p>
             <p className="text-white font-bold text-lg">{t || '—'}</p>
@@ -294,11 +316,11 @@ function SeasonBanner({ times, ctx }) {
     </div>
   )
   if (ctx.isDhulHijjah10) return (
-    <div className="rounded-xl px-4 py-3 flex items-center gap-3 bg-stone-900 border border-stone-700">
+    <div className="rounded-xl px-4 py-3 flex items-center gap-3 bg-gold/8 border border-gold/30">
       <span className="text-xl">🕋</span>
       <div>
         <p className="text-gold font-bold">Day {ctx.hijri.day} of Dhul Hijjah</p>
-        <p className="text-stone-400 text-xs">Blessed days — increase your dhikr and good deeds</p>
+        <p className="text-muted-foreground text-xs">Blessed days — increase your dhikr and good deeds</p>
       </div>
     </div>
   )
@@ -347,7 +369,7 @@ function MosqueTab({ user }) {
         </div>
         {locationError && <p className="text-sm text-destructive mb-3">{locationError}</p>}
         {isLoading ? (
-          <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-16" />)}</div>
+          <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-16" />)}</div>
         ) : mosques.length === 0 ? (
           <div className="text-center py-10 text-muted-foreground">
             <Building2 className="h-10 w-10 mx-auto mb-3 opacity-30" />
@@ -355,7 +377,7 @@ function MosqueTab({ user }) {
             {!currentLat && <Button size="sm" className="mt-3" onClick={detectLocation}>Detect My Location</Button>}
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2 max-h-[450px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground/30 transition-colors">
             {mosques.map(m => (
               <div key={m.id} className="rounded-xl border border-border bg-background p-3">
                 <div className="flex justify-between items-start">
@@ -465,9 +487,9 @@ function TravelTab({ user }) {
 
 // ─── Statistics Panel ─────────────────────────────────────────────────────────
 function StatisticsPanel() {
-  const { data: stats,   isLoading: sl } = useQuery({ queryKey: ['prayer','stats'],   queryFn: () => api.get('/prayer/stats').then(r => r.data).catch(() => []) })
-  const { data: heatmap, isLoading: hl } = useQuery({ queryKey: ['prayer','heatmap'], queryFn: () => api.get('/prayer/heatmap').then(r => r.data).catch(() => []) })
-  const { data: weekly                 } = useQuery({ queryKey: ['prayer','weekly'],   queryFn: () => api.get('/prayer/weekly-summary').then(r => r.data).catch(() => null) })
+  const { data: stats, isLoading: sl } = useQuery({ queryKey: ['prayer', 'stats'], queryFn: () => api.get('/prayer/stats').then(r => r.data).catch(() => []) })
+  const { data: heatmap, isLoading: hl } = useQuery({ queryKey: ['prayer', 'heatmap'], queryFn: () => api.get('/prayer/heatmap').then(r => r.data).catch(() => []) })
+  const { data: weekly } = useQuery({ queryKey: ['prayer', 'weekly'], queryFn: () => api.get('/prayer/weekly-summary').then(r => r.data).catch(() => null) })
 
   return (
     <div className="space-y-4">
@@ -476,9 +498,9 @@ function StatisticsPanel() {
           <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">This week</h3>
           <div className="grid grid-cols-3 gap-3 mb-3">
             {[
-              ['Prayed',   weekly.total_prayed,      weekly.total_prayers_possible],
-              ['On time',  weekly.total_on_time,     weekly.total_prayers_possible],
-              ["Jama'ah",  weekly.congregation_count, Math.max(weekly.total_prayed, 1)],
+              ['Prayed', weekly.total_prayed, weekly.total_prayers_possible],
+              ['On time', weekly.total_on_time, weekly.total_prayers_possible],
+              ["Jama'ah", weekly.congregation_count, Math.max(weekly.total_prayed, 1)],
             ].map(([label, val, max]) => (
               <div key={label} className="flex flex-col items-center gap-2">
                 <ProgressRing value={max ? Math.round((val / max) * 100) : 0} size={56} strokeWidth={4}>
@@ -500,9 +522,9 @@ function StatisticsPanel() {
         {sl
           ? <div className="space-y-3">{PRAYERS.map(p => <Skeleton key={p} className="h-5" />)}</div>
           : <div className="space-y-3">{PRAYERS.map(name => {
-              const s = stats?.find(r => r.prayer_name === name)
-              return s ? <StatsBar key={name} label={name} value={s.on_time_count} max={s.total_days || 1} /> : null
-            })}</div>
+            const s = stats?.find(r => r.prayer_name === name)
+            return s ? <StatsBar key={name} label={name} value={s.on_time_count} max={s.total_days || 1} /> : null
+          })}</div>
         }
       </div>
 
@@ -553,8 +575,8 @@ function PrayerPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 md:px-8 md:py-8 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">Prayer</h1>
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-md -mx-4 px-4 py-2 border-b border-border/50">
+        <h1 className="text-2xl font-bold text-foreground">Prayer</h1>
         <p className="text-sm text-primary mt-0.5">{ctx.formatted}</p>
       </div>
 
@@ -599,8 +621,8 @@ function PrayerPage() {
           <div className="grid grid-cols-3 gap-3">
             {[
               ['Current streak', streak?.current_streak ?? '—', 'days'],
-              ['Today',          `${summary?.total_on_time ?? 0}/5`, 'on time'],
-              ['This week',      streak ? `${Math.round(streak.this_week_completion)}%` : '—', 'completion'],
+              ['Today', `${summary?.total_on_time ?? 0}/5`, 'on time'],
+              ['This week', streak ? `${Math.round(streak.this_week_completion)}%` : '—', 'completion'],
             ].map(([label, value, sub]) => (
               <div key={label} className="rounded-xl border border-border bg-card p-3 text-center">
                 <p className="text-xl font-bold text-foreground">{value}</p>
@@ -614,29 +636,26 @@ function PrayerPage() {
           <div className="rounded-2xl border border-border bg-card p-4 space-y-2">
             {sumLoading
               ? PRAYERS.map(p => <Skeleton key={p} className="h-14" />)
-              : PRAYERS.map(name => {
-                  const timeName = name.charAt(0).toUpperCase() + name.slice(1)
-                  return (
-                    <PrayerRow
-                      key={name}
-                      name={name}
-                      time={times?.[timeName] || null}
-                      log={summary?.[name] || null}
-                      isNext={nextPrayer?.name?.toLowerCase() === name}
-                      onLog={setLogModal}
-                    />
-                  )
-                })
+              : PRAYERS.map(name => (
+                  <PrayerRow
+                    key={name}
+                    name={name}
+                    time={times?.[name.toLowerCase()] || null}
+                    log={summary?.[name] || null}
+                    isNext={nextPrayer?.name?.toLowerCase() === name}
+                    onLog={setLogModal}
+                  />
+                ))
             }
           </div>
 
           {/* Sunrise / Sunset / Midnight */}
           {times && (
             <div className="grid grid-cols-3 gap-2">
-              {[['🌄 Sunrise', times.Sunrise], ['🌞 Sunset', times.Sunset], ['🕛 Midnight', times.Midnight]].map(([l, t]) => (
+              {[['🌄 Sunrise', times.sunrise], ['🌞 Sunset', times.sunset], ['🕛 Midnight', times.midnight]].map(([l, t]) => (
                 <div key={l} className="rounded-xl border border-border bg-card p-3 text-center">
                   <p className="text-xs text-muted-foreground">{l}</p>
-                  <p className="text-sm font-semibold text-foreground mt-0.5">{t}</p>
+                  <p className="text-sm font-semibold text-foreground mt-0.5">{t || '—'}</p>
                 </div>
               ))}
             </div>
@@ -666,8 +685,8 @@ function PrayerPage() {
       )}
 
       {tab === 'mosques' && <MosqueTab user={user} />}
-      {tab === 'travel'  && <TravelTab user={user} />}
-      {tab === 'stats'   && <StatisticsPanel />}
+      {tab === 'travel' && <TravelTab user={user} />}
+      {tab === 'stats' && <StatisticsPanel />}
 
       <LogModal
         prayerName={logModal}

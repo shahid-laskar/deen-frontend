@@ -109,7 +109,7 @@ function SubscriptionPage() {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-8">
+    <div className="mx-auto max-w-4xl px-4 py-6 md:px-8 md:py-8 space-y-6">
       <div className="text-center space-y-4">
         <div>
           <h1 className="text-3xl font-semibold text-foreground mb-1">Choose Your Journey</h1>
