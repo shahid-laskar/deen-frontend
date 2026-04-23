@@ -36,6 +36,20 @@ import { Route as AuthenticatedCommunityRouteImport } from './routes/_authentica
 import { Route as AuthenticatedChildrenRouteImport } from './routes/_authenticated/children'
 import { Route as AuthenticatedAiRouteImport } from './routes/_authenticated/ai'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedQuranIndexRouteImport } from './routes/_authenticated/quran/index'
+import { Route as AuthenticatedHabitsIndexRouteImport } from './routes/_authenticated/habits/index'
+import { Route as AuthenticatedQuranStatsRouteImport } from './routes/_authenticated/quran/stats'
+import { Route as AuthenticatedQuranSearchRouteImport } from './routes/_authenticated/quran/search'
+import { Route as AuthenticatedQuranPracticeRouteImport } from './routes/_authenticated/quran/practice'
+import { Route as AuthenticatedQuranHifzRouteImport } from './routes/_authenticated/quran/hifz'
+import { Route as AuthenticatedQuranHadithRouteImport } from './routes/_authenticated/quran/hadith'
+import { Route as AuthenticatedQuranDuasRouteImport } from './routes/_authenticated/quran/duas'
+import { Route as AuthenticatedQuranBookmarksRouteImport } from './routes/_authenticated/quran/bookmarks'
+import { Route as AuthenticatedHabitsLibraryRouteImport } from './routes/_authenticated/habits/library'
+import { Route as AuthenticatedHabitsDhikrRouteImport } from './routes/_authenticated/habits/dhikr'
+import { Route as AuthenticatedHabitsAnalyticsRouteImport } from './routes/_authenticated/habits/analytics'
+import { Route as AuthenticatedHabitsIdRouteImport } from './routes/_authenticated/habits/$id'
+import { Route as AuthenticatedQuranSurahIdRouteImport } from './routes/_authenticated/quran/surah.$id'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -173,6 +187,85 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedQuranIndexRoute = AuthenticatedQuranIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedQuranRoute,
+} as any)
+const AuthenticatedHabitsIndexRoute =
+  AuthenticatedHabitsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedHabitsRoute,
+  } as any)
+const AuthenticatedQuranStatsRoute = AuthenticatedQuranStatsRouteImport.update({
+  id: '/stats',
+  path: '/stats',
+  getParentRoute: () => AuthenticatedQuranRoute,
+} as any)
+const AuthenticatedQuranSearchRoute =
+  AuthenticatedQuranSearchRouteImport.update({
+    id: '/search',
+    path: '/search',
+    getParentRoute: () => AuthenticatedQuranRoute,
+  } as any)
+const AuthenticatedQuranPracticeRoute =
+  AuthenticatedQuranPracticeRouteImport.update({
+    id: '/practice',
+    path: '/practice',
+    getParentRoute: () => AuthenticatedQuranRoute,
+  } as any)
+const AuthenticatedQuranHifzRoute = AuthenticatedQuranHifzRouteImport.update({
+  id: '/hifz',
+  path: '/hifz',
+  getParentRoute: () => AuthenticatedQuranRoute,
+} as any)
+const AuthenticatedQuranHadithRoute =
+  AuthenticatedQuranHadithRouteImport.update({
+    id: '/hadith',
+    path: '/hadith',
+    getParentRoute: () => AuthenticatedQuranRoute,
+  } as any)
+const AuthenticatedQuranDuasRoute = AuthenticatedQuranDuasRouteImport.update({
+  id: '/duas',
+  path: '/duas',
+  getParentRoute: () => AuthenticatedQuranRoute,
+} as any)
+const AuthenticatedQuranBookmarksRoute =
+  AuthenticatedQuranBookmarksRouteImport.update({
+    id: '/bookmarks',
+    path: '/bookmarks',
+    getParentRoute: () => AuthenticatedQuranRoute,
+  } as any)
+const AuthenticatedHabitsLibraryRoute =
+  AuthenticatedHabitsLibraryRouteImport.update({
+    id: '/library',
+    path: '/library',
+    getParentRoute: () => AuthenticatedHabitsRoute,
+  } as any)
+const AuthenticatedHabitsDhikrRoute =
+  AuthenticatedHabitsDhikrRouteImport.update({
+    id: '/dhikr',
+    path: '/dhikr',
+    getParentRoute: () => AuthenticatedHabitsRoute,
+  } as any)
+const AuthenticatedHabitsAnalyticsRoute =
+  AuthenticatedHabitsAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => AuthenticatedHabitsRoute,
+  } as any)
+const AuthenticatedHabitsIdRoute = AuthenticatedHabitsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedHabitsRoute,
+} as any)
+const AuthenticatedQuranSurahIdRoute =
+  AuthenticatedQuranSurahIdRouteImport.update({
+    id: '/surah/$id',
+    path: '/surah/$id',
+    getParentRoute: () => AuthenticatedQuranRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -188,19 +281,33 @@ export interface FileRoutesByFullPath {
   '/female': typeof AuthenticatedFemaleRoute
   '/finance': typeof AuthenticatedFinanceRoute
   '/gamification': typeof AuthenticatedGamificationRoute
-  '/habits': typeof AuthenticatedHabitsRoute
+  '/habits': typeof AuthenticatedHabitsRouteWithChildren
   '/journal': typeof AuthenticatedJournalRoute
   '/learning': typeof AuthenticatedLearningRoute
   '/meal': typeof AuthenticatedMealRoute
   '/prayer': typeof AuthenticatedPrayerRoute
   '/qibla': typeof AuthenticatedQiblaRoute
-  '/quran': typeof AuthenticatedQuranRoute
+  '/quran': typeof AuthenticatedQuranRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/tasks': typeof AuthenticatedTasksRoute
   '/waqf': typeof AuthenticatedWaqfRoute
   '/wellness': typeof AuthenticatedWellnessRoute
   '/workout': typeof AuthenticatedWorkoutRoute
+  '/habits/$id': typeof AuthenticatedHabitsIdRoute
+  '/habits/analytics': typeof AuthenticatedHabitsAnalyticsRoute
+  '/habits/dhikr': typeof AuthenticatedHabitsDhikrRoute
+  '/habits/library': typeof AuthenticatedHabitsLibraryRoute
+  '/quran/bookmarks': typeof AuthenticatedQuranBookmarksRoute
+  '/quran/duas': typeof AuthenticatedQuranDuasRoute
+  '/quran/hadith': typeof AuthenticatedQuranHadithRoute
+  '/quran/hifz': typeof AuthenticatedQuranHifzRoute
+  '/quran/practice': typeof AuthenticatedQuranPracticeRoute
+  '/quran/search': typeof AuthenticatedQuranSearchRoute
+  '/quran/stats': typeof AuthenticatedQuranStatsRoute
+  '/habits/': typeof AuthenticatedHabitsIndexRoute
+  '/quran/': typeof AuthenticatedQuranIndexRoute
+  '/quran/surah/$id': typeof AuthenticatedQuranSurahIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -216,19 +323,31 @@ export interface FileRoutesByTo {
   '/female': typeof AuthenticatedFemaleRoute
   '/finance': typeof AuthenticatedFinanceRoute
   '/gamification': typeof AuthenticatedGamificationRoute
-  '/habits': typeof AuthenticatedHabitsRoute
   '/journal': typeof AuthenticatedJournalRoute
   '/learning': typeof AuthenticatedLearningRoute
   '/meal': typeof AuthenticatedMealRoute
   '/prayer': typeof AuthenticatedPrayerRoute
   '/qibla': typeof AuthenticatedQiblaRoute
-  '/quran': typeof AuthenticatedQuranRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/tasks': typeof AuthenticatedTasksRoute
   '/waqf': typeof AuthenticatedWaqfRoute
   '/wellness': typeof AuthenticatedWellnessRoute
   '/workout': typeof AuthenticatedWorkoutRoute
+  '/habits/$id': typeof AuthenticatedHabitsIdRoute
+  '/habits/analytics': typeof AuthenticatedHabitsAnalyticsRoute
+  '/habits/dhikr': typeof AuthenticatedHabitsDhikrRoute
+  '/habits/library': typeof AuthenticatedHabitsLibraryRoute
+  '/quran/bookmarks': typeof AuthenticatedQuranBookmarksRoute
+  '/quran/duas': typeof AuthenticatedQuranDuasRoute
+  '/quran/hadith': typeof AuthenticatedQuranHadithRoute
+  '/quran/hifz': typeof AuthenticatedQuranHifzRoute
+  '/quran/practice': typeof AuthenticatedQuranPracticeRoute
+  '/quran/search': typeof AuthenticatedQuranSearchRoute
+  '/quran/stats': typeof AuthenticatedQuranStatsRoute
+  '/habits': typeof AuthenticatedHabitsIndexRoute
+  '/quran': typeof AuthenticatedQuranIndexRoute
+  '/quran/surah/$id': typeof AuthenticatedQuranSurahIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -246,19 +365,33 @@ export interface FileRoutesById {
   '/_authenticated/female': typeof AuthenticatedFemaleRoute
   '/_authenticated/finance': typeof AuthenticatedFinanceRoute
   '/_authenticated/gamification': typeof AuthenticatedGamificationRoute
-  '/_authenticated/habits': typeof AuthenticatedHabitsRoute
+  '/_authenticated/habits': typeof AuthenticatedHabitsRouteWithChildren
   '/_authenticated/journal': typeof AuthenticatedJournalRoute
   '/_authenticated/learning': typeof AuthenticatedLearningRoute
   '/_authenticated/meal': typeof AuthenticatedMealRoute
   '/_authenticated/prayer': typeof AuthenticatedPrayerRoute
   '/_authenticated/qibla': typeof AuthenticatedQiblaRoute
-  '/_authenticated/quran': typeof AuthenticatedQuranRoute
+  '/_authenticated/quran': typeof AuthenticatedQuranRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
   '/_authenticated/tasks': typeof AuthenticatedTasksRoute
   '/_authenticated/waqf': typeof AuthenticatedWaqfRoute
   '/_authenticated/wellness': typeof AuthenticatedWellnessRoute
   '/_authenticated/workout': typeof AuthenticatedWorkoutRoute
+  '/_authenticated/habits/$id': typeof AuthenticatedHabitsIdRoute
+  '/_authenticated/habits/analytics': typeof AuthenticatedHabitsAnalyticsRoute
+  '/_authenticated/habits/dhikr': typeof AuthenticatedHabitsDhikrRoute
+  '/_authenticated/habits/library': typeof AuthenticatedHabitsLibraryRoute
+  '/_authenticated/quran/bookmarks': typeof AuthenticatedQuranBookmarksRoute
+  '/_authenticated/quran/duas': typeof AuthenticatedQuranDuasRoute
+  '/_authenticated/quran/hadith': typeof AuthenticatedQuranHadithRoute
+  '/_authenticated/quran/hifz': typeof AuthenticatedQuranHifzRoute
+  '/_authenticated/quran/practice': typeof AuthenticatedQuranPracticeRoute
+  '/_authenticated/quran/search': typeof AuthenticatedQuranSearchRoute
+  '/_authenticated/quran/stats': typeof AuthenticatedQuranStatsRoute
+  '/_authenticated/habits/': typeof AuthenticatedHabitsIndexRoute
+  '/_authenticated/quran/': typeof AuthenticatedQuranIndexRoute
+  '/_authenticated/quran/surah/$id': typeof AuthenticatedQuranSurahIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -289,6 +422,20 @@ export interface FileRouteTypes {
     | '/waqf'
     | '/wellness'
     | '/workout'
+    | '/habits/$id'
+    | '/habits/analytics'
+    | '/habits/dhikr'
+    | '/habits/library'
+    | '/quran/bookmarks'
+    | '/quran/duas'
+    | '/quran/hadith'
+    | '/quran/hifz'
+    | '/quran/practice'
+    | '/quran/search'
+    | '/quran/stats'
+    | '/habits/'
+    | '/quran/'
+    | '/quran/surah/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -304,19 +451,31 @@ export interface FileRouteTypes {
     | '/female'
     | '/finance'
     | '/gamification'
-    | '/habits'
     | '/journal'
     | '/learning'
     | '/meal'
     | '/prayer'
     | '/qibla'
-    | '/quran'
     | '/settings'
     | '/subscription'
     | '/tasks'
     | '/waqf'
     | '/wellness'
     | '/workout'
+    | '/habits/$id'
+    | '/habits/analytics'
+    | '/habits/dhikr'
+    | '/habits/library'
+    | '/quran/bookmarks'
+    | '/quran/duas'
+    | '/quran/hadith'
+    | '/quran/hifz'
+    | '/quran/practice'
+    | '/quran/search'
+    | '/quran/stats'
+    | '/habits'
+    | '/quran'
+    | '/quran/surah/$id'
   id:
     | '__root__'
     | '/'
@@ -346,6 +505,20 @@ export interface FileRouteTypes {
     | '/_authenticated/waqf'
     | '/_authenticated/wellness'
     | '/_authenticated/workout'
+    | '/_authenticated/habits/$id'
+    | '/_authenticated/habits/analytics'
+    | '/_authenticated/habits/dhikr'
+    | '/_authenticated/habits/library'
+    | '/_authenticated/quran/bookmarks'
+    | '/_authenticated/quran/duas'
+    | '/_authenticated/quran/hadith'
+    | '/_authenticated/quran/hifz'
+    | '/_authenticated/quran/practice'
+    | '/_authenticated/quran/search'
+    | '/_authenticated/quran/stats'
+    | '/_authenticated/habits/'
+    | '/_authenticated/quran/'
+    | '/_authenticated/quran/surah/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -547,8 +720,152 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/quran/': {
+      id: '/_authenticated/quran/'
+      path: '/'
+      fullPath: '/quran/'
+      preLoaderRoute: typeof AuthenticatedQuranIndexRouteImport
+      parentRoute: typeof AuthenticatedQuranRoute
+    }
+    '/_authenticated/habits/': {
+      id: '/_authenticated/habits/'
+      path: '/'
+      fullPath: '/habits/'
+      preLoaderRoute: typeof AuthenticatedHabitsIndexRouteImport
+      parentRoute: typeof AuthenticatedHabitsRoute
+    }
+    '/_authenticated/quran/stats': {
+      id: '/_authenticated/quran/stats'
+      path: '/stats'
+      fullPath: '/quran/stats'
+      preLoaderRoute: typeof AuthenticatedQuranStatsRouteImport
+      parentRoute: typeof AuthenticatedQuranRoute
+    }
+    '/_authenticated/quran/search': {
+      id: '/_authenticated/quran/search'
+      path: '/search'
+      fullPath: '/quran/search'
+      preLoaderRoute: typeof AuthenticatedQuranSearchRouteImport
+      parentRoute: typeof AuthenticatedQuranRoute
+    }
+    '/_authenticated/quran/practice': {
+      id: '/_authenticated/quran/practice'
+      path: '/practice'
+      fullPath: '/quran/practice'
+      preLoaderRoute: typeof AuthenticatedQuranPracticeRouteImport
+      parentRoute: typeof AuthenticatedQuranRoute
+    }
+    '/_authenticated/quran/hifz': {
+      id: '/_authenticated/quran/hifz'
+      path: '/hifz'
+      fullPath: '/quran/hifz'
+      preLoaderRoute: typeof AuthenticatedQuranHifzRouteImport
+      parentRoute: typeof AuthenticatedQuranRoute
+    }
+    '/_authenticated/quran/hadith': {
+      id: '/_authenticated/quran/hadith'
+      path: '/hadith'
+      fullPath: '/quran/hadith'
+      preLoaderRoute: typeof AuthenticatedQuranHadithRouteImport
+      parentRoute: typeof AuthenticatedQuranRoute
+    }
+    '/_authenticated/quran/duas': {
+      id: '/_authenticated/quran/duas'
+      path: '/duas'
+      fullPath: '/quran/duas'
+      preLoaderRoute: typeof AuthenticatedQuranDuasRouteImport
+      parentRoute: typeof AuthenticatedQuranRoute
+    }
+    '/_authenticated/quran/bookmarks': {
+      id: '/_authenticated/quran/bookmarks'
+      path: '/bookmarks'
+      fullPath: '/quran/bookmarks'
+      preLoaderRoute: typeof AuthenticatedQuranBookmarksRouteImport
+      parentRoute: typeof AuthenticatedQuranRoute
+    }
+    '/_authenticated/habits/library': {
+      id: '/_authenticated/habits/library'
+      path: '/library'
+      fullPath: '/habits/library'
+      preLoaderRoute: typeof AuthenticatedHabitsLibraryRouteImport
+      parentRoute: typeof AuthenticatedHabitsRoute
+    }
+    '/_authenticated/habits/dhikr': {
+      id: '/_authenticated/habits/dhikr'
+      path: '/dhikr'
+      fullPath: '/habits/dhikr'
+      preLoaderRoute: typeof AuthenticatedHabitsDhikrRouteImport
+      parentRoute: typeof AuthenticatedHabitsRoute
+    }
+    '/_authenticated/habits/analytics': {
+      id: '/_authenticated/habits/analytics'
+      path: '/analytics'
+      fullPath: '/habits/analytics'
+      preLoaderRoute: typeof AuthenticatedHabitsAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedHabitsRoute
+    }
+    '/_authenticated/habits/$id': {
+      id: '/_authenticated/habits/$id'
+      path: '/$id'
+      fullPath: '/habits/$id'
+      preLoaderRoute: typeof AuthenticatedHabitsIdRouteImport
+      parentRoute: typeof AuthenticatedHabitsRoute
+    }
+    '/_authenticated/quran/surah/$id': {
+      id: '/_authenticated/quran/surah/$id'
+      path: '/surah/$id'
+      fullPath: '/quran/surah/$id'
+      preLoaderRoute: typeof AuthenticatedQuranSurahIdRouteImport
+      parentRoute: typeof AuthenticatedQuranRoute
+    }
   }
 }
+
+interface AuthenticatedHabitsRouteChildren {
+  AuthenticatedHabitsIdRoute: typeof AuthenticatedHabitsIdRoute
+  AuthenticatedHabitsAnalyticsRoute: typeof AuthenticatedHabitsAnalyticsRoute
+  AuthenticatedHabitsDhikrRoute: typeof AuthenticatedHabitsDhikrRoute
+  AuthenticatedHabitsLibraryRoute: typeof AuthenticatedHabitsLibraryRoute
+  AuthenticatedHabitsIndexRoute: typeof AuthenticatedHabitsIndexRoute
+}
+
+const AuthenticatedHabitsRouteChildren: AuthenticatedHabitsRouteChildren = {
+  AuthenticatedHabitsIdRoute: AuthenticatedHabitsIdRoute,
+  AuthenticatedHabitsAnalyticsRoute: AuthenticatedHabitsAnalyticsRoute,
+  AuthenticatedHabitsDhikrRoute: AuthenticatedHabitsDhikrRoute,
+  AuthenticatedHabitsLibraryRoute: AuthenticatedHabitsLibraryRoute,
+  AuthenticatedHabitsIndexRoute: AuthenticatedHabitsIndexRoute,
+}
+
+const AuthenticatedHabitsRouteWithChildren =
+  AuthenticatedHabitsRoute._addFileChildren(AuthenticatedHabitsRouteChildren)
+
+interface AuthenticatedQuranRouteChildren {
+  AuthenticatedQuranBookmarksRoute: typeof AuthenticatedQuranBookmarksRoute
+  AuthenticatedQuranDuasRoute: typeof AuthenticatedQuranDuasRoute
+  AuthenticatedQuranHadithRoute: typeof AuthenticatedQuranHadithRoute
+  AuthenticatedQuranHifzRoute: typeof AuthenticatedQuranHifzRoute
+  AuthenticatedQuranPracticeRoute: typeof AuthenticatedQuranPracticeRoute
+  AuthenticatedQuranSearchRoute: typeof AuthenticatedQuranSearchRoute
+  AuthenticatedQuranStatsRoute: typeof AuthenticatedQuranStatsRoute
+  AuthenticatedQuranIndexRoute: typeof AuthenticatedQuranIndexRoute
+  AuthenticatedQuranSurahIdRoute: typeof AuthenticatedQuranSurahIdRoute
+}
+
+const AuthenticatedQuranRouteChildren: AuthenticatedQuranRouteChildren = {
+  AuthenticatedQuranBookmarksRoute: AuthenticatedQuranBookmarksRoute,
+  AuthenticatedQuranDuasRoute: AuthenticatedQuranDuasRoute,
+  AuthenticatedQuranHadithRoute: AuthenticatedQuranHadithRoute,
+  AuthenticatedQuranHifzRoute: AuthenticatedQuranHifzRoute,
+  AuthenticatedQuranPracticeRoute: AuthenticatedQuranPracticeRoute,
+  AuthenticatedQuranSearchRoute: AuthenticatedQuranSearchRoute,
+  AuthenticatedQuranStatsRoute: AuthenticatedQuranStatsRoute,
+  AuthenticatedQuranIndexRoute: AuthenticatedQuranIndexRoute,
+  AuthenticatedQuranSurahIdRoute: AuthenticatedQuranSurahIdRoute,
+}
+
+const AuthenticatedQuranRouteWithChildren =
+  AuthenticatedQuranRoute._addFileChildren(AuthenticatedQuranRouteChildren)
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
@@ -560,13 +877,13 @@ interface AuthenticatedRouteChildren {
   AuthenticatedFemaleRoute: typeof AuthenticatedFemaleRoute
   AuthenticatedFinanceRoute: typeof AuthenticatedFinanceRoute
   AuthenticatedGamificationRoute: typeof AuthenticatedGamificationRoute
-  AuthenticatedHabitsRoute: typeof AuthenticatedHabitsRoute
+  AuthenticatedHabitsRoute: typeof AuthenticatedHabitsRouteWithChildren
   AuthenticatedJournalRoute: typeof AuthenticatedJournalRoute
   AuthenticatedLearningRoute: typeof AuthenticatedLearningRoute
   AuthenticatedMealRoute: typeof AuthenticatedMealRoute
   AuthenticatedPrayerRoute: typeof AuthenticatedPrayerRoute
   AuthenticatedQiblaRoute: typeof AuthenticatedQiblaRoute
-  AuthenticatedQuranRoute: typeof AuthenticatedQuranRoute
+  AuthenticatedQuranRoute: typeof AuthenticatedQuranRouteWithChildren
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSubscriptionRoute: typeof AuthenticatedSubscriptionRoute
   AuthenticatedTasksRoute: typeof AuthenticatedTasksRoute
@@ -585,13 +902,13 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedFemaleRoute: AuthenticatedFemaleRoute,
   AuthenticatedFinanceRoute: AuthenticatedFinanceRoute,
   AuthenticatedGamificationRoute: AuthenticatedGamificationRoute,
-  AuthenticatedHabitsRoute: AuthenticatedHabitsRoute,
+  AuthenticatedHabitsRoute: AuthenticatedHabitsRouteWithChildren,
   AuthenticatedJournalRoute: AuthenticatedJournalRoute,
   AuthenticatedLearningRoute: AuthenticatedLearningRoute,
   AuthenticatedMealRoute: AuthenticatedMealRoute,
   AuthenticatedPrayerRoute: AuthenticatedPrayerRoute,
   AuthenticatedQiblaRoute: AuthenticatedQiblaRoute,
-  AuthenticatedQuranRoute: AuthenticatedQuranRoute,
+  AuthenticatedQuranRoute: AuthenticatedQuranRouteWithChildren,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSubscriptionRoute: AuthenticatedSubscriptionRoute,
   AuthenticatedTasksRoute: AuthenticatedTasksRoute,
