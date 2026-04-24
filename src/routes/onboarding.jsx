@@ -1,229 +1,333 @@
 import React, { useState } from 'react'
-import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate, redirect } from '@tanstack/react-router'
+import { useMutation } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
+import { ArrowLeft, ArrowRight, Bell, Compass, MapPin, Moon } from 'lucide-react'
+import { tokenStore, usersApi } from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
-import { userApi } from '@/lib/api'
-import { cn } from '@/lib/utils'
-import { Loader2, MapPin, Bell, BookOpen, Clock } from 'lucide-react'
 
 export const Route = createFileRoute('/onboarding')({
   beforeLoad: () => {
-    const { isAuthenticated, user } = useAuthStore.getState()
-    if (!isAuthenticated) throw redirect({ to: '/login' })
-    if (user?.onboarding_completed) throw redirect({ to: '/dashboard' })
+    if (typeof window === 'undefined') return
+    if (!tokenStore.getAccess()) {
+      throw redirect({ to: '/login' })
+    }
   },
   component: OnboardingPage,
 })
 
-const STEPS = ['Welcome', 'Location', 'Prayer', 'Done']
+const METHODS = [
+  { key: 'MWL', label: 'Muslim World League' },
+  { key: 'ISNA', label: 'ISNA (North America)' },
+  { key: 'Egypt', label: 'Egyptian General Authority' },
+  { key: 'Makkah', label: 'Umm al-Qura, Makkah' },
+  { key: 'Karachi', label: 'University of Karachi' },
+]
+
+const MADHABS = ['Hanafi', 'Shafi', 'Maliki', 'Hanbali']
 
 function OnboardingPage() {
-  const navigate  = useNavigate()
-  const { user, updateUser } = useAuthStore()
+  const navigate = useNavigate()
+  const updateUser = useAuthStore((s) => s.updateUser)
+  const user = useAuthStore((s) => s.user)
+
   const [step, setStep] = useState(0)
-  const [form, setForm] = useState({
-    city: '',
-    country: '',
-    latitude: '',
-    longitude: '',
-    madhab: user?.madhab || 'hanafi',
-    calculation_method: 'MWL',
-    notifications_enabled: true,
+  const [city, setCity] = useState('')
+  const [country, setCountry] = useState('')
+  const [coords, setCoords] = useState({})
+  const [method, setMethod] = useState('MWL')
+  const [madhab, setMadhab] = useState('Hanafi')
+  const [notifications, setNotifications] = useState({
+    prayer: true,
+    habits: true,
+    daily_verse: true,
   })
-  const [loading, setLoading] = useState(false)
-  const [locLoading, setLocLoading] = useState(false)
+  const tz = typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'UTC'
 
-  const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
+  const saveProfile = useMutation({
+    mutationFn: () =>
+      usersApi.updateProfile({
+        city,
+        country,
+        latitude: coords.lat,
+        longitude: coords.lng,
+        prayer_calculation_method: method,
+        madhab,
+        timezone: tz,
+      }),
+  })
 
-  const detectLocation = () => {
-    setLocLoading(true)
-    navigator.geolocation?.getCurrentPosition(
-      ({ coords }) => {
-        setForm(f => ({ ...f, latitude: coords.latitude.toFixed(6), longitude: coords.longitude.toFixed(6) }))
-        setLocLoading(false)
+  const completeOnboarding = useMutation({
+    mutationFn: () =>
+      usersApi.completeOnboarding({
+        notification_preferences: notifications,
+      }),
+    onSuccess: async () => {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('deen_onboarded', '1')
+      }
+      updateUser({ ...user, onboarding_completed: true })
+      toast.success('All set — welcome!')
+      navigate({ to: '/' })
+    },
+    onError: () => {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('deen_onboarded', '1')
+      }
+      navigate({ to: '/' })
+    },
+  })
+
+  function detectLocation() {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation not available')
+      return
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude })
+        toast.success('Location detected')
       },
-      () => setLocLoading(false)
+      () => toast.error('Permission denied'),
+      { enableHighAccuracy: false, timeout: 8000 }
     )
   }
 
-  const finish = async () => {
-    setLoading(true)
-    try {
-      const payload = {
-        ...form,
-        latitude: form.latitude ? parseFloat(form.latitude) : null,
-        longitude: form.longitude ? parseFloat(form.longitude) : null,
-        onboarding_completed: true,
+  async function next() {
+    if (step === 2) {
+      try {
+        await saveProfile.mutateAsync()
+      } catch (e) {
+        // continue anyway
       }
-      const { data } = await userApi.updateMe(payload)
-      updateUser(data)
-      navigate({ to: '/dashboard' })
-    } catch {
-      navigate({ to: '/dashboard' })
-    } finally {
-      setLoading(false)
     }
+    if (step === 3) {
+      completeOnboarding.mutate()
+      return
+    }
+    setStep((s) => Math.min(3, s + 1))
   }
 
-  const inputCls = 'w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring transition-colors'
-
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4 py-10">
-      <div className="w-full max-w-md animate-fade-up">
-        {/* Logo */}
-        <div className="flex flex-col items-center gap-2 mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-lg">
-            <span className="font-amiri text-3xl text-primary-foreground leading-none">د</span>
-          </div>
-          <h1 className="text-2xl font-semibold text-foreground tracking-tight">Setup your Deen</h1>
-          <p className="text-sm text-muted-foreground">Just a few steps to personalise your experience</p>
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-primary/5 to-gold/5 px-4 py-10">
+      <div className="w-full max-w-lg space-y-8">
+        <div className="flex items-center justify-between">
+          <span className="font-amiri text-2xl text-gradient-primary font-bold">Deen</span>
+          <span className="text-xs text-muted-foreground font-bold">Step {step + 1} / 4</span>
+        </div>
+        <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-primary to-gold transition-all duration-500"
+            style={{ width: `${((step + 1) / 4) * 100}%` }}
+          />
         </div>
 
-        {/* Step indicators */}
-        <div className="flex items-center gap-1 justify-center mb-8">
-          {STEPS.map((s, i) => (
-            <React.Fragment key={s}>
-              <div className={cn(
-                'h-1.5 rounded-full transition-all duration-300',
-                i < step ? 'bg-primary w-8' : i === step ? 'bg-primary w-12' : 'bg-border w-8'
-              )} />
-            </React.Fragment>
+        <div className="rounded-3xl glass-card shadow-elevated p-8 space-y-6 animate-slide-up">
+          {step === 0 && <WelcomeStep />}
+          {step === 1 && (
+            <LocationStep
+              city={city}
+              country={country}
+              coords={coords}
+              setCity={setCity}
+              setCountry={setCountry}
+              detect={detectLocation}
+            />
+          )}
+          {step === 2 && (
+            <PrayerStep method={method} setMethod={setMethod} madhab={madhab} setMadhab={setMadhab} />
+          )}
+          {step === 3 && (
+            <NotificationStep prefs={notifications} setPrefs={setNotifications} />
+          )}
+
+          <div className="flex items-center justify-between pt-4">
+            {step > 0 ? (
+              <button
+                onClick={() => setStep((s) => s - 1)}
+                className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground"
+              >
+                <ArrowLeft className="h-4 w-4" /> Back
+              </button>
+            ) : (
+              <span />
+            )}
+            <button
+              onClick={next}
+              disabled={completeOnboarding.isPending || saveProfile.isPending}
+              className="flex items-center gap-2 rounded-xl bg-primary text-primary-foreground px-5 py-2.5 text-sm font-bold shadow-glow-primary disabled:opacity-60"
+            >
+              {step === 3 ? 'Finish' : 'Continue'} <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        <button
+          onClick={() => completeOnboarding.mutate()}
+          className="mx-auto block text-xs text-muted-foreground/70 hover:text-muted-foreground"
+        >
+          Skip for now
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function WelcomeStep() {
+  return (
+    <div className="text-center space-y-4">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-primary to-gold text-primary-foreground shadow-glow-primary">
+        <span className="font-amiri text-3xl font-bold">د</span>
+      </div>
+      <h2 className="font-amiri text-3xl font-bold text-gradient-primary">Bismillah, welcome</h2>
+      <p className="font-amiri text-xl text-foreground/80 italic">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</p>
+      <p className="text-sm text-muted-foreground leading-relaxed">
+        Let's set up your spiritual companion in 3 quick steps — your prayer location, calculation method, and what reminders you want.
+      </p>
+    </div>
+  )
+}
+
+function LocationStep({ city, country, coords, setCity, setCountry, detect }) {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <MapPin className="h-5 w-5" />
+        </div>
+        <h2 className="text-xl font-bold">Where do you pray?</h2>
+      </div>
+      <p className="text-sm text-muted-foreground">
+        We use this to compute accurate prayer times and Qibla direction.
+      </p>
+      <button
+        onClick={detect}
+        className="w-full rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm font-bold text-primary hover:bg-primary/10"
+      >
+        Detect my location
+      </button>
+      {coords.lat && (
+        <p className="text-xs text-sage font-semibold">
+          ✓ {coords.lat.toFixed(3)}, {coords.lng?.toFixed(3)}
+        </p>
+      )}
+      <div className="grid grid-cols-2 gap-3">
+        <input
+          placeholder="City"
+          value={city}
+          onChange={(e) => setCity(e.target.value)}
+          className="rounded-xl bg-background border border-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+        />
+        <input
+          placeholder="Country"
+          value={country}
+          onChange={(e) => setCountry(e.target.value)}
+          className="rounded-xl bg-background border border-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+        />
+      </div>
+    </div>
+  )
+}
+
+function PrayerStep({ method, setMethod, madhab, setMadhab }) {
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold/10 text-gold-foreground">
+          <Compass className="h-5 w-5" />
+        </div>
+        <h2 className="text-xl font-bold">Prayer preferences</h2>
+      </div>
+      <div>
+        <label className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
+          Calculation Method
+        </label>
+        <select
+          value={method}
+          onChange={(e) => setMethod(e.target.value)}
+          className="w-full mt-2 rounded-xl bg-background border border-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+        >
+          {METHODS.map((m) => (
+            <option key={m.key} value={m.key}>
+              {m.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
+          Madhab (for Asr time)
+        </label>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+          {MADHABS.map((m) => (
+            <button
+              key={m}
+              onClick={() => setMadhab(m)}
+              className={`rounded-xl px-3 py-2 text-sm font-bold transition-all ${
+                madhab === m
+                  ? 'bg-primary text-primary-foreground shadow-glow-primary'
+                  : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+              }`}
+            >
+              {m}
+            </button>
           ))}
         </div>
-
-        <div className="rounded-2xl border border-border bg-card shadow-sm p-6">
-          {/* Step 0: Welcome */}
-          {step === 0 && (
-            <div className="space-y-4 text-center">
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
-                <BookOpen className="h-8 w-8 text-primary" />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-foreground">
-                  Welcome, {user?.profile?.display_name || user?.email?.split('@')[0]}!
-                </h2>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Deen helps you track prayers, read Quran, build Islamic habits, and much more — all in one place.
-                </p>
-              </div>
-              <p className="text-xs text-muted-foreground">Free forever. No subscriptions required for core features.</p>
-              <button onClick={() => setStep(1)} className="w-full rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors">
-                Get started
-              </button>
-            </div>
-          )}
-
-          {/* Step 1: Location */}
-          {step === 1 && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <MapPin className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h2 className="text-base font-semibold text-foreground">Your location</h2>
-                  <p className="text-xs text-muted-foreground">Needed for accurate prayer times</p>
-                </div>
-              </div>
-              <button
-                onClick={detectLocation}
-                disabled={locLoading}
-                className="w-full flex items-center justify-center gap-2 rounded-lg border border-border py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"
-              >
-                {locLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
-                Auto-detect location
-              </button>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-foreground">Latitude</label>
-                  <input value={form.latitude} onChange={set('latitude')} placeholder="51.5074" className={inputCls} />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-foreground">Longitude</label>
-                  <input value={form.longitude} onChange={set('longitude')} placeholder="-0.1278" className={inputCls} />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">City (optional)</label>
-                <input value={form.city} onChange={set('city')} placeholder="London" className={inputCls} />
-              </div>
-              <div className="flex gap-3">
-                <button onClick={() => setStep(0)} className="flex-1 rounded-xl border border-border py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors">Back</button>
-                <button onClick={() => setStep(2)} className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors">Continue</button>
-              </div>
-            </div>
-          )}
-
-          {/* Step 2: Prayer settings */}
-          {step === 2 && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Clock className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h2 className="text-base font-semibold text-foreground">Prayer preferences</h2>
-                  <p className="text-xs text-muted-foreground">Calculation method and school of thought</p>
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">Calculation method</label>
-                <select value={form.calculation_method} onChange={set('calculation_method')} className={inputCls}>
-                  <option value="MWL">Muslim World League (MWL)</option>
-                  <option value="ISNA">ISNA — North America</option>
-                  <option value="Egypt">Egyptian General Authority</option>
-                  <option value="Makkah">Umm al-Qura, Makkah</option>
-                  <option value="Karachi">University of Islamic Sciences, Karachi</option>
-                  <option value="Tehran">Institute of Geophysics, Tehran</option>
-                </select>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">School (Asr calculation)</label>
-                <select value={form.madhab} onChange={set('madhab')} className={inputCls}>
-                  <option value="hanafi">Hanafi</option>
-                  <option value="maliki">Maliki</option>
-                  <option value="shafi">Shafi'i</option>
-                  <option value="hanbali">Hanbali</option>
-                </select>
-              </div>
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={form.notifications_enabled}
-                  onChange={e => setForm(f => ({ ...f, notifications_enabled: e.target.checked }))}
-                  className="w-4 h-4 rounded text-primary"
-                />
-                <span className="text-sm text-foreground">Enable prayer time notifications</span>
-              </label>
-              <div className="flex gap-3">
-                <button onClick={() => setStep(1)} className="flex-1 rounded-xl border border-border py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors">Back</button>
-                <button onClick={() => setStep(3)} className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors">Continue</button>
-              </div>
-            </div>
-          )}
-
-          {/* Step 3: Done */}
-          {step === 3 && (
-            <div className="space-y-4 text-center">
-              <div className="w-16 h-16 rounded-2xl bg-sage/15 flex items-center justify-center mx-auto">
-                <Bell className="h-8 w-8 text-sage" />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-foreground">You're all set! 🎉</h2>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Your Deen journey begins now. May Allah make it easy for you.
-                </p>
-              </div>
-              <button
-                onClick={finish}
-                disabled={loading}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
-              >
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Go to my Dashboard'}
-              </button>
-            </div>
-          )}
-        </div>
       </div>
+    </div>
+  )
+}
+
+function NotificationStep({ prefs, setPrefs }) {
+  function toggle(k) {
+    setPrefs({ ...prefs, [k]: !prefs[k] })
+  }
+  const items = [
+    { k: 'prayer', label: 'Prayer reminders', desc: 'Adhan times for the 5 prayers' },
+    { k: 'habits', label: 'Habit nudges', desc: 'Gentle reminders for your daily habits' },
+    { k: 'daily_verse', label: 'Daily verse', desc: 'A morning verse from the Quran' },
+  ]
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sage/10 text-sage">
+          <Bell className="h-5 w-5" />
+        </div>
+        <h2 className="text-xl font-bold">Stay on track</h2>
+      </div>
+      <div className="space-y-2">
+        {items.map((it) => (
+          <button
+            key={it.k}
+            onClick={() => toggle(it.k)}
+            className={`w-full flex items-center justify-between rounded-2xl border px-4 py-3.5 text-left transition-all ${
+              prefs[it.k]
+                ? 'border-primary/30 bg-primary/5'
+                : 'border-border bg-card hover:bg-muted/40'
+            }`}
+          >
+            <div>
+              <p className="font-bold text-sm">{it.label}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{it.desc}</p>
+            </div>
+            <div
+              className={`h-6 w-11 rounded-full transition-all relative ${
+                prefs[it.k] ? 'bg-primary' : 'bg-muted'
+              }`}
+            >
+              <div
+                className={`absolute top-0.5 h-5 w-5 rounded-full bg-background shadow transition-all ${
+                  prefs[it.k] ? 'left-5' : 'left-0.5'
+                }`}
+              />
+            </div>
+          </button>
+        ))}
+      </div>
+      <p className="text-xs text-muted-foreground/70 text-center pt-2">
+        <Moon className="h-3 w-3 inline mr-1" />
+        You can change these anytime in Settings.
+      </p>
     </div>
   )
 }
