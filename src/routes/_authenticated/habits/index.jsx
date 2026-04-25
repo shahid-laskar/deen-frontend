@@ -81,86 +81,79 @@ function Sparkline({ rate30d = 0 }) {
 }
 
 // ── Single Habit Card ───────────────────────────────────────────────────────
-function HabitCard({ habit, onLog, onUseToken }) {
-  const [checklistOpen, setChecklistOpen] = useState(false)
+function HabitCard({ habit, onLog, onUseToken, onOpenChecklist }) {
   const done = habit.completed_today
   const streak = habit.current_streak || 0
   const tokens = habit.rahmah_tokens || 0
 
   const handleLog = useCallback(() => {
     if (habit.habit_type === 'checklist') {
-      setChecklistOpen(true)
+      onOpenChecklist()
     } else {
       onLog(habit)
     }
-  }, [habit, onLog])
+  }, [habit, onLog, onOpenChecklist])
 
   return (
-    <>
-      <div className={cn(
-        'group relative overflow-hidden rounded-2xl glass-card shadow-soft hover:shadow-elevated card-hover transition-all',
-        done && 'ring-1 ring-primary/30 bg-primary/3'
-      )}>
-        {done && <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent pointer-events-none" />}
-        <div className="relative p-4 flex items-center gap-3">
-          {/* Log button */}
-          <button
-            onClick={handleLog}
-            className={cn(
-              'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-all',
-              done
-                ? 'bg-primary text-primary-foreground shadow-glow-primary'
-                : 'bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground hover:shadow-glow-primary'
-            )}
-          >
-            {done
-              ? <Check className="h-5 w-5" strokeWidth={2.5} />
-              : <span className="text-xl">{habit.icon || CAT_ICONS[habit.category] || '✅'}</span>
-            }
-          </button>
+    <div className={cn(
+      'group relative overflow-hidden rounded-2xl glass-card shadow-soft hover:shadow-elevated card-hover transition-all',
+      done && 'ring-1 ring-primary/30 bg-primary/3'
+    )}>
+      {done && <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent pointer-events-none" />}
+      <div className="relative p-4 flex items-center gap-3">
+        {/* Log button */}
+        <button
+          onClick={handleLog}
+          className={cn(
+            'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-all',
+            done
+              ? 'bg-primary text-primary-foreground shadow-glow-primary'
+              : 'bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground hover:shadow-glow-primary'
+          )}
+        >
+          {done
+            ? <Check className="h-5 w-5" strokeWidth={2.5} />
+            : <span className="text-xl">{habit.icon || CAT_ICONS[habit.category] || '✅'}</span>
+          }
+        </button>
 
-          {/* Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <p className="font-bold text-sm text-foreground truncate">{habit.name}</p>
-              <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', DIFF_DOT[habit.difficulty])} />
-            </div>
-            <div className="flex items-center gap-2.5 mt-1 flex-wrap">
-              {streak > 0 && (
-                <span className={cn('flex items-center gap-0.5 text-[10px] font-bold uppercase',
-                  streak >= 7 ? 'text-orange-500' : 'text-muted-foreground')}>
-                  <Flame className="h-3 w-3" /> {streak}d
-                </span>
-              )}
-              <Sparkline rate30d={habit.completion_rate_30d} />
-              <span className="text-[10px] font-bold text-muted-foreground">{habit.completion_rate_30d}%</span>
-              {habit.anchor_prayer && (
-                <span className="text-[10px] font-bold text-primary/70 uppercase">
-                  {habit.anchor_prayer}
-                </span>
-              )}
-            </div>
+        {/* Info - Clickable to Detail Page */}
+        <Link to={`/habits/${habit.id}`} className="flex-1 min-w-0 hover:opacity-80 transition-opacity">
+          <div className="flex items-center gap-2">
+            <p className="font-bold text-sm text-foreground truncate">{habit.name}</p>
+            <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', DIFF_DOT[habit.difficulty])} />
           </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            <RahmahTokens tokens={tokens} habitId={habit.id} onUse={() => onUseToken(habit.id)} />
-            {habit.habit_type === 'checklist' && (
-              <button
-                onClick={() => setChecklistOpen(true)}
-                className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted/60 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all"
-              >
-                <ChevronDown className="h-4 w-4" />
-              </button>
+          <div className="flex items-center gap-2.5 mt-1 flex-wrap">
+            {streak > 0 && (
+              <span className={cn('flex items-center gap-0.5 text-[10px] font-bold uppercase',
+                streak >= 7 ? 'text-orange-500' : 'text-muted-foreground')}>
+                <Flame className="h-3 w-3" /> {streak}d
+              </span>
+            )}
+            <Sparkline rate30d={habit.completion_rate_30d} />
+            <span className="text-[10px] font-bold text-muted-foreground">{habit.completion_rate_30d}%</span>
+            {habit.anchor_prayer && (
+              <span className="text-[10px] font-bold text-primary/70 uppercase">
+                {habit.anchor_prayer}
+              </span>
             )}
           </div>
+        </Link>
+
+        {/* Actions */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <RahmahTokens tokens={tokens} habitId={habit.id} onUse={() => onUseToken(habit.id)} />
+          {habit.habit_type === 'checklist' && (
+            <button
+              onClick={onOpenChecklist}
+              className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted/60 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all"
+            >
+              <ChevronDown className="h-4 w-4" />
+            </button>
+          )}
         </div>
       </div>
-
-      {checklistOpen && (
-        <ChecklistSheet habitId={habit.id} habitName={habit.name} onClose={() => setChecklistOpen(false)} />
-      )}
-    </>
+    </div>
   )
 }
 
@@ -168,6 +161,7 @@ function HabitCard({ habit, onLog, onUseToken }) {
 function HabitsTodayPage() {
   const qc = useQueryClient()
   const [formOpen, setFormOpen] = useState(false)
+  const [activeChecklist, setActiveChecklist] = useState(null)
   const today = format(new Date(), 'yyyy-MM-dd')
 
   const { data: habits = [] } = useQuery({
@@ -184,19 +178,24 @@ function HabitsTodayPage() {
     mutationFn: (habit) => api.post('/habits/log', {
       habit_id: habit.id,
       log_date: today,
-      count: 1,
-      completed: true,
+      count: habit.completed_today ? 0 : 1,
+      completed: !habit.completed_today,
     }),
     onMutate: async (habit) => {
       await qc.cancelQueries({ queryKey: ['habits'] })
       const prev = qc.getQueryData(['habits'])
       qc.setQueryData(['habits'], old =>
-        (old || []).map(h => h.id === habit.id ? { ...h, completed_today: true } : h)
+        (old || []).map(h => h.id === habit.id ? { ...h, completed_today: !habit.completed_today } : h)
       )
       return { prev }
     },
     onError: (_, __, ctx) => { qc.setQueryData(['habits'], ctx.prev); toast.error('Failed to log habit') },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['habits'] }); toast.success('Alhamdulillah! 🤲') },
+    onSuccess: (data, habit) => { 
+      qc.invalidateQueries({ queryKey: ['habits'] }); 
+      if (!habit.completed_today) {
+        toast.success('Alhamdulillah! 🤲') 
+      }
+    },
   })
 
   const { mutate: useToken } = useMutation({
@@ -312,7 +311,7 @@ function HabitsTodayPage() {
                   {PRAYER_LABELS[anchor]}
                 </p>
                 {group.map(h => (
-                  <HabitCard key={h.id} habit={h} onLog={logHabit} onUseToken={useToken} />
+                  <HabitCard key={h.id} habit={h} onLog={logHabit} onUseToken={useToken} onOpenChecklist={() => setActiveChecklist(h)} />
                 ))}
               </div>
             )
@@ -321,6 +320,14 @@ function HabitsTodayPage() {
       )}
 
       {formOpen && <HabitFormSheet onClose={() => setFormOpen(false)} />}
+      
+      {activeChecklist && (
+        <ChecklistSheet 
+          habitId={activeChecklist.id} 
+          habitName={activeChecklist.name} 
+          onClose={() => setActiveChecklist(null)} 
+        />
+      )}
     </div>
   )
 }

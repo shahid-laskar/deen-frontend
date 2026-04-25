@@ -217,7 +217,7 @@ function DhikrPage() {
       <div className="animate-slide-up stagger-2">
         <h2 className="text-sm font-black uppercase tracking-widest text-muted-foreground mb-3">Choose a Dhikr</h2>
         <div className="grid gap-3">
-          {presets.length === 0
+          {(presets.length === 0
             ? [
               { type: 'subhanallah', label: 'SubhanAllah', arabic: 'سُبْحَانَ اللَّهِ', transliteration: 'Glory be to Allah' },
               { type: 'alhamdulillah', label: 'Alhamdulillah', arabic: 'الْحَمْدُ لِلَّهِ', transliteration: 'All praise to Allah' },
@@ -227,7 +227,7 @@ function DhikrPage() {
               { type: 'salawat', label: 'Salawat', arabic: 'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ', transliteration: 'Blessing upon the Prophet ﷺ' },
             ]
             : presets
-          }.map(preset => (
+          ).map(preset => (
             <button key={preset.type}
               onClick={() => startSession(preset)}
               className="relative overflow-hidden w-full flex items-center gap-4 p-4 rounded-2xl glass-card shadow-soft hover:shadow-elevated card-hover text-left group">

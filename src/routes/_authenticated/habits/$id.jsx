@@ -201,7 +201,7 @@ function HabitDetailPage() {
   return (
     <div className="space-y-6">
       {/* Back + header */}
-      <div className="animate-slide-up">
+      <div className="animate-slide-up relative z-50">
         <button onClick={() => navigate({ to: '/habits/' })}
           className="flex items-center gap-1.5 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors mb-4">
           <ArrowLeft className="h-4 w-4" /> Back to Today
