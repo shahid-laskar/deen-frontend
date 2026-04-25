@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, subDays, startOfWeek, eachDayOfInterval } from 'date-fns'
-import { Flame, Check, ArrowLeft, Trash2, Edit2, MoreHorizontal, Plus, X } from 'lucide-react'
+import { Flame, Check, ArrowLeft, Trash2, Edit2, MoreHorizontal, Plus, X, MoonStar, BookOpen, Heart, Feather, Activity, GraduationCap, User, Users, SunDim, HeartHandshake, ShieldAlert } from 'lucide-react'
 import api from '@/lib/api'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -14,6 +14,20 @@ export const Route = createFileRoute('/_authenticated/habits/$id')({
 })
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+const CAT_ICONS = {
+  ibadah: <MoonStar className="h-8 w-8" />,
+  quran: <BookOpen className="h-8 w-8" />,
+  dhikr: <Heart className="h-8 w-8" />,
+  sunnah: <Feather className="h-8 w-8" />,
+  health: <Activity className="h-8 w-8" />,
+  learning: <GraduationCap className="h-8 w-8" />,
+  personal: <User className="h-8 w-8" />,
+  family: <Users className="h-8 w-8" />,
+  fasting: <SunDim className="h-8 w-8" />,
+  sadaqah: <HeartHandshake className="h-8 w-8" />,
+  avoid: <ShieldAlert className="h-8 w-8" />,
+}
 
 // ── 365-day Heatmap ──────────────────────────────────────────────────────────
 function Heatmap365({ data = [] }) {
@@ -209,7 +223,7 @@ function HabitDetailPage() {
 
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <span className="text-4xl">{habit.icon || '✅'}</span>
+            <span className="flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 text-primary shrink-0">{CAT_ICONS[habit.category] || <Check className="h-8 w-8" />}</span>
             <div>
               <h1 className="font-amiri text-3xl font-bold text-gradient-primary">{habit.name}</h1>
               <p className="text-sm text-muted-foreground capitalize mt-1">

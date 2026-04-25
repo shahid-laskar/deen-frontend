@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Search, Plus, Check, Filter } from 'lucide-react'
+import { Search, Plus, Check, Filter, MoonStar, BookOpen, Heart, Feather, Activity, GraduationCap, User, Users, SunDim, HeartHandshake, ShieldAlert } from 'lucide-react'
 import api from '@/lib/api'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -16,8 +16,17 @@ const DIFFICULTIES = ['easy', 'medium', 'hard', 'epic']
 const HABIT_TYPES = ['binary', 'quantity', 'duration', 'avoid', 'checklist']
 
 const CAT_ICONS = {
-  ibadah: '🕌', quran: '📖', dhikr: '📿', sunnah: '🌙', health: '💪',
-  learning: '📚', personal: '✅', family: '👨‍👩‍👧', fasting: '🌙', sadaqah: '💚', avoid: '🚫',
+  ibadah: <MoonStar className="h-4 w-4" />,
+  quran: <BookOpen className="h-4 w-4" />,
+  dhikr: <Heart className="h-4 w-4" />,
+  sunnah: <Feather className="h-4 w-4" />,
+  health: <Activity className="h-4 w-4" />,
+  learning: <GraduationCap className="h-4 w-4" />,
+  personal: <User className="h-4 w-4" />,
+  family: <Users className="h-4 w-4" />,
+  fasting: <SunDim className="h-4 w-4" />,
+  sadaqah: <HeartHandshake className="h-4 w-4" />,
+  avoid: <ShieldAlert className="h-4 w-4" />,
 }
 const DIFF_STYLE = {
   easy: 'text-green-600 bg-green-500/10 border-green-500/20',
@@ -160,7 +169,7 @@ function HabitsLibraryPage() {
                   <div className="relative">
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div className="flex items-start gap-2 min-w-0">
-                        <span className="text-xl shrink-0">{h.icon || CAT_ICONS[h.category]}</span>
+                        <span className="shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">{CAT_ICONS[h.category] || <Check className="h-4 w-4" />}</span>
                         <div className="min-w-0">
                           <h3 className="font-bold text-sm text-foreground leading-snug">{h.name}</h3>
                           {h.minimum_version && (
@@ -209,8 +218,8 @@ function HabitsLibraryPage() {
         ))}
 
         {filtered.length === 0 && !isLoading && (
-          <div className="rounded-2xl glass-card shadow-soft p-10 text-center">
-            <span className="text-4xl mb-4 block">🔍</span>
+          <div className="rounded-2xl glass-card shadow-soft p-10 flex flex-col items-center text-center">
+            <Search className="h-10 w-10 text-muted-foreground/30 mb-4" />
             <p className="text-sm text-muted-foreground">No habits found. Try adjusting your filters.</p>
           </div>
         )}

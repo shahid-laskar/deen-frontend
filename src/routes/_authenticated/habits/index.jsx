@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import { Plus, Flame, Check, Heart, Layers, BookOpen, ChevronDown, RotateCcw, Sparkles } from 'lucide-react'
+import { Plus, Flame, Check, Heart, Layers, BookOpen, ChevronDown, RotateCcw, Sparkles, MoonStar, Feather, Activity, GraduationCap, User, Users, SunDim, HeartHandshake, ShieldAlert } from 'lucide-react'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -15,8 +15,17 @@ export const Route = createFileRoute('/_authenticated/habits/')({
 })
 
 const CAT_ICONS = {
-  ibadah: '🕌', quran: '📖', dhikr: '📿', sunnah: '🌙', health: '💪',
-  learning: '📚', personal: '✅', family: '👨‍👩‍👧', fasting: '🌙', sadaqah: '💚', avoid: '🚫',
+  ibadah: <MoonStar className="h-5 w-5" />,
+  quran: <BookOpen className="h-5 w-5" />,
+  dhikr: <Heart className="h-5 w-5" />,
+  sunnah: <Feather className="h-5 w-5" />,
+  health: <Activity className="h-5 w-5" />,
+  learning: <GraduationCap className="h-5 w-5" />,
+  personal: <User className="h-5 w-5" />,
+  family: <Users className="h-5 w-5" />,
+  fasting: <SunDim className="h-5 w-5" />,
+  sadaqah: <HeartHandshake className="h-5 w-5" />,
+  avoid: <ShieldAlert className="h-5 w-5" />,
 }
 const DIFF_DOT = { easy: 'bg-green-500', medium: 'bg-orange-500', hard: 'bg-red-500', epic: 'bg-purple-500' }
 const PRAYER_ANCHORS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha', null]
@@ -113,7 +122,7 @@ function HabitCard({ habit, onLog, onUseToken, onOpenChecklist }) {
         >
           {done
             ? <Check className="h-5 w-5" strokeWidth={2.5} />
-            : <span className="text-xl">{habit.icon || CAT_ICONS[habit.category] || '✅'}</span>
+            : <span className="flex items-center justify-center">{CAT_ICONS[habit.category] || <Check className="h-5 w-5" />}</span>
           }
         </button>
 
@@ -283,8 +292,8 @@ function HabitsTodayPage() {
 
       {/* Habit groups */}
       {total === 0 ? (
-        <div className="rounded-3xl glass-card shadow-soft p-10 text-center animate-slide-up stagger-2">
-          <span className="text-5xl block mb-4">🌱</span>
+        <div className="rounded-3xl glass-card shadow-soft p-10 flex flex-col items-center text-center animate-slide-up stagger-2">
+          <Sparkles className="h-12 w-12 text-primary/40 mb-4" />
           <h3 className="text-base font-bold text-foreground mb-1">Start your journey</h3>
           <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
             "The most beloved of deeds to Allah are those most consistent, even if small." — Bukhari

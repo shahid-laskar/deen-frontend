@@ -2,7 +2,7 @@ import React from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { format, subDays, startOfWeek, eachDayOfInterval } from 'date-fns'
-import { Flame, Check, Trophy, AlertCircle, BarChart2, Layers } from 'lucide-react'
+import { Flame, Check, Trophy, AlertCircle, BarChart2, Layers, MoonStar, BookOpen, Heart, Feather, Activity, GraduationCap, User, Users, SunDim, HeartHandshake, ShieldAlert } from 'lucide-react'
 import api from '@/lib/api'
 import { cn } from '@/lib/utils'
 
@@ -12,8 +12,17 @@ export const Route = createFileRoute('/_authenticated/habits/analytics')({
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const CAT_ICONS = {
-  ibadah: '🕌', quran: '📖', dhikr: '📿', sunnah: '🌙', health: '💪',
-  learning: '📚', personal: '✅', family: '👨‍👩‍👧', fasting: '🌙', sadaqah: '💚', avoid: '🚫',
+  ibadah: <MoonStar className="h-4 w-4" />,
+  quran: <BookOpen className="h-4 w-4" />,
+  dhikr: <Heart className="h-4 w-4" />,
+  sunnah: <Feather className="h-4 w-4" />,
+  health: <Activity className="h-4 w-4" />,
+  learning: <GraduationCap className="h-4 w-4" />,
+  personal: <User className="h-4 w-4" />,
+  family: <Users className="h-4 w-4" />,
+  fasting: <SunDim className="h-4 w-4" />,
+  sadaqah: <HeartHandshake className="h-4 w-4" />,
+  avoid: <ShieldAlert className="h-4 w-4" />,
 }
 
 // ── Health Score Gauge ──────────────────────────────────────────────────────
@@ -151,7 +160,7 @@ function StreakTable({ habits = [], streakSummary = {} }) {
             <Link key={h.id} to={`/habits/${h.id}`}
               className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 transition-colors group">
               <span className="text-xs font-black text-muted-foreground w-4 text-center">{i + 1}</span>
-              <span className="text-base shrink-0">{h.icon || CAT_ICONS[h.category] || '✅'}</span>
+              <span className="flex items-center justify-center shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary">{CAT_ICONS[h.category] || <Check className="h-3 w-3" />}</span>
               <p className="text-sm font-bold text-foreground flex-1 truncate group-hover:text-primary transition-colors">{h.name}</p>
               <div className="flex items-center gap-3 shrink-0">
                 <div className="flex items-center gap-1 text-orange-500">
@@ -191,7 +200,7 @@ function CategoryBreakdown({ habits = [] }) {
         {entries.map(([cat, count], i) => (
           <div key={cat} className="flex items-center gap-2">
             <div className={cn('w-2 h-2 rounded-full shrink-0', COLORS[i % COLORS.length])} />
-            <span className="text-xs font-bold text-foreground capitalize flex-1 truncate">{CAT_ICONS[cat]} {cat}</span>
+            <span className="text-xs font-bold text-foreground capitalize flex-1 truncate flex items-center gap-1.5">{CAT_ICONS[cat]} {cat}</span>
             <span className="text-xs font-bold text-muted-foreground">{count}</span>
           </div>
         ))}

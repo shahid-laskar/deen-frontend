@@ -38,6 +38,7 @@ import { Route as AuthenticatedAiRouteImport } from './routes/_authenticated/ai'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedQuranIndexRouteImport } from './routes/_authenticated/quran/index'
 import { Route as AuthenticatedHabitsIndexRouteImport } from './routes/_authenticated/habits/index'
+import { Route as AuthenticatedChildrenIndexRouteImport } from './routes/_authenticated/children/index'
 import { Route as AuthenticatedQuranStatsRouteImport } from './routes/_authenticated/quran/stats'
 import { Route as AuthenticatedQuranSearchRouteImport } from './routes/_authenticated/quran/search'
 import { Route as AuthenticatedQuranPracticeRouteImport } from './routes/_authenticated/quran/practice'
@@ -49,6 +50,8 @@ import { Route as AuthenticatedHabitsLibraryRouteImport } from './routes/_authen
 import { Route as AuthenticatedHabitsDhikrRouteImport } from './routes/_authenticated/habits/dhikr'
 import { Route as AuthenticatedHabitsAnalyticsRouteImport } from './routes/_authenticated/habits/analytics'
 import { Route as AuthenticatedHabitsIdRouteImport } from './routes/_authenticated/habits/$id'
+import { Route as AuthenticatedChildrenKidsModeRouteImport } from './routes/_authenticated/children/kids-mode'
+import { Route as AuthenticatedChildrenChildIdRouteImport } from './routes/_authenticated/children/$childId'
 import { Route as AuthenticatedQuranSurahIdRouteImport } from './routes/_authenticated/quran/surah.$id'
 
 const RegisterRoute = RegisterRouteImport.update({
@@ -198,6 +201,12 @@ const AuthenticatedHabitsIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedHabitsRoute,
   } as any)
+const AuthenticatedChildrenIndexRoute =
+  AuthenticatedChildrenIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedChildrenRoute,
+  } as any)
 const AuthenticatedQuranStatsRoute = AuthenticatedQuranStatsRouteImport.update({
   id: '/stats',
   path: '/stats',
@@ -260,6 +269,18 @@ const AuthenticatedHabitsIdRoute = AuthenticatedHabitsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AuthenticatedHabitsRoute,
 } as any)
+const AuthenticatedChildrenKidsModeRoute =
+  AuthenticatedChildrenKidsModeRouteImport.update({
+    id: '/kids-mode',
+    path: '/kids-mode',
+    getParentRoute: () => AuthenticatedChildrenRoute,
+  } as any)
+const AuthenticatedChildrenChildIdRoute =
+  AuthenticatedChildrenChildIdRouteImport.update({
+    id: '/$childId',
+    path: '/$childId',
+    getParentRoute: () => AuthenticatedChildrenRoute,
+  } as any)
 const AuthenticatedQuranSurahIdRoute =
   AuthenticatedQuranSurahIdRouteImport.update({
     id: '/surah/$id',
@@ -274,7 +295,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/ai': typeof AuthenticatedAiRoute
-  '/children': typeof AuthenticatedChildrenRoute
+  '/children': typeof AuthenticatedChildrenRouteWithChildren
   '/community': typeof AuthenticatedCommunityRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/family': typeof AuthenticatedFamilyRoute
@@ -294,6 +315,8 @@ export interface FileRoutesByFullPath {
   '/waqf': typeof AuthenticatedWaqfRoute
   '/wellness': typeof AuthenticatedWellnessRoute
   '/workout': typeof AuthenticatedWorkoutRoute
+  '/children/$childId': typeof AuthenticatedChildrenChildIdRoute
+  '/children/kids-mode': typeof AuthenticatedChildrenKidsModeRoute
   '/habits/$id': typeof AuthenticatedHabitsIdRoute
   '/habits/analytics': typeof AuthenticatedHabitsAnalyticsRoute
   '/habits/dhikr': typeof AuthenticatedHabitsDhikrRoute
@@ -305,6 +328,7 @@ export interface FileRoutesByFullPath {
   '/quran/practice': typeof AuthenticatedQuranPracticeRoute
   '/quran/search': typeof AuthenticatedQuranSearchRoute
   '/quran/stats': typeof AuthenticatedQuranStatsRoute
+  '/children/': typeof AuthenticatedChildrenIndexRoute
   '/habits/': typeof AuthenticatedHabitsIndexRoute
   '/quran/': typeof AuthenticatedQuranIndexRoute
   '/quran/surah/$id': typeof AuthenticatedQuranSurahIdRoute
@@ -316,7 +340,6 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/ai': typeof AuthenticatedAiRoute
-  '/children': typeof AuthenticatedChildrenRoute
   '/community': typeof AuthenticatedCommunityRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/family': typeof AuthenticatedFamilyRoute
@@ -334,6 +357,8 @@ export interface FileRoutesByTo {
   '/waqf': typeof AuthenticatedWaqfRoute
   '/wellness': typeof AuthenticatedWellnessRoute
   '/workout': typeof AuthenticatedWorkoutRoute
+  '/children/$childId': typeof AuthenticatedChildrenChildIdRoute
+  '/children/kids-mode': typeof AuthenticatedChildrenKidsModeRoute
   '/habits/$id': typeof AuthenticatedHabitsIdRoute
   '/habits/analytics': typeof AuthenticatedHabitsAnalyticsRoute
   '/habits/dhikr': typeof AuthenticatedHabitsDhikrRoute
@@ -345,6 +370,7 @@ export interface FileRoutesByTo {
   '/quran/practice': typeof AuthenticatedQuranPracticeRoute
   '/quran/search': typeof AuthenticatedQuranSearchRoute
   '/quran/stats': typeof AuthenticatedQuranStatsRoute
+  '/children': typeof AuthenticatedChildrenIndexRoute
   '/habits': typeof AuthenticatedHabitsIndexRoute
   '/quran': typeof AuthenticatedQuranIndexRoute
   '/quran/surah/$id': typeof AuthenticatedQuranSurahIdRoute
@@ -358,7 +384,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/ai': typeof AuthenticatedAiRoute
-  '/_authenticated/children': typeof AuthenticatedChildrenRoute
+  '/_authenticated/children': typeof AuthenticatedChildrenRouteWithChildren
   '/_authenticated/community': typeof AuthenticatedCommunityRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/family': typeof AuthenticatedFamilyRoute
@@ -378,6 +404,8 @@ export interface FileRoutesById {
   '/_authenticated/waqf': typeof AuthenticatedWaqfRoute
   '/_authenticated/wellness': typeof AuthenticatedWellnessRoute
   '/_authenticated/workout': typeof AuthenticatedWorkoutRoute
+  '/_authenticated/children/$childId': typeof AuthenticatedChildrenChildIdRoute
+  '/_authenticated/children/kids-mode': typeof AuthenticatedChildrenKidsModeRoute
   '/_authenticated/habits/$id': typeof AuthenticatedHabitsIdRoute
   '/_authenticated/habits/analytics': typeof AuthenticatedHabitsAnalyticsRoute
   '/_authenticated/habits/dhikr': typeof AuthenticatedHabitsDhikrRoute
@@ -389,6 +417,7 @@ export interface FileRoutesById {
   '/_authenticated/quran/practice': typeof AuthenticatedQuranPracticeRoute
   '/_authenticated/quran/search': typeof AuthenticatedQuranSearchRoute
   '/_authenticated/quran/stats': typeof AuthenticatedQuranStatsRoute
+  '/_authenticated/children/': typeof AuthenticatedChildrenIndexRoute
   '/_authenticated/habits/': typeof AuthenticatedHabitsIndexRoute
   '/_authenticated/quran/': typeof AuthenticatedQuranIndexRoute
   '/_authenticated/quran/surah/$id': typeof AuthenticatedQuranSurahIdRoute
@@ -422,6 +451,8 @@ export interface FileRouteTypes {
     | '/waqf'
     | '/wellness'
     | '/workout'
+    | '/children/$childId'
+    | '/children/kids-mode'
     | '/habits/$id'
     | '/habits/analytics'
     | '/habits/dhikr'
@@ -433,6 +464,7 @@ export interface FileRouteTypes {
     | '/quran/practice'
     | '/quran/search'
     | '/quran/stats'
+    | '/children/'
     | '/habits/'
     | '/quran/'
     | '/quran/surah/$id'
@@ -444,7 +476,6 @@ export interface FileRouteTypes {
     | '/register'
     | '/admin'
     | '/ai'
-    | '/children'
     | '/community'
     | '/dashboard'
     | '/family'
@@ -462,6 +493,8 @@ export interface FileRouteTypes {
     | '/waqf'
     | '/wellness'
     | '/workout'
+    | '/children/$childId'
+    | '/children/kids-mode'
     | '/habits/$id'
     | '/habits/analytics'
     | '/habits/dhikr'
@@ -473,6 +506,7 @@ export interface FileRouteTypes {
     | '/quran/practice'
     | '/quran/search'
     | '/quran/stats'
+    | '/children'
     | '/habits'
     | '/quran'
     | '/quran/surah/$id'
@@ -505,6 +539,8 @@ export interface FileRouteTypes {
     | '/_authenticated/waqf'
     | '/_authenticated/wellness'
     | '/_authenticated/workout'
+    | '/_authenticated/children/$childId'
+    | '/_authenticated/children/kids-mode'
     | '/_authenticated/habits/$id'
     | '/_authenticated/habits/analytics'
     | '/_authenticated/habits/dhikr'
@@ -516,6 +552,7 @@ export interface FileRouteTypes {
     | '/_authenticated/quran/practice'
     | '/_authenticated/quran/search'
     | '/_authenticated/quran/stats'
+    | '/_authenticated/children/'
     | '/_authenticated/habits/'
     | '/_authenticated/quran/'
     | '/_authenticated/quran/surah/$id'
@@ -734,6 +771,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHabitsIndexRouteImport
       parentRoute: typeof AuthenticatedHabitsRoute
     }
+    '/_authenticated/children/': {
+      id: '/_authenticated/children/'
+      path: '/'
+      fullPath: '/children/'
+      preLoaderRoute: typeof AuthenticatedChildrenIndexRouteImport
+      parentRoute: typeof AuthenticatedChildrenRoute
+    }
     '/_authenticated/quran/stats': {
       id: '/_authenticated/quran/stats'
       path: '/stats'
@@ -811,6 +855,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHabitsIdRouteImport
       parentRoute: typeof AuthenticatedHabitsRoute
     }
+    '/_authenticated/children/kids-mode': {
+      id: '/_authenticated/children/kids-mode'
+      path: '/kids-mode'
+      fullPath: '/children/kids-mode'
+      preLoaderRoute: typeof AuthenticatedChildrenKidsModeRouteImport
+      parentRoute: typeof AuthenticatedChildrenRoute
+    }
+    '/_authenticated/children/$childId': {
+      id: '/_authenticated/children/$childId'
+      path: '/$childId'
+      fullPath: '/children/$childId'
+      preLoaderRoute: typeof AuthenticatedChildrenChildIdRouteImport
+      parentRoute: typeof AuthenticatedChildrenRoute
+    }
     '/_authenticated/quran/surah/$id': {
       id: '/_authenticated/quran/surah/$id'
       path: '/surah/$id'
@@ -820,6 +878,23 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AuthenticatedChildrenRouteChildren {
+  AuthenticatedChildrenChildIdRoute: typeof AuthenticatedChildrenChildIdRoute
+  AuthenticatedChildrenKidsModeRoute: typeof AuthenticatedChildrenKidsModeRoute
+  AuthenticatedChildrenIndexRoute: typeof AuthenticatedChildrenIndexRoute
+}
+
+const AuthenticatedChildrenRouteChildren: AuthenticatedChildrenRouteChildren = {
+  AuthenticatedChildrenChildIdRoute: AuthenticatedChildrenChildIdRoute,
+  AuthenticatedChildrenKidsModeRoute: AuthenticatedChildrenKidsModeRoute,
+  AuthenticatedChildrenIndexRoute: AuthenticatedChildrenIndexRoute,
+}
+
+const AuthenticatedChildrenRouteWithChildren =
+  AuthenticatedChildrenRoute._addFileChildren(
+    AuthenticatedChildrenRouteChildren,
+  )
 
 interface AuthenticatedHabitsRouteChildren {
   AuthenticatedHabitsIdRoute: typeof AuthenticatedHabitsIdRoute
@@ -870,7 +945,7 @@ const AuthenticatedQuranRouteWithChildren =
 interface AuthenticatedRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAiRoute: typeof AuthenticatedAiRoute
-  AuthenticatedChildrenRoute: typeof AuthenticatedChildrenRoute
+  AuthenticatedChildrenRoute: typeof AuthenticatedChildrenRouteWithChildren
   AuthenticatedCommunityRoute: typeof AuthenticatedCommunityRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFamilyRoute: typeof AuthenticatedFamilyRoute
@@ -895,7 +970,7 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAiRoute: AuthenticatedAiRoute,
-  AuthenticatedChildrenRoute: AuthenticatedChildrenRoute,
+  AuthenticatedChildrenRoute: AuthenticatedChildrenRouteWithChildren,
   AuthenticatedCommunityRoute: AuthenticatedCommunityRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFamilyRoute: AuthenticatedFamilyRoute,
