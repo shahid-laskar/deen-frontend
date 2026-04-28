@@ -19,6 +19,7 @@ import { FajrOpeningModal } from '@/components/planner/FajrOpeningModal'
 import { IshaModal }      from '@/components/planner/IshaModal'
 import { ShortcutsHelp } from '@/components/planner/ShortcutsHelp'
 import { TemplatePicker } from '@/components/planner/TemplatePicker'
+import { materializeTemplates } from '@/lib/planner/recurrence'
 
 export const Route = createFileRoute('/_authenticated/tasks')({
   component: PlannerPage,
@@ -45,16 +46,65 @@ function PlannerPage() {
   const [showTemplate, setShowTemplate] = useState(false)
 
   const qc = useQueryClient()
+  const initRef = React.useRef(false)
+  const [todayLoaded, setTodayLoaded] = useState(false)
 
-  // ── Auto-trigger Fajr modal once per day ─────────────────────────────────
+  // ── Data queries ─────────────────────────────────────────────────────────
+  const { data: todayRaw  = [], isSuccess: isTodayLoaded } = useQuery({
+    queryKey: ['tasks', 'today'],
+    queryFn: () => tasksApi.today().then(r => r.data ?? []),
+  })
+
   useEffect(() => {
+    if (isTodayLoaded) setTodayLoaded(true)
+  }, [isTodayLoaded])
+
+  const { data: allRaw = [] } = useQuery({
+    queryKey: ['tasks', 'list'],
+    queryFn: () => tasksApi.list({ completed: false }).then(r => r.data ?? []),
+  })
+  const { data: prayerTimes } = useQuery({
+    queryKey: ['prayer', 'today'],
+    queryFn: () => prayerApi.getTimes({}).then(r => r.data),
+    staleTime: 1000 * 60 * 60,
+  })
+  const { data: prayerSummary } = useQuery({
+    queryKey: ['prayer', 'summary'],
+    queryFn: () => prayerApi.getTodaySummary().then(r => r.data),
+  })
+  const { data: habits = [] } = useQuery({
+    queryKey: ['habits', 'list'],
+    queryFn: () => habitsApi.list().then(r => (Array.isArray(r) ? r : r.data ?? [])),
+    staleTime: 1000 * 60 * 5,
+  })
+
+
+  useEffect(() => {
+    if (initRef.current || !todayLoaded) return
+    initRef.current = true
+
+    // 1. Materialize templates
+    materializeTemplates((payload) => tasksApi.create(payload), todayRaw).then(() => {
+      qc.invalidateQueries({ queryKey: ['tasks'] })
+    })
+
+    // 2. Auto-trigger rituals
     const ritual = getLastRitual(TODAY)
     if (!ritual) {
-      // Delay 2 seconds so the page renders first
       const t = setTimeout(() => setShowFajr(true), 2000)
       return () => clearTimeout(t)
+    } else if (ritual === 'fajr' && prayerTimes?.Maghrib) {
+      const now = new Date()
+      const [h, m] = prayerTimes.Maghrib.split(':').map(Number)
+      const maghribDate = new Date(now)
+      maghribDate.setHours(h, m, 0, 0)
+      
+      if (now > maghribDate) {
+        const t = setTimeout(() => setShowIsha(true), 2000)
+        return () => clearTimeout(t)
+      }
     }
-  }, [])
+  }, [todayLoaded, todayRaw, qc, prayerTimes])
 
   // ── Global keyboard shortcuts ─────────────────────────────────────────────
   useEffect(() => {
@@ -88,29 +138,6 @@ function PlannerPage() {
     return () => window.removeEventListener('keydown', handler)
   }, [])
 
-  // ── Data queries ─────────────────────────────────────────────────────────
-  const { data: todayRaw  = [] } = useQuery({
-    queryKey: ['tasks', 'today'],
-    queryFn: () => tasksApi.today().then(r => r.data ?? []),
-  })
-  const { data: allRaw = [] } = useQuery({
-    queryKey: ['tasks', 'list'],
-    queryFn: () => tasksApi.list({ completed: false }).then(r => r.data ?? []),
-  })
-  const { data: prayerTimes } = useQuery({
-    queryKey: ['prayer', 'today'],
-    queryFn: () => prayerApi.getTimes({}).then(r => r.data),
-    staleTime: 1000 * 60 * 60,
-  })
-  const { data: prayerSummary } = useQuery({
-    queryKey: ['prayer', 'summary'],
-    queryFn: () => prayerApi.getTodaySummary().then(r => r.data),
-  })
-  const { data: habits = [] } = useQuery({
-    queryKey: ['habits', 'list'],
-    queryFn: () => habitsApi.list().then(r => (Array.isArray(r) ? r : r.data ?? [])),
-    staleTime: 1000 * 60 * 5,
-  })
 
   // ── Mutations ─────────────────────────────────────────────────────────────
   const { mutate: completeTask } = useMutation({

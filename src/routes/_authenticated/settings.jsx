@@ -5,6 +5,7 @@ import { Palette, User, Globe, Bell, Lock, Check, Crown, Download, Navigation, M
 import api from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
 import { useThemeStore } from '@/store/themeStore'
+import { useTheme } from '@/lib/theme-context'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -53,47 +54,50 @@ function SettingRow({ label, description, checked, onCheckedChange }) {
 
 // ─── Appearance Tab ───────────────────────────────────────────────────────────
 function AppearanceTab() {
-  const { isDark, toggleDark, autoDarkAfterMaghrib, toggleAutoDark, seasonalEnabled, setSeasonalEnabled, typography, setTypography } = useThemeStore()
+  const { 
+    mode, setMode, resolvedDark, 
+    typeset, setTypesetOverride 
+  } = useTheme()
 
-  const TEXT_SCALE_OPTIONS = [
-    { key: 'sm',   label: 'Small'   },
-    { key: 'base', label: 'Regular' },
-    { key: 'lg',   label: 'Large'   },
-    { key: 'xl',   label: 'X-Large' },
+  const { 
+    autoDarkAfterMaghrib, toggleAutoDark, 
+    seasonalEnabled, setSeasonalEnabled,
+    quranScale, setQuranScale
+  } = useThemeStore()
+
+  const TYPESET_OPTIONS = [
+    { key: 'classic',   label: 'Classic',    desc: 'Amiri + Inter' },
+    { key: 'editorial', label: 'Editorial',  desc: 'Fraunces + Inter' },
+    { key: 'royal',     label: 'Royal',      desc: 'Cormorant + Manrope' },
+    { key: 'modern',    label: 'Modern',     desc: 'Inter + Inter' },
+    { key: 'geometric', label: 'Geometric',  desc: 'Space Grotesk + Jakarta' },
+    { key: 'soft',      label: 'Soft',       desc: 'DM Serif + Nunito' },
   ]
 
-  const FONT_OPTIONS = [
-    { key: 'Inter',    label: 'Inter (Default)' },
-    { key: 'Outfit',   label: 'Outfit'          },
-    { key: 'Nunito',   label: 'Nunito'          },
-    { key: 'Amiri',    label: 'Amiri (Arabic)'  },
+  const THEME_MODES = [
+    { key: 'light',  label: 'Light',  icon: Sun, color: 'text-gold' },
+    { key: 'dark',   label: 'Dark',   icon: Moon, color: 'text-primary' },
+    { key: 'system', label: 'System', icon: Globe, color: 'text-muted-foreground' },
   ]
 
   return (
     <div className="space-y-4">
       {/* Dark mode */}
-      <Section title="Theme">
+      <Section title="Mode">
         <div className="flex gap-3">
-          <button
-            onClick={() => !isDark && toggleDark()}
-            className={cn(
-              'flex-1 flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all',
-              !isDark ? 'border-primary bg-primary/5' : 'border-border bg-background hover:bg-muted'
-            )}
-          >
-            <Sun className="h-5 w-5 text-gold" />
-            <span className="text-xs font-medium text-foreground">Light</span>
-          </button>
-          <button
-            onClick={() => isDark && toggleDark()}
-            className={cn(
-              'flex-1 flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all',
-              isDark ? 'border-primary bg-primary/5' : 'border-border bg-background hover:bg-muted'
-            )}
-          >
-            <Moon className="h-5 w-5 text-primary" />
-            <span className="text-xs font-medium text-foreground">Dark</span>
-          </button>
+          {THEME_MODES.map(m => (
+            <button
+              key={m.key}
+              onClick={() => setMode(m.key)}
+              className={cn(
+                'flex-1 flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all',
+                mode === m.key ? 'border-primary bg-primary/5' : 'border-border bg-background hover:bg-muted'
+              )}
+            >
+              <m.icon className={cn("h-5 w-5", m.color)} />
+              <span className="text-xs font-medium text-foreground">{m.label}</span>
+            </button>
+          ))}
         </div>
       </Section>
 
@@ -120,56 +124,41 @@ function AppearanceTab() {
       <Section title="Typography">
         <div className="space-y-4">
           <div>
-            <p className="text-sm font-medium text-foreground mb-2">UI Font</p>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-medium text-foreground">Font Pairing</p>
+              <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => setTypesetOverride(null)}>
+                Reset to theme default
+              </Button>
+            </div>
             <div className="grid grid-cols-2 gap-2">
-              {FONT_OPTIONS.map(({ key, label }) => (
+              {TYPESET_OPTIONS.map(({ key, label, desc }) => (
                 <button
                   key={key}
-                  onClick={() => setTypography({ fontFamily: key })}
+                  onClick={() => setTypesetOverride(key)}
                   className={cn(
                     'px-3 py-2.5 rounded-xl border text-left transition-all',
-                    typography?.fontFamily === key
+                    typeset === key
                       ? 'border-primary bg-primary/8 text-foreground'
                       : 'border-border bg-background text-muted-foreground hover:bg-muted'
                   )}
-                  style={{ fontFamily: `'${key}', system-ui` }}
                 >
                   <p className="text-sm font-medium">{label}</p>
-                  <p className="text-[10px] opacity-60">Aa Bb — بسم الله</p>
+                  <p className="text-[10px] opacity-60 truncate">{desc}</p>
                 </button>
               ))}
             </div>
           </div>
 
-          <div>
-            <p className="text-sm font-medium text-foreground mb-2">Text size</p>
-            <div className="flex gap-2 flex-wrap">
-              {TEXT_SCALE_OPTIONS.map(({ key, label }) => (
-                <button
-                  key={key}
-                  onClick={() => setTypography({ textScale: key })}
-                  className={cn(
-                    'px-4 py-2 rounded-xl border text-sm font-medium transition-all',
-                    typography?.textScale === key
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-border bg-card text-muted-foreground hover:bg-muted'
-                  )}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-
+          <Separator />
           <div>
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-medium text-foreground">Quran font size</p>
-              <span className="text-xs font-mono text-muted-foreground">{Math.round((typography?.quranScale ?? 1) * 100)}%</span>
+              <span className="text-xs font-mono text-muted-foreground">{Math.round((quranScale ?? 1) * 100)}%</span>
             </div>
             <input
               type="range" min="0.8" max="2" step="0.1"
-              value={typography?.quranScale ?? 1}
-              onChange={e => setTypography({ quranScale: parseFloat(e.target.value) })}
+              value={quranScale ?? 1}
+              onChange={e => setQuranScale(parseFloat(e.target.value))}
               className="w-full accent-primary"
             />
             <div className="font-amiri text-center py-3 rounded-xl mt-2 bg-muted text-lg text-primary">

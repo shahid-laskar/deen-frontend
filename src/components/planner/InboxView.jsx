@@ -4,6 +4,7 @@ import { format, addDays } from 'date-fns'
 import { Inbox, CalendarClock } from 'lucide-react'
 import { tasksApi } from '@/lib/api'
 import { TaskCard } from '@/components/planner/TaskCard'
+import { QuickAddBar } from '@/components/planner/QuickAddBar'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
 
@@ -100,6 +101,8 @@ export function InboxView({ allTasks, onComplete, onEdit, onDelete, onDefer }) {
           </div>
         )}
       </div>
+
+      <QuickAddBar />
 
       {inbox.length === 0 ? (
         <div className="rounded-3xl border-2 border-dashed border-border/40 p-12 text-center">

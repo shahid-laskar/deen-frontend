@@ -115,7 +115,7 @@ export function FocusView({ todayTasks, prayerTimes }) {
       </div>
 
       {/* Duration selector */}
-      <div className="flex items-center justify-center gap-2">
+      <div className="flex items-center justify-center gap-2 flex-wrap">
         {[25, 50, 90].map(d => (
           <button
             key={d}
@@ -125,6 +125,23 @@ export function FocusView({ todayTasks, prayerTimes }) {
             {d}m
           </button>
         ))}
+        {/* Custom Timer Input */}
+        <div className="flex items-center gap-1 border border-border rounded-xl px-2 bg-card">
+          <input
+            type="number"
+            min="1"
+            max="240"
+            className="w-14 bg-transparent py-2 text-sm text-center font-bold focus:outline-none placeholder:font-normal"
+            placeholder="Custom"
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                const val = parseInt(e.target.value)
+                if (val > 0) { setDuration(val); stop() }
+              }
+            }}
+          />
+          <span className="text-sm font-bold text-muted-foreground pr-2">m</span>
+        </div>
       </div>
 
       {/* Prayer warning */}

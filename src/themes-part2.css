@@ -1,0 +1,310 @@
+/* ── 13. Paper Scholar ── */
+html[data-theme="paper-scholar"] {
+  --primary: oklch(0.38 0.10 35); --primary-foreground: oklch(0.99 0.002 80);
+  --gold: oklch(0.72 0.12 75); --gold-foreground: oklch(0.25 0.06 60);
+  --sage: oklch(0.55 0.06 130); --sage-foreground: oklch(0.99 0.002 80);
+  --warm: oklch(0.45 0.14 25); --warm-foreground: oklch(0.99 0.002 80);
+  --background: oklch(0.970 0.010 80); --foreground: oklch(0.20 0.06 35);
+  --card: oklch(0.980 0.007 82); --card-foreground: oklch(0.20 0.06 35);
+  --border: oklch(0.88 0.018 75); --ring: oklch(0.38 0.10 35);
+  --sidebar: oklch(0.962 0.010 78); --sidebar-border: oklch(0.87 0.020 75);
+  --sidebar-primary: oklch(0.38 0.10 35); --sidebar-foreground: oklch(0.20 0.06 35);
+  --gradient-hero: linear-gradient(135deg, oklch(0.38 0.10 35), oklch(0.45 0.14 25), oklch(0.72 0.12 75));
+  --pattern-stroke: oklch(0.38 0.10 35);
+}
+html[data-theme="paper-scholar"].dark {
+  --primary: oklch(0.55 0.10 38); --background: oklch(0.16 0.018 35);
+  --foreground: oklch(0.93 0.010 75); --card: oklch(0.20 0.022 35);
+  --card-foreground: oklch(0.93 0.010 75); --border: oklch(0.30 0.022 35);
+  --sidebar: oklch(0.18 0.022 35); --sidebar-border: oklch(0.30 0.022 35);
+  --sidebar-foreground: oklch(0.93 0.010 75); --sidebar-accent: oklch(0.24 0.03 35);
+  --sidebar-accent-foreground: oklch(0.90 0.01 75);
+}
+
+/* ── 14. Mist Ink ── */
+html[data-theme="mist-ink"] {
+  --primary: oklch(0.35 0.04 260); --primary-foreground: oklch(0.99 0.002 80);
+  --gold: oklch(0.72 0.10 60); --gold-foreground: oklch(0.25 0.06 60);
+  --sage: oklch(0.62 0.06 220); --sage-foreground: oklch(0.99 0.002 80);
+  --warm: oklch(0.68 0.10 20); --warm-foreground: oklch(0.15 0.02 20);
+  --background: oklch(0.975 0.005 230); --foreground: oklch(0.22 0.04 260);
+  --card: oklch(0.990 0.003 230); --card-foreground: oklch(0.22 0.04 260);
+  --border: oklch(0.90 0.010 225); --ring: oklch(0.35 0.04 260);
+  --sidebar: oklch(0.968 0.005 228); --sidebar-border: oklch(0.89 0.012 225);
+  --sidebar-primary: oklch(0.35 0.04 260); --sidebar-foreground: oklch(0.22 0.04 260);
+  --gradient-hero: linear-gradient(135deg, oklch(0.35 0.04 260), oklch(0.62 0.06 220), oklch(0.68 0.10 20));
+  --pattern-stroke: oklch(0.35 0.04 260);
+}
+html[data-theme="mist-ink"].dark {
+  --primary: oklch(0.55 0.06 262); --background: oklch(0.14 0.012 258);
+  --foreground: oklch(0.93 0.006 240); --card: oklch(0.18 0.016 258);
+  --card-foreground: oklch(0.93 0.006 240); --border: oklch(0.28 0.016 258);
+  --sidebar: oklch(0.16 0.016 258); --sidebar-border: oklch(0.28 0.016 258);
+  --sidebar-foreground: oklch(0.93 0.006 240); --sidebar-accent: oklch(0.24 0.03 258);
+  --sidebar-accent-foreground: oklch(0.90 0.01 240);
+}
+
+/* ── 15. Obsidian Gold ── */
+html[data-theme="obsidian-gold"] {
+  --primary: oklch(0.78 0.17 82); --primary-foreground: oklch(0.10 0.01 80);
+  --gold: oklch(0.82 0.17 82); --gold-foreground: oklch(0.10 0.01 80);
+  --sage: oklch(0.70 0.015 85); --sage-foreground: oklch(0.10 0.01 80);
+  --warm: oklch(0.60 0.10 60); --warm-foreground: oklch(0.10 0.01 60);
+  --background: oklch(0.10 0.006 80); --foreground: oklch(0.94 0.010 82);
+  --card: oklch(0.14 0.008 80); --card-foreground: oklch(0.94 0.010 82);
+  --border: oklch(0.24 0.012 80); --ring: oklch(0.78 0.17 82);
+  --sidebar: oklch(0.12 0.008 80); --sidebar-border: oklch(0.24 0.012 80);
+  --sidebar-primary: oklch(0.78 0.17 82); --sidebar-foreground: oklch(0.94 0.010 82);
+  --gradient-hero: linear-gradient(135deg, oklch(0.10 0.006 80), oklch(0.24 0.012 80), oklch(0.82 0.17 82));
+  --pattern-stroke: oklch(0.82 0.17 82);
+}
+html[data-theme="obsidian-gold"].dark {
+  --primary: oklch(0.82 0.17 82); --background: oklch(0.08 0.006 80);
+  --foreground: oklch(0.95 0.010 82); --card: oklch(0.12 0.008 80);
+  --card-foreground: oklch(0.95 0.010 82); --border: oklch(0.22 0.012 80);
+  --sidebar: oklch(0.10 0.008 80); --sidebar-border: oklch(0.22 0.012 80);
+  --sidebar-foreground: oklch(0.95 0.010 82); --sidebar-accent: oklch(0.18 0.02 80);
+  --sidebar-accent-foreground: oklch(0.90 0.008 82);
+}
+
+/* ── 16. Pearl Mushaf ── */
+html[data-theme="pearl-mushaf"] {
+  --primary: oklch(0.58 0.12 340); --primary-foreground: oklch(0.99 0.002 80);
+  --gold: oklch(0.78 0.10 35); --gold-foreground: oklch(0.25 0.06 60);
+  --sage: oklch(0.70 0.04 20); --sage-foreground: oklch(0.25 0.04 20);
+  --warm: oklch(0.68 0.10 15); --warm-foreground: oklch(0.20 0.04 15);
+  --background: oklch(0.980 0.005 345); --foreground: oklch(0.22 0.04 340);
+  --card: oklch(0.992 0.003 345); --card-foreground: oklch(0.22 0.04 340);
+  --border: oklch(0.91 0.010 340); --ring: oklch(0.58 0.12 340);
+  --sidebar: oklch(0.975 0.005 342); --sidebar-border: oklch(0.90 0.012 340);
+  --sidebar-primary: oklch(0.58 0.12 340); --sidebar-foreground: oklch(0.22 0.04 340);
+  --gradient-hero: linear-gradient(135deg, oklch(0.58 0.12 340), oklch(0.68 0.10 15), oklch(0.78 0.10 35));
+  --pattern-stroke: oklch(0.58 0.12 340);
+}
+html[data-theme="pearl-mushaf"].dark {
+  --primary: oklch(0.70 0.12 342); --background: oklch(0.15 0.016 340);
+  --foreground: oklch(0.93 0.008 345); --card: oklch(0.19 0.020 340);
+  --card-foreground: oklch(0.93 0.008 345); --border: oklch(0.29 0.020 340);
+  --sidebar: oklch(0.17 0.020 340); --sidebar-border: oklch(0.29 0.020 340);
+  --sidebar-foreground: oklch(0.93 0.008 345); --sidebar-accent: oklch(0.24 0.03 340);
+  --sidebar-accent-foreground: oklch(0.90 0.01 345);
+}
+
+/* ── 17. Platinum Silk ── */
+html[data-theme="platinum-silk"] {
+  --primary: oklch(0.52 0.06 85); --primary-foreground: oklch(0.99 0.002 80);
+  --gold: oklch(0.78 0.08 85); --gold-foreground: oklch(0.25 0.06 60);
+  --sage: oklch(0.68 0.04 280); --sage-foreground: oklch(0.20 0.04 280);
+  --warm: oklch(0.48 0.08 300); --warm-foreground: oklch(0.99 0.002 80);
+  --background: oklch(0.978 0.004 90); --foreground: oklch(0.22 0.04 85);
+  --card: oklch(0.990 0.002 90); --card-foreground: oklch(0.22 0.04 85);
+  --border: oklch(0.91 0.008 88); --ring: oklch(0.52 0.06 85);
+  --sidebar: oklch(0.972 0.004 88); --sidebar-border: oklch(0.90 0.010 88);
+  --sidebar-primary: oklch(0.52 0.06 85); --sidebar-foreground: oklch(0.22 0.04 85);
+  --gradient-hero: linear-gradient(135deg, oklch(0.52 0.06 85), oklch(0.48 0.08 300), oklch(0.78 0.08 85));
+  --pattern-stroke: oklch(0.52 0.06 85);
+}
+html[data-theme="platinum-silk"].dark {
+  --primary: oklch(0.68 0.06 87); --background: oklch(0.14 0.010 88);
+  --foreground: oklch(0.93 0.004 88); --card: oklch(0.18 0.014 88);
+  --card-foreground: oklch(0.93 0.004 88); --border: oklch(0.28 0.014 88);
+  --sidebar: oklch(0.16 0.014 88); --sidebar-border: oklch(0.28 0.014 88);
+  --sidebar-foreground: oklch(0.93 0.004 88); --sidebar-accent: oklch(0.22 0.02 88);
+  --sidebar-accent-foreground: oklch(0.90 0.004 88);
+}
+
+/* ── 18. Velvet Amethyst ── */
+html[data-theme="velvet-amethyst"] {
+  --primary: oklch(0.38 0.16 295); --primary-foreground: oklch(0.99 0.002 80);
+  --gold: oklch(0.78 0.15 85); --gold-foreground: oklch(0.15 0.02 50);
+  --sage: oklch(0.58 0.10 290); --sage-foreground: oklch(0.99 0.002 80);
+  --warm: oklch(0.48 0.14 320); --warm-foreground: oklch(0.99 0.002 80);
+  --background: oklch(0.975 0.005 295); --foreground: oklch(0.22 0.04 295);
+  --card: oklch(0.988 0.003 295); --card-foreground: oklch(0.22 0.04 295);
+  --border: oklch(0.90 0.012 292); --ring: oklch(0.38 0.16 295);
+  --sidebar: oklch(0.970 0.006 293); --sidebar-border: oklch(0.89 0.014 292);
+  --sidebar-primary: oklch(0.38 0.16 295); --sidebar-foreground: oklch(0.22 0.04 295);
+  --gradient-hero: linear-gradient(135deg, oklch(0.38 0.16 295), oklch(0.48 0.14 320), oklch(0.78 0.15 85));
+  --pattern-stroke: oklch(0.38 0.16 295);
+}
+html[data-theme="velvet-amethyst"].dark {
+  --primary: oklch(0.58 0.16 297); --background: oklch(0.14 0.020 295);
+  --foreground: oklch(0.93 0.008 295); --card: oklch(0.18 0.024 295);
+  --card-foreground: oklch(0.93 0.008 295); --border: oklch(0.28 0.024 295);
+  --sidebar: oklch(0.16 0.024 295); --sidebar-border: oklch(0.28 0.024 295);
+  --sidebar-foreground: oklch(0.93 0.008 295); --sidebar-accent: oklch(0.22 0.03 295);
+  --sidebar-accent-foreground: oklch(0.90 0.01 295);
+}
+
+/* ── 19. Cherry Blossom Iftar ── */
+html[data-theme="cherry-blossom-iftar"] {
+  --primary: oklch(0.72 0.13 15); --primary-foreground: oklch(0.15 0.02 15);
+  --gold: oklch(0.80 0.12 75); --gold-foreground: oklch(0.25 0.06 60);
+  --sage: oklch(0.68 0.12 140); --sage-foreground: oklch(0.15 0.02 140);
+  --warm: oklch(0.48 0.14 345); --warm-foreground: oklch(0.99 0.002 80);
+  --background: oklch(0.990 0.004 15); --foreground: oklch(0.22 0.04 345);
+  --card: oklch(0.996 0.002 15); --card-foreground: oklch(0.22 0.04 345);
+  --border: oklch(0.92 0.010 10); --ring: oklch(0.72 0.13 15);
+  --sidebar: oklch(0.985 0.004 12); --sidebar-border: oklch(0.91 0.012 10);
+  --sidebar-primary: oklch(0.72 0.13 15); --sidebar-foreground: oklch(0.22 0.04 345);
+  --gradient-hero: linear-gradient(135deg, oklch(0.72 0.13 15), oklch(0.68 0.12 140), oklch(0.80 0.12 75));
+  --pattern-stroke: oklch(0.72 0.13 15);
+}
+html[data-theme="cherry-blossom-iftar"].dark {
+  --primary: oklch(0.80 0.13 18); --background: oklch(0.15 0.016 15);
+  --foreground: oklch(0.93 0.008 15); --card: oklch(0.19 0.020 15);
+  --card-foreground: oklch(0.93 0.008 15); --border: oklch(0.29 0.020 15);
+  --sidebar: oklch(0.17 0.020 15); --sidebar-border: oklch(0.29 0.020 15);
+  --sidebar-foreground: oklch(0.93 0.008 15); --sidebar-accent: oklch(0.24 0.03 15);
+  --sidebar-accent-foreground: oklch(0.90 0.008 15);
+}
+
+/* ── 20. Ocean Tasbih ── */
+html[data-theme="ocean-tasbih"] {
+  --primary: oklch(0.52 0.14 220); --primary-foreground: oklch(0.99 0.002 80);
+  --gold: oklch(0.76 0.14 50); --gold-foreground: oklch(0.25 0.06 60);
+  --sage: oklch(0.62 0.10 190); --sage-foreground: oklch(0.99 0.002 80);
+  --warm: oklch(0.68 0.14 35); --warm-foreground: oklch(0.15 0.02 35);
+  --background: oklch(0.978 0.005 215); --foreground: oklch(0.22 0.04 220);
+  --card: oklch(0.990 0.003 215); --card-foreground: oklch(0.22 0.04 220);
+  --border: oklch(0.90 0.012 215); --ring: oklch(0.52 0.14 220);
+  --sidebar: oklch(0.972 0.005 213); --sidebar-border: oklch(0.89 0.014 213);
+  --sidebar-primary: oklch(0.52 0.14 220); --sidebar-foreground: oklch(0.22 0.04 220);
+  --gradient-hero: linear-gradient(135deg, oklch(0.52 0.14 220), oklch(0.62 0.10 190), oklch(0.68 0.14 35));
+  --pattern-stroke: oklch(0.52 0.14 220);
+}
+html[data-theme="ocean-tasbih"].dark {
+  --primary: oklch(0.66 0.14 222); --background: oklch(0.14 0.020 220);
+  --foreground: oklch(0.93 0.006 220); --card: oklch(0.18 0.024 220);
+  --card-foreground: oklch(0.93 0.006 220); --border: oklch(0.28 0.024 220);
+  --sidebar: oklch(0.16 0.024 220); --sidebar-border: oklch(0.28 0.024 220);
+  --sidebar-foreground: oklch(0.93 0.006 220); --sidebar-accent: oklch(0.22 0.03 220);
+  --sidebar-accent-foreground: oklch(0.90 0.006 220);
+}
+
+/* ── 21. Mountain Fajr ── */
+html[data-theme="mountain-fajr"] {
+  --primary: oklch(0.50 0.08 230); --primary-foreground: oklch(0.99 0.002 80);
+  --gold: oklch(0.74 0.10 80); --gold-foreground: oklch(0.25 0.06 60);
+  --sage: oklch(0.48 0.10 160); --sage-foreground: oklch(0.99 0.002 80);
+  --warm: oklch(0.42 0.06 230); --warm-foreground: oklch(0.99 0.002 80);
+  --background: oklch(0.980 0.004 220); --foreground: oklch(0.22 0.04 230);
+  --card: oklch(0.992 0.002 220); --card-foreground: oklch(0.22 0.04 230);
+  --border: oklch(0.91 0.008 220); --ring: oklch(0.50 0.08 230);
+  --sidebar: oklch(0.975 0.004 218); --sidebar-border: oklch(0.90 0.010 218);
+  --sidebar-primary: oklch(0.50 0.08 230); --sidebar-foreground: oklch(0.22 0.04 230);
+  --gradient-hero: linear-gradient(135deg, oklch(0.50 0.08 230), oklch(0.48 0.10 160), oklch(0.74 0.10 80));
+  --pattern-stroke: oklch(0.50 0.08 230);
+}
+html[data-theme="mountain-fajr"].dark {
+  --primary: oklch(0.64 0.08 232); --background: oklch(0.14 0.012 228);
+  --foreground: oklch(0.93 0.006 225); --card: oklch(0.18 0.016 228);
+  --card-foreground: oklch(0.93 0.006 225); --border: oklch(0.28 0.016 228);
+  --sidebar: oklch(0.16 0.016 228); --sidebar-border: oklch(0.28 0.016 228);
+  --sidebar-foreground: oklch(0.93 0.006 225); --sidebar-accent: oklch(0.22 0.02 228);
+  --sidebar-accent-foreground: oklch(0.90 0.006 225);
+}
+
+/* ── 22. Autumn Maghrib ── */
+html[data-theme="autumn-maghrib"] {
+  --primary: oklch(0.54 0.18 35); --primary-foreground: oklch(0.99 0.002 80);
+  --gold: oklch(0.76 0.16 75); --gold-foreground: oklch(0.25 0.06 60);
+  --sage: oklch(0.50 0.10 100); --sage-foreground: oklch(0.99 0.002 80);
+  --warm: oklch(0.38 0.16 20); --warm-foreground: oklch(0.99 0.002 80);
+  --background: oklch(0.978 0.006 50); --foreground: oklch(0.22 0.04 35);
+  --card: oklch(0.990 0.003 50); --card-foreground: oklch(0.22 0.04 35);
+  --border: oklch(0.90 0.014 45); --ring: oklch(0.54 0.18 35);
+  --sidebar: oklch(0.972 0.006 48); --sidebar-border: oklch(0.89 0.016 45);
+  --sidebar-primary: oklch(0.54 0.18 35); --sidebar-foreground: oklch(0.22 0.04 35);
+  --gradient-hero: linear-gradient(135deg, oklch(0.54 0.18 35), oklch(0.38 0.16 20), oklch(0.76 0.16 75));
+  --pattern-stroke: oklch(0.54 0.18 35);
+}
+html[data-theme="autumn-maghrib"].dark {
+  --primary: oklch(0.68 0.18 37); --background: oklch(0.15 0.020 35);
+  --foreground: oklch(0.93 0.010 50); --card: oklch(0.19 0.024 35);
+  --card-foreground: oklch(0.93 0.010 50); --border: oklch(0.29 0.024 35);
+  --sidebar: oklch(0.17 0.024 35); --sidebar-border: oklch(0.29 0.024 35);
+  --sidebar-foreground: oklch(0.93 0.010 50); --sidebar-accent: oklch(0.24 0.03 35);
+  --sidebar-accent-foreground: oklch(0.90 0.010 50);
+}
+
+/* ── 23. Spring Rayhan ── */
+html[data-theme="spring-rayhan"] {
+  --primary: oklch(0.62 0.14 150); --primary-foreground: oklch(0.99 0.002 80);
+  --gold: oklch(0.84 0.14 95); --gold-foreground: oklch(0.15 0.02 90);
+  --sage: oklch(0.72 0.10 220); --sage-foreground: oklch(0.15 0.02 220);
+  --warm: oklch(0.60 0.12 140); --warm-foreground: oklch(0.15 0.02 140);
+  --background: oklch(0.985 0.004 130); --foreground: oklch(0.22 0.04 150);
+  --card: oklch(0.994 0.002 130); --card-foreground: oklch(0.22 0.04 150);
+  --border: oklch(0.92 0.010 140); --ring: oklch(0.62 0.14 150);
+  --sidebar: oklch(0.980 0.004 135); --sidebar-border: oklch(0.91 0.012 138);
+  --sidebar-primary: oklch(0.62 0.14 150); --sidebar-foreground: oklch(0.22 0.04 150);
+  --gradient-hero: linear-gradient(135deg, oklch(0.62 0.14 150), oklch(0.72 0.10 220), oklch(0.84 0.14 95));
+  --pattern-stroke: oklch(0.62 0.14 150);
+}
+html[data-theme="spring-rayhan"].dark {
+  --primary: oklch(0.72 0.14 152); --background: oklch(0.14 0.018 150);
+  --foreground: oklch(0.93 0.008 140); --card: oklch(0.18 0.022 150);
+  --card-foreground: oklch(0.93 0.008 140); --border: oklch(0.28 0.022 150);
+  --sidebar: oklch(0.16 0.022 150); --sidebar-border: oklch(0.28 0.022 150);
+  --sidebar-foreground: oklch(0.93 0.008 140); --sidebar-accent: oklch(0.22 0.03 150);
+  --sidebar-accent-foreground: oklch(0.90 0.008 140);
+}
+
+/* ── 24. Winter Sakina ── */
+html[data-theme="winter-sakina"] {
+  --primary: oklch(0.62 0.08 230); --primary-foreground: oklch(0.99 0.002 80);
+  --gold: oklch(0.78 0.06 220); --gold-foreground: oklch(0.22 0.04 220);
+  --sage: oklch(0.68 0.06 200); --sage-foreground: oklch(0.22 0.04 200);
+  --warm: oklch(0.42 0.06 240); --warm-foreground: oklch(0.99 0.002 80);
+  --background: oklch(0.985 0.004 225); --foreground: oklch(0.22 0.04 235);
+  --card: oklch(0.994 0.002 225); --card-foreground: oklch(0.22 0.04 235);
+  --border: oklch(0.92 0.008 225); --ring: oklch(0.62 0.08 230);
+  --sidebar: oklch(0.980 0.004 223); --sidebar-border: oklch(0.91 0.010 223);
+  --sidebar-primary: oklch(0.62 0.08 230); --sidebar-foreground: oklch(0.22 0.04 235);
+  --gradient-hero: linear-gradient(135deg, oklch(0.62 0.08 230), oklch(0.42 0.06 240), oklch(0.78 0.06 220));
+  --pattern-stroke: oklch(0.62 0.08 230);
+}
+html[data-theme="winter-sakina"].dark {
+  --primary: oklch(0.74 0.08 232); --background: oklch(0.14 0.012 230);
+  --foreground: oklch(0.93 0.006 225); --card: oklch(0.18 0.016 230);
+  --card-foreground: oklch(0.93 0.006 225); --border: oklch(0.28 0.016 230);
+  --sidebar: oklch(0.16 0.016 230); --sidebar-border: oklch(0.28 0.016 230);
+  --sidebar-foreground: oklch(0.93 0.006 225); --sidebar-accent: oklch(0.22 0.02 230);
+  --sidebar-accent-foreground: oklch(0.90 0.006 225);
+}
+
+/* ═══════════════════════════════════════════════════════
+   Typography pairings — 6 typesets
+   ═══════════════════════════════════════════════════════ */
+
+[data-typeset="classic"] {
+  --font-heading: "Amiri", serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-arabic: "Amiri", serif;
+}
+[data-typeset="editorial"] {
+  --font-heading: "Fraunces", Georgia, serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-arabic: "Amiri", serif;
+}
+[data-typeset="royal"] {
+  --font-heading: "Cormorant Garamond", Georgia, serif;
+  --font-body: "Manrope", system-ui, sans-serif;
+  --font-arabic: "Amiri Quran", "Amiri", serif;
+}
+[data-typeset="modern"] {
+  --font-heading: "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-arabic: "Amiri", serif;
+}
+[data-typeset="geometric"] {
+  --font-heading: "Space Grotesk", system-ui, sans-serif;
+  --font-body: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-arabic: "Amiri", serif;
+}
+[data-typeset="soft"] {
+  --font-heading: "DM Serif Display", Georgia, serif;
+  --font-body: "Nunito", system-ui, sans-serif;
+  --font-arabic: "Amiri", serif;
+}

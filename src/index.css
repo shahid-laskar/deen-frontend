@@ -6,6 +6,8 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+@import "./themes-part1.css";
+@import "./themes-part2.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -70,6 +72,19 @@
   --font-amiri-quran:  "Amiri Quran", "Amiri", serif;
   --font-display:      "Inter", sans-serif;
   --font-mono:         "JetBrains Mono", monospace;
+
+  /* Theme typography vars */
+  --font-heading:      var(--font-display);
+  --font-body:         "Inter", system-ui, sans-serif;
+  --font-arabic:       var(--font-amiri);
+
+  /* Theme extra tokens */
+  --gradient-hero:     linear-gradient(135deg, var(--primary), var(--warm), var(--gold));
+  --pattern-stroke:    var(--primary);
+
+  /* Expose in Tailwind color map */
+  --color-gradient-hero: var(--gradient-hero);
+  --color-pattern-stroke: var(--pattern-stroke);
 }
 
 /* ─── Light mode tokens ───────────────────────────────────── */
@@ -227,11 +242,15 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-family: "Inter", system-ui, sans-serif;
+    font-family: var(--font-body, "Inter", system-ui, sans-serif);
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  h1, h2, h3, h4, .font-heading {
+    font-family: var(--font-heading, "Inter", system-ui, sans-serif);
   }
 
   /* Arabic / Quran text */

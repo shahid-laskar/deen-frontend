@@ -54,6 +54,40 @@ const TEMPLATES = [
       { title: 'Light tasks only', category: 'errand', time_block: 'morning', estimated_minutes: 30 },
     ],
   },
+  {
+    id: 'ceo',
+    label: 'Executive Day',
+    icon: '📊',
+    tasks: [
+      { title: 'Review key metrics', category: 'work', time_block: 'morning', estimated_minutes: 30 },
+      { title: 'Deep work block', category: 'work', time_block: 'morning', estimated_minutes: 90 },
+      { title: 'Meetings & syncs', category: 'work', time_block: 'after_dhuhr', estimated_minutes: 60 },
+      { title: 'Inbox zero', category: 'errand', time_block: 'after_asr', estimated_minutes: 30 },
+      { title: 'Plan tomorrow', category: 'personal', time_block: 'evening', estimated_minutes: 15 },
+    ],
+  },
+  {
+    id: 'developer',
+    label: 'Deep Work Focus',
+    icon: '💻',
+    tasks: [
+      { title: 'Code review', category: 'work', time_block: 'morning', estimated_minutes: 30 },
+      { title: 'Deep work (Sprint task)', category: 'work', time_block: 'morning', estimated_minutes: 120 },
+      { title: 'Deep work (Bug fixing)', category: 'work', time_block: 'after_dhuhr', estimated_minutes: 90 },
+      { title: 'Learning / Tech docs', category: 'learning', time_block: 'after_asr', estimated_minutes: 45 },
+    ],
+  },
+  {
+    id: 'weekend',
+    label: 'Weekend Reset',
+    icon: '☕',
+    tasks: [
+      { title: 'Slow morning + Reading', category: 'personal', time_block: 'morning', estimated_minutes: 60 },
+      { title: 'Household chores', category: 'errand', time_block: 'after_dhuhr', estimated_minutes: 90 },
+      { title: 'Family time / Outing', category: 'family', time_block: 'after_asr', estimated_minutes: 180 },
+      { title: 'Weekly review', category: 'personal', time_block: 'evening', estimated_minutes: 30 },
+    ],
+  },
 ]
 
 export function TemplatePicker({ onClose }) {

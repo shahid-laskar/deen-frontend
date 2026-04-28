@@ -1,13 +1,21 @@
 import React from 'react'
 import { Link } from '@tanstack/react-router'
-import { Moon, Sun, Menu } from 'lucide-react'
-import { useThemeStore } from '@/store/themeStore'
+import { Menu } from 'lucide-react'
+import { useTheme } from '@/lib/theme-context'
 import { useAppStore } from '@/store/appStore'
+import { Icon } from '@/components/ui/icon'
+import { ThemeTrigger } from '@/components/theme/ThemeTrigger'
 import { cn } from '@/lib/utils'
 
 export function MobileHeader() {
-  const { isDark, toggleDark } = useThemeStore()
+  const { resolvedDark, setMode, mode } = useTheme()
   const { toggleSidebar } = useAppStore()
+
+  const toggleDark = () => {
+    if (mode === 'dark') setMode('light')
+    else if (mode === 'light') setMode('dark')
+    else setMode(resolvedDark ? 'light' : 'dark')
+  }
 
   return (
     <header className="flex items-center justify-between px-4 py-3 border-b border-border bg-card/80 backdrop-blur-md md:hidden sticky top-0 z-30">
@@ -26,13 +34,20 @@ export function MobileHeader() {
           <span className="text-base font-semibold tracking-tight text-foreground">Deen</span>
         </Link>
       </div>
-      <button
-        onClick={toggleDark}
-        className="p-2 rounded-lg text-muted-foreground hover:bg-accent transition-colors"
-        aria-label="Toggle dark mode"
-      >
-        {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-      </button>
+
+      <div className="flex items-center gap-1">
+        {/* Theme picker trigger */}
+        <ThemeTrigger className="p-2" showLabel={false} />
+
+        {/* Dark mode toggle */}
+        <button
+          onClick={toggleDark}
+          className="p-2 rounded-lg text-muted-foreground hover:bg-accent transition-colors"
+          aria-label="Toggle dark mode"
+        >
+          <Icon name={resolvedDark ? 'sun' : 'moon'} size={20} />
+        </button>
+      </div>
     </header>
   )
 }
