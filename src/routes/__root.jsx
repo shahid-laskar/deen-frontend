@@ -1,6 +1,5 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { createRootRoute, Outlet } from '@tanstack/react-router'
-import { useThemeStore } from '@/store/themeStore'
 import { ThemeProvider } from '@/lib/theme-context'
 
 // ─── Anti-flash: runs synchronously before first paint ───────────────────────
@@ -38,12 +37,6 @@ export const Route = createRootRoute({
 })
 
 function RootLayout() {
-  const { applyToDOM } = useThemeStore()
-
-  useEffect(() => {
-    applyToDOM()
-  }, [])
-
   return (
     <ThemeProvider>
       <Outlet />

@@ -2,14 +2,14 @@ import { BookOpen, Brain, BarChart3, Hand, Quote, Search, Bookmark, Mic } from '
 import { Link, useRouterState } from '@tanstack/react-router'
 
 const TABS = [
-  { to: '/quran',           label: 'Browse',    icon: BookOpen,  exact: true },
-  { to: '/quran/search',    label: 'Search',    icon: Search },
-  { to: '/quran/bookmarks', label: 'Bookmarks', icon: Bookmark },
-  { to: '/quran/hifz',      label: 'Hifz',      icon: Brain },
-  { to: '/quran/stats',     label: 'Stats',     icon: BarChart3 },
-  { to: '/quran/duas',      label: 'Duas',      icon: Hand },
-  { to: '/quran/hadith',    label: 'Hadith',    icon: Quote },
-  { to: '/quran/practice',  label: 'Practice',  icon: Mic },
+  { to: '/worship/quran',           label: 'Browse',    icon: BookOpen,  exact: true },
+  { to: '/worship/quran/search',    label: 'Search',    icon: Search },
+  { to: '/worship/quran/bookmarks', label: 'Bookmarks', icon: Bookmark },
+  { to: '/worship/quran/hifz',      label: 'Hifz',      icon: Brain },
+  { to: '/worship/quran/stats',     label: 'Stats',     icon: BarChart3 },
+  { to: '/worship/quran/duas',      label: 'Duas',      icon: Hand },
+  { to: '/worship/quran/hadith',    label: 'Hadith',    icon: Quote },
+  { to: '/worship/quran/practice',  label: 'Practice',  icon: Mic },
 ]
 
 export function QuranTabs() {
@@ -21,8 +21,8 @@ export function QuranTabs() {
       <div className="flex gap-1 min-w-max bg-muted/40 rounded-2xl p-1">
         {TABS.map((t) => {
           const active = t.exact ? pathname === t.to : (
-            pathname.startsWith(t.to) && t.to !== '/quran'
-          ) || (t.to === '/quran' && pathname === '/quran')
+            pathname.startsWith(t.to) && t.to !== '/worship/quran'
+          ) || (t.to === '/worship/quran' && pathname === '/worship/quran')
           const Icon = t.icon
           return (
             <Link

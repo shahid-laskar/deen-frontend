@@ -91,100 +91,61 @@
 :root {
   --radius: 0.75rem;
 
-  /* Warm parchment light theme — tuned to match screenshot */
-  --background:            oklch(0.975 0.008 75);   /* warm cream parchment */
-  --foreground:            oklch(0.22 0.03 50);
-  --card:                  oklch(0.99 0.004 78);    /* very slightly warm white */
-  --card-foreground:       oklch(0.22 0.03 50);
-  --popover:               oklch(0.99 0.004 78);
-  --popover-foreground:    oklch(0.22 0.03 50);
-  --primary:               oklch(0.58 0.14 52);     /* vivid amber-orange */
-  --primary-foreground:    oklch(0.99 0.002 80);
-  --secondary:             oklch(0.94 0.015 80);
-  --secondary-foreground:  oklch(0.35 0.05 55);
-  --muted:                 oklch(0.94 0.012 78);
-  --muted-foreground:      oklch(0.52 0.03 55);
-  --accent:                oklch(0.92 0.02 82);
-  --accent-foreground:     oklch(0.30 0.05 55);
-  --destructive:           oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.99 0.002 80);
-  --border:                oklch(0.90 0.016 78);    /* warm sand border */
-  --input:                 oklch(0.90 0.016 78);
-  --ring:                  oklch(0.58 0.14 52);
+  /* Brand */
+  --emerald-50: 152 60% 96%;
+  --emerald-500: 152 56% 38%;
+  --emerald-700: 152 60% 24%;
+  --gold-400: 42 78% 60%;
+  --gold-600: 38 70% 46%;
 
-  /* Islamic palette tokens */
-  --gold:                  oklch(0.72 0.15 72);     /* richer amber gold */
-  --gold-foreground:       oklch(0.25 0.06 60);
-  --sage:                  oklch(0.52 0.11 152);    /* Islamic green */
-  --sage-foreground:       oklch(0.99 0.002 80);
-  --warm:                  oklch(0.45 0.08 45);
-  --warm-foreground:       oklch(0.99 0.002 80);
+  /* Semantic (HSL) */
+  --background: 40 30% 98%;       /* warm parchment */
+  --surface-1: 40 25% 96%;        /* card */
+  --surface-2: 40 20% 92%;        /* elevated card */
+  --foreground: 152 30% 12%;
+  --muted-foreground: 152 12% 38%;
+  --primary: var(--emerald-500);
+  --accent: var(--gold-400);
 
-  /* Chart colors */
-  --chart-1:   oklch(0.58 0.14 52);
-  --chart-2:   oklch(0.52 0.11 152);
-  --chart-3:   oklch(0.72 0.15 72);
-  --chart-4:   oklch(0.60 0.10 30);
-  --chart-5:   oklch(0.50 0.06 260);
+  /* Mapping for legacy compatibility */
+  --card: var(--surface-1);
+  --card-foreground: var(--foreground);
+  --popover: var(--surface-1);
+  --popover-foreground: var(--foreground);
+  --primary-foreground: 0 0% 100%;
+  --secondary: 40 20% 92%;
+  --secondary-foreground: 152 30% 12%;
+  --muted: 40 20% 92%;
+  --border: 152 12% 88%;
+  --input: 152 12% 88%;
+  --ring: var(--emerald-500);
 
-  /* Sidebar — slightly warmer/darker than background */
-  --sidebar:                      oklch(0.965 0.010 73);
-  --sidebar-foreground:           oklch(0.22 0.03 50);
-  --sidebar-primary:              oklch(0.58 0.14 52);
-  --sidebar-primary-foreground:   oklch(0.99 0.002 80);
-  --sidebar-accent:               oklch(0.92 0.02 78);
-  --sidebar-accent-foreground:    oklch(0.30 0.05 55);
-  --sidebar-border:               oklch(0.89 0.018 75);
-  --sidebar-ring:                 oklch(0.58 0.14 52);
+  /* Prayer hues */
+  --prayer-fajr: 220 60% 55%;
+  --prayer-dhuhr: 42 85% 55%;
+  --prayer-asr: 28 75% 55%;
+  --prayer-maghrib: 12 70% 50%;
+  --prayer-isha: 250 50% 45%;
 
-  /* Legacy compat vars (used during migration) */
+  /* Legacy compat vars */
   --nav-h: 64px;
   --sidebar-w: 260px;
 }
 
 /* ─── Dark mode tokens ─────────────────────────────────────── */
 .dark {
-  --background:            oklch(0.15 0.018 50);
-  --foreground:            oklch(0.93 0.01 80);
-  --card:                  oklch(0.19 0.022 50);
-  --card-foreground:       oklch(0.93 0.01 80);
-  --popover:               oklch(0.19 0.022 50);
-  --popover-foreground:    oklch(0.93 0.01 80);
-  --primary:               oklch(0.70 0.15 58);
-  --primary-foreground:    oklch(0.15 0.02 50);
-  --secondary:             oklch(0.24 0.025 50);
-  --secondary-foreground:  oklch(0.90 0.01 80);
-  --muted:                 oklch(0.24 0.02 50);
-  --muted-foreground:      oklch(0.65 0.03 60);
-  --accent:                oklch(0.27 0.028 50);
-  --accent-foreground:     oklch(0.90 0.01 80);
-  --destructive:           oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.99 0.002 80);
-  --border:                oklch(0.29 0.022 50);
-  --input:                 oklch(0.29 0.022 50);
-  --ring:                  oklch(0.70 0.15 58);
-
-  --gold:                  oklch(0.78 0.14 75);
-  --gold-foreground:       oklch(0.15 0.02 50);
-  --sage:                  oklch(0.60 0.10 155);
-  --sage-foreground:       oklch(0.15 0.02 50);
-  --warm:                  oklch(0.65 0.08 45);
-  --warm-foreground:       oklch(0.15 0.02 50);
-
-  --chart-1:   oklch(0.70 0.15 58);
-  --chart-2:   oklch(0.60 0.10 155);
-  --chart-3:   oklch(0.78 0.14 75);
-  --chart-4:   oklch(0.65 0.10 30);
-  --chart-5:   oklch(0.55 0.06 260);
-
-  --sidebar:                      oklch(0.17 0.022 50);
-  --sidebar-foreground:           oklch(0.93 0.01 80);
-  --sidebar-primary:              oklch(0.70 0.15 58);
-  --sidebar-primary-foreground:   oklch(0.15 0.02 50);
-  --sidebar-accent:               oklch(0.24 0.03 50);
-  --sidebar-accent-foreground:    oklch(0.90 0.01 80);
-  --sidebar-border:               oklch(0.29 0.022 50);
-  --sidebar-ring:                 oklch(0.70 0.15 58);
+  --background: 152 30% 6%;
+  --surface-1: 152 24% 10%;
+  --surface-2: 152 20% 14%;
+  --foreground: 40 20% 96%;
+  --muted-foreground: 152 10% 65%;
+  
+  --card: var(--surface-1);
+  --popover: var(--surface-1);
+  --secondary: 152 20% 14%;
+  --muted: 152 20% 14%;
+  --border: 152 20% 18%;
+  --input: 152 20% 18%;
 }
 
 /* ─── Seasonal theme overrides ────────────────────────────── */
@@ -496,4 +457,31 @@
 }
 .animate-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* ─── Reduced motion — disable ALL animations when OS setting is on ──────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─── Focus rings — visible for keyboard nav ─────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ─── Utility for very-low-opacity primary bg (used in contextual topbar) ── */
+.bg-primary\/8 {
+  background-color: color-mix(in oklab, var(--color-primary) 8%, transparent);
+}
+.hover\:bg-primary\/15:hover {
+  background-color: color-mix(in oklab, var(--color-primary) 15%, transparent);
 }

@@ -1,12 +1,18 @@
 import React from 'react'
 import { Link } from '@tanstack/react-router'
-import { Menu } from 'lucide-react'
 import { useTheme } from '@/lib/theme-context'
 import { useAppStore } from '@/store/appStore'
 import { Icon } from '@/components/ui/icon'
 import { ThemeTrigger } from '@/components/theme/ThemeTrigger'
+import { CommandBarTrigger } from '@/components/layout/CommandBar'
 import { cn } from '@/lib/utils'
 
+/**
+ * Mobile Header — top bar visible on mobile only.
+ * Enhanced per spec §1.1:
+ *   - Added Command Bar trigger (search icon)
+ *   - Cleaner layout with search prominently placed
+ */
 export function MobileHeader() {
   const { resolvedDark, setMode, mode } = useTheme()
   const { toggleSidebar } = useAppStore()
@@ -25,17 +31,20 @@ export function MobileHeader() {
           className="p-2 rounded-lg text-muted-foreground hover:bg-accent transition-colors"
           aria-label="Toggle menu"
         >
-          <Menu className="h-5 w-5" />
+          <Icon name="menu" size={22} />
         </button>
-        <Link to="/dashboard" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+        <Link to="/today" className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm shadow-primary/20">
             <span className="font-amiri text-base font-bold leading-none">د</span>
           </div>
-          <span className="text-base font-semibold tracking-tight text-foreground">Deen</span>
+          <span className="text-base font-bold tracking-tight text-foreground">Deen</span>
         </Link>
       </div>
 
       <div className="flex items-center gap-1">
+        {/* Command bar trigger (⌘K) */}
+        <CommandBarTrigger className="p-2" />
+
         {/* Theme picker trigger */}
         <ThemeTrigger className="p-2" showLabel={false} />
 

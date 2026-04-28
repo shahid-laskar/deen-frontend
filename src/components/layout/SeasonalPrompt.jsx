@@ -1,6 +1,6 @@
 import React from 'react'
-import { useThemeStore } from '@/store/themeStore'
-import { Sparkles, X } from 'lucide-react'
+import { useTheme } from '@/lib/theme-context'
+import { Icon } from '@/components/ui/icon'
 
 const SEASON_LABELS = {
   ramadan:        { title: 'Ramadan Mubarak 🌙', desc: 'Switch to the Ramadan theme for an immersive spiritual experience.' },
@@ -10,10 +10,10 @@ const SEASON_LABELS = {
 }
 
 export function SeasonalPrompt() {
-  const { pendingSeasonalTheme, acceptSeasonalTheme, declineSeasonalTheme } = useThemeStore()
-  if (!pendingSeasonalTheme) return null
+  const { pendingSeason, acceptSeason, declineSeason } = useTheme()
+  if (!pendingSeason) return null
 
-  const labels = SEASON_LABELS[pendingSeasonalTheme.season]
+  const labels = SEASON_LABELS[pendingSeason]
   if (!labels) return null
 
   return (
@@ -21,28 +21,28 @@ export function SeasonalPrompt() {
       <div className="rounded-2xl border border-primary/20 bg-card p-4 shadow-xl">
         <div className="flex items-start gap-3">
           <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
-            <Sparkles className="h-5 w-5 text-primary" />
+            <Icon name="sparkles" size={20} className="text-primary" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-foreground text-sm">{labels.title}</p>
             <p className="text-xs text-muted-foreground mt-0.5">{labels.desc}</p>
             <div className="flex gap-2 mt-3">
               <button
-                onClick={acceptSeasonalTheme}
+                onClick={acceptSeason}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
               >
                 Apply Theme
               </button>
               <button
-                onClick={declineSeasonalTheme}
+                onClick={declineSeason}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent transition-colors"
               >
                 No thanks
               </button>
             </div>
           </div>
-          <button onClick={declineSeasonalTheme} className="text-muted-foreground hover:text-foreground transition-colors">
-            <X className="h-4 w-4" />
+          <button onClick={declineSeason} className="text-muted-foreground hover:text-foreground transition-colors">
+            <Icon name="x" size={16} />
           </button>
         </div>
       </div>

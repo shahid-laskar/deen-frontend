@@ -15,8 +15,8 @@ export function SurahCard({ surah, className }) {
     <div
       role="button"
       tabIndex={0}
-      onClick={() => navigate({ to: `/quran/surah/${surah.id}` })}
-      onKeyDown={(e) => e.key === 'Enter' && navigate({ to: `/quran/surah/${surah.id}` })}
+      onClick={() => navigate({ to: `/worship/quran/surah/${surah.id}` })}
+      onKeyDown={(e) => e.key === 'Enter' && navigate({ to: `/worship/quran/surah/${surah.id}` })}
       className={cn(
         'rounded-2xl border border-border bg-card p-4 cursor-pointer group',
         'card-hover shadow-soft hover:shadow-elevated hover:border-primary/20',

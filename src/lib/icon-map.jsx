@@ -6,12 +6,13 @@ import React from 'react'
 
 import {
   LayoutDashboard, Clock, BookOpen, Heart, NotebookPen, CheckSquare, Compass,
-  Settings, Moon, Sun, Bell, ChevronRight, ChevronLeft, Sparkles, Palette,
-  User, MapPin, Shield, HelpCircle, Plus, Check, X, Play, Pause, Volume2,
-  RefreshCw, Star, Flame, Trophy, Lock, LogOut, Menu, Crown,
+  Settings, Moon, Sun, Bell, ChevronRight, ChevronLeft, ChevronDown, ChevronUp,
+  Sparkles, Palette, User, MapPin, Shield, HelpCircle, Plus, Check, X,
+  Play, Pause, Volume2, RefreshCw, Star, Flame, Trophy, Lock, LogOut, Menu, Crown,
   ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Search, Filter,
   MoreHorizontal, MoreVertical, Grid2x2, List, Eye, EyeOff,
   Image, Camera, Download, Upload, Share, Copy, Trash, Edit,
+  Calendar, Activity, Utensils, Banknote,
 } from 'lucide-react'
 
 import {
@@ -104,6 +105,7 @@ const lucideBase = {
   notebook: NotebookPen, list: CheckSquare, compass: Compass,
   settings: Settings, moon: Moon, sun: Sun, bell: Bell,
   'chevron-right': ChevronRight, 'chevron-left': ChevronLeft,
+  'chevron-down': ChevronDown, 'chevron-up': ChevronUp,
   sparkles: Sparkles, palette: Palette, user: User, 'map-pin': MapPin,
   shield: Shield, help: HelpCircle, plus: Plus, check: Check, x: X,
   play: Play, pause: Pause, volume: Volume2, refresh: RefreshCw,
@@ -116,6 +118,7 @@ const lucideBase = {
   eye: Eye, 'eye-off': EyeOff, image: Image, camera: Camera,
   download: Download, upload: Upload, share: Share, copy: Copy,
   trash: Trash, edit: Edit,
+  calendar: Calendar, activity: Activity, utensils: Utensils, bank: Banknote,
 }
 
 export const ICON_MAP = {

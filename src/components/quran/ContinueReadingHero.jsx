@@ -14,7 +14,7 @@ export function ContinueReadingHero({ lastRead, totalVerses = 6236, versesRead =
   const pct = Math.min(100, Math.round((versesRead / totalVerses) * 100))
 
   const handleResume = () => {
-    navigate({ to: `/quran/surah/${surahNumber}`, search: { ayah: ayahNumber } })
+    navigate({ to: `/worship/quran/surah/${surahNumber}`, search: { ayah: ayahNumber } })
   }
 
   return (

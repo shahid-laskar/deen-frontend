@@ -8,37 +8,52 @@ import { authApi } from '@/lib/api'
 import { Icon } from '@/components/ui/icon'
 import { Pattern } from '@/components/ui/pattern'
 import { ThemeTrigger } from '@/components/theme/ThemeTrigger'
-import {
-  LogOut, ChevronLeft, ChevronRight, Crown, Shield, Heart,
-} from 'lucide-react'
 
 // ─── Nav structure ────────────────────────────────────────────────────────────
-const CORE_NAV = [
-  { to: '/dashboard',    iconName: 'home',     label: 'Dashboard' },
-  { to: '/prayer',       iconName: 'clock',    label: 'Prayer Times' },
-  { to: '/quran',        iconName: 'book',     label: 'Quran' },
-  { to: '/habits/dhikr', iconName: 'sparkles', label: 'Dhikr & Dua' },
-  { to: '/habits/',      iconName: 'heart',    label: 'Habits' },
-  { to: '/journal',      iconName: 'notebook', label: 'Journal' },
-  { to: '/tasks',        iconName: 'list',     label: 'Planner' },
-  { to: '/ai',           iconName: 'sparkles', label: 'AI Guide' },
-  { to: '/qibla',        iconName: 'compass',  label: 'Qibla' },
-  { to: '/gamification', iconName: 'trophy',   label: 'Journey' },
-  { to: '/learning',     iconName: 'book',     label: 'Learning Hub' },
-]
-
-const WELLNESS_NAV = [
-  { to: '/meal',      iconName: 'heart',    label: 'Meal Planner' },
-  { to: '/workout',   iconName: 'flame',    label: 'Workout' },
-  { to: '/wellness',  iconName: 'star',     label: 'Wellness' },
-  { to: '/children',  iconName: 'shield',   label: 'Child Upbringing' },
-]
-
-const COMMUNITY_NAV = [
-  { to: '/community', iconName: 'user',     label: 'Community' },
-  { to: '/waqf',      iconName: 'heart',    label: 'Waqf & Sadaqah' },
-  { to: '/finance',   iconName: 'star',     label: 'Islamic Finance' },
-  { to: '/family',    iconName: 'home',     label: 'Family & Home' },
+const HUB_NAV = [
+  {
+    label: 'Today',
+    items: [
+      { to: '/today', iconName: 'home', label: 'Dashboard' },
+      { to: '/today/tasks', iconName: 'list', label: 'Planner' },
+      { to: '/today/journal', iconName: 'notebook', label: 'Journal' },
+    ]
+  },
+  {
+    label: 'Worship',
+    items: [
+      { to: '/worship/prayer', iconName: 'clock', label: 'Prayer' },
+      { to: '/worship/quran', iconName: 'book', label: 'Quran' },
+      { to: '/worship/qibla', iconName: 'compass', label: 'Qibla' },
+    ]
+  },
+  {
+    label: 'Grow',
+    items: [
+      { to: '/grow/habits', iconName: 'heart', label: 'Habits' },
+      { to: '/grow/learning', iconName: 'book', label: 'Learning' },
+      { to: '/grow/ai', iconName: 'sparkles', label: 'AI Guide' },
+      { to: '/grow/wellness', iconName: 'heart', label: 'Wellness' },
+      { to: '/grow/meal', iconName: 'utensils', label: 'Meals' },
+      { to: '/grow/workout', iconName: 'activity', label: 'Workout' },
+      { to: '/grow/finance', iconName: 'bank', label: 'Islamic Finance' },
+    ]
+  },
+  {
+    label: 'Community',
+    items: [
+      { to: '/community', iconName: 'user', label: 'Community' },
+      { to: '/grow/waqf', iconName: 'heart', label: 'Waqf & Sadaqah' },
+    ]
+  },
+  {
+    label: 'Me',
+    items: [
+      { to: '/me/children', iconName: 'user', label: 'Tarbiyah (Kids)' },
+      { to: '/me/family', iconName: 'home', label: 'Family' },
+      { to: '/me/female', iconName: 'heart', label: 'Sister\'s Space', femaleOnly: true },
+    ]
+  }
 ]
 
 // ─── Individual nav link ──────────────────────────────────────────────────────
@@ -128,62 +143,70 @@ export function Sidebar() {
       {!sidebarCollapsed && (
         <div className="relative z-10 px-4 py-3 border-b border-sidebar-border shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center font-semibold text-sm bg-primary/10 text-primary shrink-0">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center font-semibold text-sm bg-primary/10 text-primary shrink-0 shadow-sm">
               {initial}
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-medium truncate text-sidebar-foreground">{displayName}</p>
-              <p className="text-[10px] capitalize text-muted-foreground">{user?.madhab || 'hanafi'} school</p>
+              <p className="text-sm font-bold truncate text-sidebar-foreground">{displayName}</p>
+              <p className="text-[10px] capitalize font-medium text-muted-foreground">{user?.madhab || 'hanafi'} school</p>
             </div>
           </div>
         </div>
       )}
 
       {/* Navigation */}
-      <nav className="relative z-10 flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
-        {CORE_NAV.map(n => <NavItem key={n.label} {...n} collapsed={sidebarCollapsed} />)}
-
-        <SectionLabel label="Wellness" collapsed={sidebarCollapsed} />
-        {WELLNESS_NAV.map(n => <NavItem key={n.to} {...n} collapsed={sidebarCollapsed} />)}
-
-        <SectionLabel label="Community" collapsed={sidebarCollapsed} />
-        {COMMUNITY_NAV.map(n => <NavItem key={n.to} {...n} collapsed={sidebarCollapsed} />)}
-
-        {isFemale?.() && (
-          <>
-            <SectionLabel label="Sister's Tools" collapsed={sidebarCollapsed} />
-            <Link to="/female" className="group">
-              {({ isActive }) => (
-                <div className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
-                  isActive ? 'bg-pink-500/10 text-pink-400' : 'text-pink-400/70 hover:bg-pink-500/10 hover:text-pink-400'
-                )}>
-                  <Heart className="h-[18px] w-[18px] shrink-0" />
-                  {!sidebarCollapsed && <span className="truncate">Sister's Space</span>}
-                </div>
-              )}
-            </Link>
-          </>
-        )}
+      <nav className="relative z-10 flex-1 overflow-y-auto px-3 py-4 space-y-0.5 scrollbar-none">
+        {HUB_NAV.map(hub => (
+          <React.Fragment key={hub.label}>
+            <SectionLabel label={hub.label} collapsed={sidebarCollapsed} />
+            {hub.items.map(n => {
+              if (n.femaleOnly && !isFemale?.()) return null
+              return <NavItem key={n.to} {...n} collapsed={sidebarCollapsed} />
+            })}
+          </React.Fragment>
+        ))}
       </nav>
 
       {/* Footer actions */}
-      <div className="relative z-10 border-t border-sidebar-border px-3 py-4 space-y-1 shrink-0 mt-auto">
+      <div className="relative z-10 border-t border-sidebar-border px-3 py-4 space-y-1 shrink-0 mt-auto bg-sidebar/50 backdrop-blur-md">
         {/* Upgrade */}
-        <Link to="/subscription" className="group">
+        <Link to="/me/subscription" className="group">
           {({ isActive }) => (
             <div className={cn(
               'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
               isActive ? 'bg-primary/10 text-primary' : 'text-sidebar-foreground/70 hover:bg-sidebar-accent'
             )}>
-              <Crown className="h-[18px] w-[18px] shrink-0" />
+              <Icon name="crown" size={18} className="shrink-0" />
               {!sidebarCollapsed && <span>Upgrade Plan</span>}
             </div>
           )}
         </Link>
 
+        {user?.role === 'admin' && (
+          <Link to="/me/admin" className="group">
+            {({ isActive }) => (
+              <div className={cn(
+                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
+                isActive ? 'bg-primary/10 text-primary' : 'text-sidebar-foreground/70 hover:bg-sidebar-accent'
+              )}>
+                <Icon name="shield" size={18} className="shrink-0" />
+                {!sidebarCollapsed && <span>Admin Portal</span>}
+              </div>
+            )}
+          </Link>
+        )}
+
+        {/* Dark mode toggle */}
+        <button
+          onClick={toggleDark}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent transition-colors"
+        >
+          <Icon name={resolvedDark ? 'sun' : 'moon'} size={18} className="shrink-0" />
+          {!sidebarCollapsed && <span>{resolvedDark ? 'Light Mode' : 'Dark Mode'}</span>}
+        </button>
+
         {/* Settings */}
-        <Link to="/settings" className="group">
+        <Link to="/me/settings" className="group">
           {({ isActive }) => (
             <div className={cn(
               'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
@@ -195,49 +218,21 @@ export function Sidebar() {
           )}
         </Link>
 
-        {user?.role === 'admin' && (
-          <Link to="/admin" className="group">
-            {({ isActive }) => (
-              <div className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
-                isActive ? 'bg-primary/10 text-primary' : 'text-sidebar-foreground/70 hover:bg-sidebar-accent'
-              )}>
-                <Shield className="h-[18px] w-[18px] shrink-0" />
-                {!sidebarCollapsed && <span>Admin Portal</span>}
-              </div>
-            )}
-          </Link>
-        )}
-
-        {/* Theme trigger */}
-        <ThemeTrigger showLabel={!sidebarCollapsed} />
-
-        {/* Dark mode toggle */}
-        <button
-          onClick={toggleDark}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent transition-colors"
-        >
-          <Icon name={resolvedDark ? 'sun' : 'moon'} size={18} className="shrink-0" />
-          {!sidebarCollapsed && <span>{resolvedDark ? 'Light Mode' : 'Dark Mode'}</span>}
-        </button>
-
         {/* Logout */}
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/70 hover:bg-destructive/10 hover:text-destructive transition-colors"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 hover:bg-destructive/10 hover:text-destructive transition-colors"
         >
-          <LogOut className="h-[18px] w-[18px] shrink-0" />
+          <Icon name="log-out" size={18} className="shrink-0" />
           {!sidebarCollapsed && <span>Sign out</span>}
         </button>
 
         {/* Collapse toggle */}
         <button
           onClick={toggleCollapsed}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent transition-colors"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent transition-colors"
         >
-          {sidebarCollapsed
-            ? <ChevronRight className="h-[18px] w-[18px]" />
-            : <ChevronLeft className="h-[18px] w-[18px]" />}
+          <Icon name={sidebarCollapsed ? 'chevron-right' : 'chevron-left'} size={18} className="shrink-0" />
           {!sidebarCollapsed && <span>Collapse</span>}
         </button>
       </div>
