@@ -224,14 +224,31 @@ export const journalApi = {
 }
 
 export const tasksApi = {
-  list: (params) => api.get('/tasks', { params }),
-  today: () => api.get('/tasks/today'),
-  create: (data) => api.post('/tasks', data),
-  get: (id) => api.get(`/tasks/${id}`),
-  update: (id, data) => api.patch(`/tasks/${id}`, data),
-  complete: (id) => api.post(`/tasks/${id}/complete`),
-  delete: (id) => api.delete(`/tasks/${id}`),
+  // ── CRUD ──────────────────────────────────────────────────────────────────
+  list:     (filters = {}) => api.get('/tasks', { params: filters }),
+  today:    ()             => api.get('/tasks/today'),
+  get:      (id)           => api.get(`/tasks/${id}`),
+  create:   (payload)      => api.post('/tasks', payload),
+  update:   (id, patch)    => api.patch(`/tasks/${id}`, patch),
+  complete: (id)           => api.post(`/tasks/${id}/complete`),
+  remove:   (id)           => api.delete(`/tasks/${id}`),
+  // Backwards-compat alias for existing callers using .delete()
+  delete:   (id)           => api.delete(`/tasks/${id}`),
 }
+
+// ── Full Task shape (mirrors backend schema) ────────────────────────────────
+// id, user_id, title, description, category, priority,
+// due_date, time_block, estimated_minutes,
+// completed, completed_at,
+// parent_task_id, sort_order,
+// islamic_context, linked_habit_id,
+// is_urgent, is_important,
+// created_at, updated_at
+//
+// TaskPriority:  "low" | "medium" | "high" | "urgent"
+// TaskCategory:  "work" | "personal" | "ibadah" | "family" | "health" | "learning" | "errand"
+// TimeBlock:     "after_fajr" | "morning" | "after_dhuhr" | "afternoon" |
+//                "after_asr" | "evening" | "after_maghrib" | "after_isha"
 
 export const femaleApi = {
   getCycles: () => api.get('/female/cycles'),

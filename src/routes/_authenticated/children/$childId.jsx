@@ -3,8 +3,8 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { differenceInMonths } from 'date-fns'
 import {
-  ArrowLeft, Star, Flame, Trophy, BookOpen, Heart, CheckCircle,
-  Circle, Sparkles, Zap, Target, BarChart2, Medal, Plus, Trash2
+  ArrowLeft, Star, Flame, Trophy, BookOpen, Book, Heart, CheckCircle,
+  Circle, Sparkles, Zap, Target, BarChart2, Medal, Plus, Trash2, Lightbulb
 } from 'lucide-react'
 import api from '@/lib/api'
 import { cn } from '@/lib/utils'
@@ -53,7 +53,7 @@ function XpBar({ xp, level }) {
   )
 }
 
-function OverviewTab({ child, stats, activities, badges }) {
+function OverviewTab({ child, stats, analytics, activities, badges }) {
   const qc = useQueryClient()
   const { childId } = Route.useParams()
 
@@ -145,6 +145,71 @@ function OverviewTab({ child, stats, activities, badges }) {
                 <span className="text-xs font-black text-primary">+{a.xp_earned}</span>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Parent AI Nudge (Phase 10 Notification Suggestions) */}
+      {stats && stats.current_streak === 0 && stats.total_activities > 0 && (
+        <div className="rounded-2xl glass-card shadow-soft p-4 border border-orange-500/30 bg-orange-500/5 animate-fade-up">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center shrink-0">
+              <Sparkles className="h-4 w-4 text-orange-600" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-foreground mb-1">Gentle Reminder</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">{child.name} hasn't logged any activities recently and their streak was lost. Would you like to sit down and read a Story or practice a Dua together today to get them back on track?</p>
+              <div className="flex gap-2 mt-3">
+                <Button variant="outline" size="sm" className="h-7 text-[10px] rounded-lg border-orange-500/30 text-orange-600 hover:bg-orange-500/10" onClick={() => document.getElementById('stories-tab-btn')?.click()}>Read a Story</Button>
+                <Button variant="outline" size="sm" className="h-7 text-[10px] rounded-lg border-orange-500/30 text-orange-600 hover:bg-orange-500/10" onClick={() => document.getElementById('quran-tab-btn')?.click()}>Read Quran Together</Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Parent Analytics Dashboard (Phase 9) */}
+      {analytics && (
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="rounded-2xl glass-card shadow-soft p-5 border border-emerald-500/20 bg-emerald-500/5">
+            <h3 className="text-sm font-black uppercase tracking-widest text-emerald-700 mb-3 flex items-center gap-2"><Book className="h-4 w-4" /> Quran & Duas</h3>
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs font-bold text-muted-foreground mb-1">Hifz Tracking</p>
+                <div className="flex justify-between items-end">
+                  <span className="text-2xl font-black text-emerald-600">{analytics.quran_progress.surahs_memorized} <span className="text-sm text-emerald-700/70">Surahs</span></span>
+                  <span className="text-xs font-bold text-muted-foreground">{analytics.quran_progress.total_ayahs} Ayahs Total</span>
+                </div>
+              </div>
+              <div className="h-px bg-emerald-500/10 w-full" />
+              <div>
+                <p className="text-xs font-bold text-muted-foreground mb-1">Dua Library</p>
+                <div className="flex justify-between items-end">
+                  <span className="text-2xl font-black text-emerald-600">{analytics.duas_progress.mastered} <span className="text-sm text-emerald-700/70">Mastered</span></span>
+                  <span className="text-xs font-bold text-muted-foreground">{analytics.duas_progress.learning} Learning</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl glass-card shadow-soft p-5 border border-blue-500/20 bg-blue-500/5">
+            <h3 className="text-sm font-black uppercase tracking-widest text-blue-700 mb-3 flex items-center gap-2"><Target className="h-4 w-4" /> Development</h3>
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs font-bold text-muted-foreground mb-1">Milestones Achieved</p>
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl font-black text-blue-600">{analytics.milestones_progress.achieved}<span className="text-sm text-blue-700/70">/{analytics.milestones_progress.total}</span></span>
+                  <div className="flex-1 h-2 bg-blue-500/20 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500 rounded-full" style={{ width: `${(analytics.milestones_progress.achieved / (analytics.milestones_progress.total || 1)) * 100}%` }} />
+                  </div>
+                </div>
+              </div>
+              <div className="h-px bg-blue-500/10 w-full" />
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-bold text-muted-foreground">Stories Read</span>
+                <span className="text-lg font-black text-blue-600 flex items-center gap-1.5"><BookOpen className="h-4 w-4" /> {analytics.stories_read}</span>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -698,6 +763,424 @@ function StoryReader({ storyKey, onComplete, isCompleting }) {
   )
 }
 
+function QuranTab({ child }) {
+  const qc = useQueryClient()
+  const childId = child.id
+  const [libraryOpen, setLibraryOpen] = useState(false)
+  const [surahList, setSurahList] = useState([])
+  const [isLoadingSurahs, setIsLoadingSurahs] = useState(false)
+
+  const { data: progress = [] } = useQuery({
+    queryKey: ['child', childId, 'quran'],
+    queryFn: () => api.get(`/children/${childId}/quran`).then(r => r.data).catch(() => []),
+  })
+
+  const loadSurahs = async () => {
+    if (surahList.length > 0) {
+      setLibraryOpen(true)
+      return
+    }
+    setIsLoadingSurahs(true)
+    try {
+      const res = await api.get('/quran/surahs')
+      setSurahList(res.data)
+      setLibraryOpen(true)
+    } catch (e) {
+      toast.error('Failed to load Surah list')
+    } finally {
+      setIsLoadingSurahs(false)
+    }
+  }
+
+  const { mutate: trackSurah, isPending: isTracking } = useMutation({
+    mutationFn: (surah) => api.post(`/children/${childId}/quran`, {
+      surah_number: surah.id || surah.number,
+      surah_name: surah.name_simple || surah.name,
+      total_ayahs: surah.verses_count || surah.ayahCount
+    }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['child', childId, 'quran'] })
+      toast.success('Started tracking Surah!')
+      setLibraryOpen(false)
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.detail || 'Failed to track Surah')
+    }
+  })
+
+  const { mutate: updateSurah } = useMutation({
+    mutationFn: ({ surah_number, ...data }) => api.patch(`/children/${childId}/quran/${surah_number}`, data),
+    onSuccess: () => { 
+      qc.invalidateQueries({ queryKey: ['child', childId, 'quran'] })
+      toast.success('Progress updated!') 
+    },
+  })
+
+  const STATUS_CONFIG = {
+    not_started: { label:'Not Started', color:'bg-muted/50 text-muted-foreground' },
+    learning:    { label:'Learning',    color:'bg-blue-500/15 text-blue-600' },
+    memorizing:  { label:'Memorizing',  color:'bg-amber-500/15 text-amber-600' },
+    reviewing:   { label:'Reviewing',   color:'bg-purple-500/15 text-purple-600' },
+    memorized:   { label:'Memorized',   color:'bg-green-500/15 text-green-600' },
+  }
+  
+  const STATUS_ORDER = ['not_started','learning','memorizing','reviewing','memorized']
+  const memorizedCount = progress.filter(p => p.status === 'memorized').length
+
+  return (
+    <div className="space-y-6">
+      <div className="p-4 rounded-2xl glass-card shadow-soft flex items-center justify-between bg-gradient-to-br from-emerald-500/5 to-emerald-500/10 border border-emerald-500/20">
+        <div>
+          <p className="text-3xl font-black text-emerald-600">{memorizedCount}</p>
+          <p className="text-xs font-bold text-emerald-700/70 uppercase tracking-wider">Surahs Memorized</p>
+        </div>
+        <div className="text-right">
+          <p className="text-3xl font-black text-primary">{progress.length}</p>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Currently Tracking</p>
+        </div>
+      </div>
+
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-black text-foreground">Hifz Tracker</h2>
+        <div className="flex gap-2">
+          <Link to="/quran" className="flex items-center gap-1.5 px-4 h-9 rounded-xl border border-border/50 text-xs font-bold text-muted-foreground hover:bg-muted/50 transition-colors">
+            <BookOpen className="h-3.5 w-3.5" /> Read Together
+          </Link>
+          <Button onClick={loadSurahs} disabled={isLoadingSurahs} className="rounded-xl shadow-glow-primary bg-primary hover:bg-primary/90 text-white font-bold h-9 px-4">
+            <Plus className="h-4 w-4 mr-1.5" /> Track New Surah
+          </Button>
+        </div>
+      </div>
+
+      {progress.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-3xl border border-dashed border-border/50">
+          <BookOpen className="h-10 w-10 mx-auto mb-3 opacity-30" />
+          <p className="font-bold">No Surahs tracked yet</p>
+          <p className="text-sm mt-1">Start by tracking Surah Al-Fatihah or short Surahs from Juz 30.</p>
+          <Button onClick={loadSurahs} disabled={isLoadingSurahs} variant="outline" className="mt-4 rounded-xl font-bold bg-background">
+            Open Surah List
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {progress.map(p => {
+            const cfg = STATUS_CONFIG[p.status] || STATUS_CONFIG.not_started
+            const currentIdx = STATUS_ORDER.indexOf(p.status)
+            const nextStatus = STATUS_ORDER[currentIdx + 1]
+
+            return (
+              <div key={p.id} className="p-5 rounded-2xl glass-card shadow-soft space-y-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-black text-lg text-foreground flex items-center gap-2">
+                      <span className="text-muted-foreground text-sm font-bold w-6">{p.surah_number}.</span>
+                      {p.surah_name}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <span className={cn('text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest', cfg.color)}>
+                        {cfg.label}
+                      </span>
+                      <span className="text-[10px] font-bold text-muted-foreground">
+                        {p.ayahs_memorized} / {p.total_ayahs} Ayahs
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    {nextStatus && (
+                      <button onClick={() => updateSurah({ surah_number: p.surah_number, status: nextStatus })}
+                        className="text-xs font-bold text-primary hover:text-primary/80 px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors">
+                        Mark as {STATUS_CONFIG[nextStatus].label}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs font-bold text-muted-foreground">
+                    <span>Memorization Progress</span>
+                    <span>{Math.round((p.ayahs_memorized / p.total_ayahs) * 100)}%</span>
+                  </div>
+                  <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-emerald-500 transition-all duration-500 rounded-full" 
+                      style={{ width: `${Math.min(100, Math.max(0, (p.ayahs_memorized / p.total_ayahs) * 100))}%` }} 
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center pt-2 border-t border-border/50">
+                  <div className="flex gap-2">
+                    <Button onClick={() => updateSurah({ surah_number: p.surah_number, ayahs_memorized: Math.max(0, p.ayahs_memorized - 1) })} variant="ghost" className="h-8 w-8 p-0 rounded-lg text-muted-foreground">
+                      -
+                    </Button>
+                    <div className="h-8 px-3 flex items-center justify-center rounded-lg bg-muted/50 font-bold text-sm">
+                      {p.ayahs_memorized} Ayahs
+                    </div>
+                    <Button onClick={() => updateSurah({ surah_number: p.surah_number, ayahs_memorized: Math.min(p.total_ayahs, p.ayahs_memorized + 1) })} variant="ghost" className="h-8 w-8 p-0 rounded-lg text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10">
+                      +
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Surah List Modal */}
+      <Dialog open={libraryOpen} onOpenChange={setLibraryOpen}>
+        <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-hidden flex flex-col rounded-3xl p-0">
+          <DialogHeader className="p-6 pb-4 border-b border-border/50">
+            <DialogTitle className="text-xl font-black">Quran Index</DialogTitle>
+            <p className="text-sm text-muted-foreground font-medium">Select a Surah to start tracking</p>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-muted/10">
+            {surahList.map(surah => {
+              const surahNum = surah.id || surah.number;
+              const surahName = surah.name_simple || surah.name;
+              const totalAyahs = surah.verses_count || surah.ayahCount;
+              const isTracking = progress.some(p => p.surah_number === surahNum)
+              return (
+                <div key={surahNum} className="flex items-center justify-between p-3 rounded-xl bg-background border border-border/50 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground">
+                      {surahNum}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-foreground leading-tight">{surahName}</h3>
+                      <p className="text-[10px] uppercase font-bold text-muted-foreground mt-0.5">{totalAyahs} Ayahs</p>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    onClick={() => trackSurah(surah)} 
+                    disabled={isTracking || isTracking}
+                    variant={isTracking ? "secondary" : "default"}
+                    className="rounded-lg font-bold h-8 text-xs"
+                  >
+                    {isTracking ? 'Tracking' : 'Track'}
+                  </Button>
+                </div>
+              )
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
+
+function LessonsTab({ child }) {
+  const qc = useQueryClient()
+  const childId = child.id
+  
+  const { data: curriculum = [] } = useQuery({
+    queryKey: ['curriculum', child.age_group],
+    queryFn: () => api.get('/children/curriculum', { params: { age_group: child.age_group || 'young' } }).then(r => r.data),
+  })
+
+  const { data: lessons = [] } = useQuery({
+    queryKey: ['child', childId, 'lessons'],
+    queryFn: () => api.get(`/children/${childId}/lessons`).then(r => r.data).catch(() => []),
+  })
+
+  const { data: stats } = useQuery({
+    queryKey: ['child', childId, 'lessons', 'stats'],
+    queryFn: () => api.get(`/children/${childId}/lessons/stats`).then(r => r.data).catch(() => null),
+  })
+
+  const [customLessonOpen, setCustomLessonOpen] = useState(false)
+  const [customForm, setCustomForm] = useState({ subject: 'Akhlaq', topic: '', duration_minutes: 15 })
+
+  const { mutate: logLesson, isPending: isLogging } = useMutation({
+    mutationFn: (data) => api.post(`/children/${childId}/lessons`, data).then(r => r.data),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ['child', childId] })
+      
+      if (data.leveled_up) {
+        toast.success(`🎉 LEVEL UP! The child is now a ${data.level_name}!`, { duration: 4000 })
+      } else {
+        toast.success(`Lesson logged successfully! +${data.xp_gained} XP! 🌟`)
+      }
+      data.new_badges?.forEach(b =>
+        setTimeout(() => toast.success(`🏅 New badge earned: ${b.badge_name}!`, { duration: 3000 }), 800)
+      )
+    },
+    onError: (e) => toast.error(e.response?.data?.detail || 'Failed to log lesson')
+  })
+
+  const handleLog = (subject, topic) => {
+    logLesson({
+      lesson_date: new Date().toISOString().split('T')[0],
+      subject,
+      topic,
+      duration_minutes: 15,
+      rating: 5
+    })
+  }
+
+  const handleCustomLog = (e) => {
+    e.preventDefault()
+    if (!customForm.topic.trim()) return
+    logLesson({
+      lesson_date: new Date().toISOString().split('T')[0],
+      subject: customForm.subject,
+      topic: customForm.topic,
+      duration_minutes: parseInt(customForm.duration_minutes) || 15,
+      rating: 5
+    })
+    setCustomLessonOpen(false)
+    setCustomForm({ subject: 'Akhlaq', topic: '', duration_minutes: 15 })
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="p-4 rounded-2xl glass-card shadow-soft flex items-center justify-between bg-gradient-to-br from-blue-500/5 to-blue-500/10 border border-blue-500/20">
+        <div>
+          <p className="text-3xl font-black text-blue-600">{stats?.total_lessons || 0}</p>
+          <p className="text-xs font-bold text-blue-700/70 uppercase tracking-wider">Lessons Completed</p>
+        </div>
+        <div className="text-right">
+          <p className="text-3xl font-black text-primary">{Math.round((stats?.total_minutes || 0) / 60)}h</p>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Learning Time</p>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-black text-foreground flex items-center gap-2">
+              <div className="p-1.5 rounded-xl bg-blue-500/10"><Lightbulb className="h-5 w-5 text-blue-500" /></div>
+              Curriculum Roadmap
+            </h2>
+            <Button onClick={() => setCustomLessonOpen(true)} size="sm" variant="outline" className="rounded-xl border-blue-500/30 text-blue-600 hover:bg-blue-500/10 font-bold">
+              <Plus className="h-4 w-4 mr-1" /> Custom
+            </Button>
+          </div>
+          {curriculum.map((group, i) => (
+            <div key={i} className="p-5 rounded-3xl glass-card border border-border/50 shadow-sm relative overflow-hidden">
+              {/* Background accent */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-blue-500/5 to-transparent rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none" />
+              
+              <h3 className="font-black text-blue-600 mb-4 text-sm uppercase tracking-widest flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-blue-500" /> {group.subject}
+              </h3>
+              <div className="space-y-3">
+                {group.topics.map((topic, j) => {
+                  const isDone = lessons.some(l => l.subject === group.subject && l.topic === topic)
+                  return (
+                    <div key={j} className={cn("group flex items-center justify-between p-3 rounded-2xl transition-all border", 
+                      isDone ? "bg-muted/30 border-transparent" : "bg-card hover:border-blue-500/30 hover:shadow-sm border-border/50")}>
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className={cn("shrink-0 h-8 w-8 rounded-full border-2 flex items-center justify-center transition-all shadow-sm", 
+                          isDone ? "bg-emerald-500 border-emerald-500 text-white" : "border-muted-foreground/20 bg-background")}>
+                          {isDone ? <CheckCircle className="h-5 w-5" /> : <div className="h-2.5 w-2.5 rounded-full bg-muted-foreground/20" />}
+                        </div>
+                        <p className={cn("text-sm font-bold leading-snug", isDone ? "text-muted-foreground line-through" : "text-foreground")}>{topic}</p>
+                      </div>
+                      {!isDone && (
+                        <Button 
+                          size="sm" 
+                          disabled={isLogging}
+                          onClick={() => handleLog(group.subject, topic)}
+                          className="shrink-0 h-8 rounded-xl font-bold bg-blue-500/10 text-blue-600 hover:bg-blue-500 hover:text-white shadow-none opacity-0 group-hover:opacity-100 transition-all"
+                        >
+                          Log
+                        </Button>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="space-y-4">
+          <h2 className="text-lg font-black text-foreground flex items-center gap-2">
+            <div className="p-1.5 rounded-xl bg-gold/10"><Star className="h-5 w-5 text-gold" /></div>
+            Recent Logs
+          </h2>
+          {lessons.length === 0 ? (
+            <div className="text-center py-10 bg-muted/20 rounded-2xl border border-dashed border-border/50">
+              <p className="text-sm font-bold text-muted-foreground">No lessons logged yet.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {lessons.slice(0, 5).map(l => (
+                <div key={l.id} className="p-3 rounded-xl bg-background border border-border/50 shadow-sm flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-primary">{l.subject}</span>
+                    <p className="text-sm font-bold text-foreground">{l.topic}</p>
+                  </div>
+                  <div className="text-right">
+                    <div className="flex text-gold">
+                      {[...Array(5)].map((_, i) => <Star key={i} className={cn("h-3 w-3", i < (l.rating || 5) ? "fill-gold" : "opacity-30")} />)}
+                    </div>
+                    <span className="text-[10px] font-bold text-muted-foreground">{l.duration_minutes || 15} min</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Custom Lesson Modal */}
+      <Dialog open={customLessonOpen} onOpenChange={setCustomLessonOpen}>
+        <DialogContent className="sm:max-w-md rounded-3xl p-6">
+          <DialogHeader className="mb-4">
+            <DialogTitle className="text-xl font-black">Log Custom Lesson</DialogTitle>
+            <p className="text-sm text-muted-foreground font-medium">Record a lesson that isn't in the curriculum.</p>
+          </DialogHeader>
+          <form onSubmit={handleCustomLog} className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-foreground">Subject</label>
+              <select 
+                className="w-full flex h-10 rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                value={customForm.subject}
+                onChange={e => setCustomForm({ ...customForm, subject: e.target.value })}
+              >
+                {['Aqeedah', 'Akhlaq', 'Salah', 'Seerah', 'Fiqh', 'Quran', 'Arabic', 'Other'].map(s => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-foreground">Topic Description</label>
+              <Input 
+                autoFocus
+                placeholder="e.g. Discussing honesty with parents" 
+                value={customForm.topic} 
+                onChange={e => setCustomForm({ ...customForm, topic: e.target.value })} 
+                className="rounded-xl h-10" 
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-foreground">Duration (Minutes)</label>
+              <Input 
+                type="number"
+                min="1"
+                placeholder="15" 
+                value={customForm.duration_minutes} 
+                onChange={e => setCustomForm({ ...customForm, duration_minutes: e.target.value })} 
+                className="rounded-xl h-10" 
+              />
+            </div>
+            <div className="pt-2 flex gap-3">
+              <Button type="button" variant="outline" className="flex-1 rounded-xl font-bold" onClick={() => setCustomLessonOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={!customForm.topic.trim() || isLogging} className="flex-1 rounded-xl font-bold bg-primary hover:bg-primary/90 text-white shadow-glow-primary">
+                {isLogging ? 'Logging...' : 'Log Lesson'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
+
 export default function ChildDetailPage() {
   const { childId } = Route.useParams()
   const [tab, setTab] = useState('overview')
@@ -710,6 +1193,10 @@ export default function ChildDetailPage() {
     queryKey: ['child', childId, 'stats'],
     queryFn: () => api.get(`/children/${childId}/stats`).then(r => r.data).catch(() => null),
   })
+  const { data: analytics } = useQuery({
+    queryKey: ['child', childId, 'analytics'],
+    queryFn: () => api.get(`/children/${childId}/analytics`).then(r => r.data).catch(() => null),
+  })
   const { data: activities = [] } = useQuery({
     queryKey: ['child', childId, 'activities'],
     queryFn: () => api.get(`/children/${childId}/activities`).then(r => r.data).catch(() => []),
@@ -721,7 +1208,9 @@ export default function ChildDetailPage() {
 
   const TABS = [
     { id:'overview',    label:'Overview',   icon: BarChart2 },
+    { id:'lessons',     label:'Lessons',    icon: Lightbulb },
     { id:'stories',     label:'Stories',    icon: BookOpen },
+    { id:'quran',       label:'Quran',      icon: Book },
     { id:'milestones',  label:'Milestones', icon: Target },
     { id:'duas',        label:'Duas',       icon: Heart },
   ]
@@ -743,8 +1232,17 @@ export default function ChildDetailPage() {
     ? differenceInMonths(new Date(), new Date(child.date_of_birth))
     : null
 
+  const AGE_THEMES = {
+    toddler: 'bg-gradient-to-br from-pink-500/10 via-rose-400/5 to-orange-400/10 border-pink-200/50',
+    young: 'bg-gradient-to-br from-blue-500/10 via-cyan-400/5 to-teal-400/10 border-blue-200/50',
+    middle: 'bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-fuchsia-500/10 border-indigo-200/50',
+    preteen: 'bg-gradient-to-br from-slate-500/10 via-zinc-400/5 to-stone-400/10 border-slate-200/50',
+    default: 'bg-gradient-to-br from-primary/5 to-transparent'
+  }
+  const themeClass = AGE_THEMES[child.age_group] || AGE_THEMES.default
+
   return (
-    <div className="space-y-6 animate-slide-up">
+    <div className={cn("space-y-6 animate-slide-up p-4 sm:p-6 rounded-3xl border border-border/40 min-h-screen", themeClass)}>
       {/* Back + Header */}
       <div>
         <Link to="/children/" className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground mb-4">
@@ -763,19 +1261,25 @@ export default function ChildDetailPage() {
               </p>
             )}
           </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gold/15 border border-gold/20 shrink-0">
-            <Star className="h-4 w-4 text-gold fill-gold" />
-            <span className="text-sm font-black text-gold">Lv {child.level || 1}</span>
+          <div className="flex flex-col items-end gap-2 shrink-0">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gold/15 border border-gold/20">
+              <Star className="h-4 w-4 text-gold fill-gold" />
+              <span className="text-sm font-black text-gold">Lv {child.level || 1}</span>
+            </div>
+            <Link to="/children/kids-mode" className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary hover:bg-primary/90 text-white shadow-glow-primary transition-all hover:scale-105 active:scale-95">
+              <Sparkles className="h-4 w-4" />
+              <span className="text-sm font-black">Kids Mode</span>
+            </Link>
           </div>
         </div>
       </div>
 
       {/* Sub-tabs */}
-      <div className="flex gap-1 p-1 bg-muted/50 rounded-2xl">
+      <div className="flex gap-1 p-1 bg-muted/50 rounded-2xl overflow-x-auto scrollbar-none">
         {TABS.map(({ id, label, icon: Icon }) => (
-          <button key={id} onClick={() => setTab(id)}
+          <button key={id} id={`${id}-tab-btn`} onClick={() => setTab(id)}
             className={cn(
-              'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all',
+              'flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition-all shrink-0 min-w-max',
               tab === id ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
             )}
           >
@@ -786,8 +1290,10 @@ export default function ChildDetailPage() {
 
       {/* Tab content */}
       <div>
-        {tab === 'overview'   && <OverviewTab child={child} stats={stats} activities={activities} badges={badges} />}
+        {tab === 'overview'   && <OverviewTab child={child} stats={stats} analytics={analytics} activities={activities} badges={badges} />}
+        {tab === 'lessons'    && <LessonsTab child={child} />}
         {tab === 'stories'    && <StoriesTab child={child} />}
+        {tab === 'quran'      && <QuranTab child={child} />}
         {tab === 'milestones' && <MilestonesTab child={child} />}
         {tab === 'duas'       && <DuasTab child={child} />}
       </div>

@@ -338,6 +338,44 @@ function HabitsSummary({ habits }) {
   )
 }
 
+// ─── Children Progress Widget (Phase 10) ──────────────────────────────────────
+function ChildrenProgressWidget() {
+  const { data: children = [] } = useQuery({
+    queryKey: ['children'],
+    queryFn: () => api.get('/children').then(r => r.data).catch(() => []),
+  })
+
+  if (!children.length) return null
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-6 space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Children's Progress</h3>
+        <Link to="/children" className="text-xs text-primary font-bold hover:underline">View All</Link>
+      </div>
+      <div className="space-y-3">
+        {children.slice(0, 3).map(c => (
+          <Link key={c.id} to={`/children/${c.id}`} className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50 hover:bg-muted/50 hover:border-primary/30 transition-all">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">{c.avatar_emoji}</span>
+              <div>
+                <p className="text-sm font-bold text-foreground leading-tight">{c.name}</p>
+                <p className="text-[10px] font-semibold text-muted-foreground">Level {c.level || 1} • {c.xp_total || 0} XP</p>
+              </div>
+            </div>
+            {c.current_streak > 0 && (
+              <div className="flex items-center gap-1 text-orange-500 bg-orange-500/10 px-2 py-1 rounded-lg">
+                <Flame className="h-3 w-3" />
+                <span className="text-xs font-bold">{c.current_streak}</span>
+              </div>
+            )}
+          </Link>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ─── Quick Actions ────────────────────────────────────────────────────────────
 const ACTIONS = [
   { title: 'Quran', icon: BookOpen, color: 'bg-primary/10 text-primary', to: '/quran', desc: 'Read & Listen' },
@@ -520,13 +558,14 @@ function DashboardPage() {
       {/* Quick Actions */}
       <QuickActions />
 
-      {/* Habits + Verse 2-col grid */}
+      {/* Dashboard Grid */}
       <div className="grid gap-6 md:grid-cols-2">
         <DailyVerse verseData={verseData} />
         {habitsLoading
           ? <div className="h-48 rounded-2xl bg-muted animate-pulse" />
           : <HabitsSummary habits={habits} />
         }
+        <ChildrenProgressWidget />
       </div>
 
       {/* Ayat footer */}
