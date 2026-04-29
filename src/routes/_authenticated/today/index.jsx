@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { RefreshCw } from 'lucide-react'
+import { RefreshCw, Moon } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import api from '@/lib/api'
@@ -369,6 +369,14 @@ function DashboardPage() {
   const qc = useQueryClient()
   const [refreshing, setRefreshing] = useState(false)
   const [showMore, setShowMore] = useState(false)
+  const [ramadanMode, setRamadanMode] = useState(() => { try { return localStorage.getItem('deen-ramadan-mode') === 'true' } catch { return false } })
+
+  const toggleRamadanMode = () => {
+    const next = !ramadanMode
+    setRamadanMode(next)
+    localStorage.setItem('deen-ramadan-mode', next)
+    toast.success(next ? 'Ramadan Mode activated! 🌙' : 'Ramadan Mode disabled')
+  }
 
   const displayName = user?.profile?.display_name || user?.email?.split('@')[0] || ''
   const lat = user?.latitude
@@ -419,13 +427,43 @@ function DashboardPage() {
       {/* 1. Header */}
       <div className="flex items-start justify-between gap-4">
         <IslamicHeader displayName={displayName} />
-        <button onClick={refresh} className={cn('mt-1 p-2 rounded-xl text-muted-foreground hover:bg-muted transition-colors', refreshing && 'animate-spin')}>
-          <RefreshCw className="h-4 w-4" />
-        </button>
+        <div className="flex flex-col items-end gap-2 mt-1">
+          <button onClick={toggleRamadanMode} className={cn('flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border', ramadanMode ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-card border-border text-muted-foreground hover:bg-muted')}>
+            <Moon className="h-3.5 w-3.5" /> {ramadanMode ? 'Ramadan' : 'Ramadan'}
+          </button>
+          <button onClick={refresh} className={cn('p-2 rounded-xl text-muted-foreground hover:bg-muted transition-colors', refreshing && 'animate-spin')}>
+            <RefreshCw className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       {/* Seasonal banner */}
       <IslamicBanner />
+      
+      {/* Ramadan Mode Widget */}
+      {ramadanMode && (
+        <div className="rounded-2xl border-2 border-primary/30 bg-primary/5 p-6 space-y-4 animate-in fade-in zoom-in-95 shadow-sm">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-black text-foreground flex items-center gap-2"><Moon className="h-5 w-5 text-primary" fill="currentColor" /> Ramadan Tracker</h3>
+            <Badge className="bg-primary text-primary-foreground font-black uppercase tracking-widest text-[9px]">Active</Badge>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-card p-4 rounded-xl border border-border">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Next Fasting Milestone</p>
+              <p className="text-xl font-black text-primary">Iftar in 4h 20m</p>
+            </div>
+            <div className="bg-card p-4 rounded-xl border border-border">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Taraweeh</p>
+              <p className="text-xl font-black text-primary">8 / 20 Rakat</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" className="flex-1 bg-card text-xs">Log Fast</Button>
+            <Button variant="outline" className="flex-1 bg-card text-xs">Read Quran</Button>
+            <Button variant="outline" className="flex-1 bg-card text-xs">Donate Zakat</Button>
+          </div>
+        </div>
+      )}
 
       {/* 2. Prayer Hero — next prayer with live countdown */}
       {ptLoading ? <PrayerHeroSkeleton /> : <PrayerHero times={prayerTimes} summary={summary} />}

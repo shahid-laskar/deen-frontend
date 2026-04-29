@@ -221,6 +221,14 @@
     line-height: 2.2;
   }
 
+  /* RTL mirroring for chevrons/arrows */
+  html[dir="rtl"] .lucide-chevron-right,
+  html[dir="rtl"] .lucide-chevron-left,
+  html[dir="rtl"] .lucide-arrow-right,
+  html[dir="rtl"] .lucide-arrow-left {
+    transform: scaleX(-1);
+  }
+
   /* Scrollbars */
   ::-webkit-scrollbar         { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track   { background: transparent; }

@@ -24,8 +24,10 @@ import { Route as AuthenticatedCommunityIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedWorshipQuranRouteImport } from './routes/_authenticated/worship/quran'
 import { Route as AuthenticatedWorshipQiblaRouteImport } from './routes/_authenticated/worship/qibla'
 import { Route as AuthenticatedWorshipPrayerRouteImport } from './routes/_authenticated/worship/prayer'
+import { Route as AuthenticatedWorshipAudioRouteImport } from './routes/_authenticated/worship/audio'
 import { Route as AuthenticatedTodayTasksRouteImport } from './routes/_authenticated/today/tasks'
 import { Route as AuthenticatedTodayJournalRouteImport } from './routes/_authenticated/today/journal'
+import { Route as AuthenticatedTodayCalendarRouteImport } from './routes/_authenticated/today/calendar'
 import { Route as AuthenticatedMeSubscriptionRouteImport } from './routes/_authenticated/me/subscription'
 import { Route as AuthenticatedMeSettingsRouteImport } from './routes/_authenticated/me/settings'
 import { Route as AuthenticatedMeFemaleRouteImport } from './routes/_authenticated/me/female'
@@ -138,6 +140,12 @@ const AuthenticatedWorshipPrayerRoute =
     path: '/worship/prayer',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedWorshipAudioRoute =
+  AuthenticatedWorshipAudioRouteImport.update({
+    id: '/worship/audio',
+    path: '/worship/audio',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedTodayTasksRoute = AuthenticatedTodayTasksRouteImport.update({
   id: '/today/tasks',
   path: '/today/tasks',
@@ -147,6 +155,12 @@ const AuthenticatedTodayJournalRoute =
   AuthenticatedTodayJournalRouteImport.update({
     id: '/today/journal',
     path: '/today/journal',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedTodayCalendarRoute =
+  AuthenticatedTodayCalendarRouteImport.update({
+    id: '/today/calendar',
+    path: '/today/calendar',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedMeSubscriptionRoute =
@@ -355,8 +369,10 @@ export interface FileRoutesByFullPath {
   '/me/female': typeof AuthenticatedMeFemaleRoute
   '/me/settings': typeof AuthenticatedMeSettingsRoute
   '/me/subscription': typeof AuthenticatedMeSubscriptionRoute
+  '/today/calendar': typeof AuthenticatedTodayCalendarRoute
   '/today/journal': typeof AuthenticatedTodayJournalRoute
   '/today/tasks': typeof AuthenticatedTodayTasksRoute
+  '/worship/audio': typeof AuthenticatedWorshipAudioRoute
   '/worship/prayer': typeof AuthenticatedWorshipPrayerRoute
   '/worship/qibla': typeof AuthenticatedWorshipQiblaRoute
   '/worship/quran': typeof AuthenticatedWorshipQuranRouteWithChildren
@@ -403,8 +419,10 @@ export interface FileRoutesByTo {
   '/me/female': typeof AuthenticatedMeFemaleRoute
   '/me/settings': typeof AuthenticatedMeSettingsRoute
   '/me/subscription': typeof AuthenticatedMeSubscriptionRoute
+  '/today/calendar': typeof AuthenticatedTodayCalendarRoute
   '/today/journal': typeof AuthenticatedTodayJournalRoute
   '/today/tasks': typeof AuthenticatedTodayTasksRoute
+  '/worship/audio': typeof AuthenticatedWorshipAudioRoute
   '/worship/prayer': typeof AuthenticatedWorshipPrayerRoute
   '/worship/qibla': typeof AuthenticatedWorshipQiblaRoute
   '/community': typeof AuthenticatedCommunityIndexRoute
@@ -454,8 +472,10 @@ export interface FileRoutesById {
   '/_authenticated/me/female': typeof AuthenticatedMeFemaleRoute
   '/_authenticated/me/settings': typeof AuthenticatedMeSettingsRoute
   '/_authenticated/me/subscription': typeof AuthenticatedMeSubscriptionRoute
+  '/_authenticated/today/calendar': typeof AuthenticatedTodayCalendarRoute
   '/_authenticated/today/journal': typeof AuthenticatedTodayJournalRoute
   '/_authenticated/today/tasks': typeof AuthenticatedTodayTasksRoute
+  '/_authenticated/worship/audio': typeof AuthenticatedWorshipAudioRoute
   '/_authenticated/worship/prayer': typeof AuthenticatedWorshipPrayerRoute
   '/_authenticated/worship/qibla': typeof AuthenticatedWorshipQiblaRoute
   '/_authenticated/worship/quran': typeof AuthenticatedWorshipQuranRouteWithChildren
@@ -506,8 +526,10 @@ export interface FileRouteTypes {
     | '/me/female'
     | '/me/settings'
     | '/me/subscription'
+    | '/today/calendar'
     | '/today/journal'
     | '/today/tasks'
+    | '/worship/audio'
     | '/worship/prayer'
     | '/worship/qibla'
     | '/worship/quran'
@@ -554,8 +576,10 @@ export interface FileRouteTypes {
     | '/me/female'
     | '/me/settings'
     | '/me/subscription'
+    | '/today/calendar'
     | '/today/journal'
     | '/today/tasks'
+    | '/worship/audio'
     | '/worship/prayer'
     | '/worship/qibla'
     | '/community'
@@ -604,8 +628,10 @@ export interface FileRouteTypes {
     | '/_authenticated/me/female'
     | '/_authenticated/me/settings'
     | '/_authenticated/me/subscription'
+    | '/_authenticated/today/calendar'
     | '/_authenticated/today/journal'
     | '/_authenticated/today/tasks'
+    | '/_authenticated/worship/audio'
     | '/_authenticated/worship/prayer'
     | '/_authenticated/worship/qibla'
     | '/_authenticated/worship/quran'
@@ -748,6 +774,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWorshipPrayerRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/worship/audio': {
+      id: '/_authenticated/worship/audio'
+      path: '/worship/audio'
+      fullPath: '/worship/audio'
+      preLoaderRoute: typeof AuthenticatedWorshipAudioRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/today/tasks': {
       id: '/_authenticated/today/tasks'
       path: '/today/tasks'
@@ -760,6 +793,13 @@ declare module '@tanstack/react-router' {
       path: '/today/journal'
       fullPath: '/today/journal'
       preLoaderRoute: typeof AuthenticatedTodayJournalRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/today/calendar': {
+      id: '/_authenticated/today/calendar'
+      path: '/today/calendar'
+      fullPath: '/today/calendar'
+      preLoaderRoute: typeof AuthenticatedTodayCalendarRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/me/subscription': {
@@ -1081,8 +1121,10 @@ interface AuthenticatedRouteChildren {
   AuthenticatedMeFemaleRoute: typeof AuthenticatedMeFemaleRoute
   AuthenticatedMeSettingsRoute: typeof AuthenticatedMeSettingsRoute
   AuthenticatedMeSubscriptionRoute: typeof AuthenticatedMeSubscriptionRoute
+  AuthenticatedTodayCalendarRoute: typeof AuthenticatedTodayCalendarRoute
   AuthenticatedTodayJournalRoute: typeof AuthenticatedTodayJournalRoute
   AuthenticatedTodayTasksRoute: typeof AuthenticatedTodayTasksRoute
+  AuthenticatedWorshipAudioRoute: typeof AuthenticatedWorshipAudioRoute
   AuthenticatedWorshipPrayerRoute: typeof AuthenticatedWorshipPrayerRoute
   AuthenticatedWorshipQiblaRoute: typeof AuthenticatedWorshipQiblaRoute
   AuthenticatedWorshipQuranRoute: typeof AuthenticatedWorshipQuranRouteWithChildren
@@ -1111,8 +1153,10 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedMeFemaleRoute: AuthenticatedMeFemaleRoute,
   AuthenticatedMeSettingsRoute: AuthenticatedMeSettingsRoute,
   AuthenticatedMeSubscriptionRoute: AuthenticatedMeSubscriptionRoute,
+  AuthenticatedTodayCalendarRoute: AuthenticatedTodayCalendarRoute,
   AuthenticatedTodayJournalRoute: AuthenticatedTodayJournalRoute,
   AuthenticatedTodayTasksRoute: AuthenticatedTodayTasksRoute,
+  AuthenticatedWorshipAudioRoute: AuthenticatedWorshipAudioRoute,
   AuthenticatedWorshipPrayerRoute: AuthenticatedWorshipPrayerRoute,
   AuthenticatedWorshipQiblaRoute: AuthenticatedWorshipQiblaRoute,
   AuthenticatedWorshipQuranRoute: AuthenticatedWorshipQuranRouteWithChildren,

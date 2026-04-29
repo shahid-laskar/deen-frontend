@@ -13,11 +13,11 @@ import { Icon } from '@/components/ui/icon'
  */
 
 const TABS = [
-  { to: '/today',          iconName: 'home',     label: 'Today' },
-  { to: '/worship/prayer', iconName: 'clock',    label: 'Worship' },
-  { to: '/grow/habits',    iconName: 'heart',    label: 'Grow' },
-  { to: '/community',      iconName: 'user',     label: 'Ummah' },
-  { to: '/me/settings',    iconName: 'settings', label: 'Me' },
+  { to: '/today',     base: '/today',     iconName: 'home',     label: 'Today' },
+  { to: '/worship',   base: '/worship',   iconName: 'moon',     label: 'Worship' },
+  { to: '/grow',      base: '/grow',      iconName: 'heart',    label: 'Grow' },
+  { to: '/community', base: '/community', iconName: 'users',    label: 'Ummah' },
+  { to: '/me',        base: '/me',        iconName: 'user',     label: 'Me' },
 ]
 
 export function BottomNav() {
@@ -32,7 +32,7 @@ export function BottomNav() {
     >
       <div className="flex items-stretch justify-around" style={{ height: '56px' }}>
         {TABS.map((tab) => {
-          const isActive = location.pathname === tab.to || location.pathname.startsWith(tab.to + '/')
+          const isActive = location.pathname === tab.base || location.pathname.startsWith(tab.base + '/')
           return (
             <Link
               key={tab.to}

@@ -138,7 +138,48 @@ function XPHistory() {
   )
 }
 
-const TABS = ['Progress', 'Quests', 'Badges', 'History']
+function StreakCard() {
+  const [streak, setStreak] = useState(14)
+  const [insurance, setInsurance] = useState(1)
+  
+  return (
+    <div className="relative overflow-hidden rounded-3xl p-5 mb-6 border-2 border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-orange-500/5 shadow-sm">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center text-2xl drop-shadow-sm border border-orange-500/40">🔥</div>
+          <div>
+            <h3 className="text-xl font-black text-foreground">{streak} Day Streak</h3>
+            <p className="text-xs font-medium text-muted-foreground">Your consistency is inspiring.</p>
+          </div>
+        </div>
+        <div className="flex flex-col items-center justify-center bg-card/80 backdrop-blur-sm px-3 py-2 rounded-2xl border border-orange-500/20 shadow-sm text-center">
+          <span className="text-xl mb-0.5">☂️</span>
+          <span className="text-[10px] font-black uppercase tracking-wider text-orange-500">{insurance} Shield</span>
+        </div>
+      </div>
+      <p className="text-[10px] mt-4 font-medium text-muted-foreground bg-background/40 p-2 rounded-xl border border-border/50">
+        <strong className="text-foreground">Streak Insurance active.</strong> Protects your streak if you miss 1 day this month.
+      </p>
+    </div>
+  )
+}
+
+function MilestoneCard({ icon, title, date, flavorText }) {
+  return (
+    <div className="aspect-square relative p-5 rounded-3xl border-4 border-gold/30 bg-gradient-to-br from-gold/10 via-background to-gold/5 flex flex-col items-center justify-center text-center shadow-md overflow-hidden group">
+      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')] opacity-10 mix-blend-overlay"></div>
+      <div className="absolute top-3 left-3 right-3 bottom-3 border border-gold/20 rounded-2xl pointer-events-none" />
+      <span className="text-4xl mb-3 drop-shadow-md group-hover:scale-110 transition-transform">{icon}</span>
+      <h3 className="font-amiri text-xl font-bold text-gold-foreground mb-1">{title}</h3>
+      <p className="text-[10px] font-medium text-muted-foreground z-10">{flavorText}</p>
+      <div className="mt-auto z-10">
+        <Badge variant="outline" className="text-[9px] uppercase tracking-widest border-gold/30 text-gold-foreground bg-gold/10">{date}</Badge>
+      </div>
+    </div>
+  )
+}
+
+const TABS = ['Progress', 'Milestones', 'Quests', 'Badges', 'History']
 
 function GamificationPage() {
   const qc = useQueryClient()
@@ -205,6 +246,7 @@ function GamificationPage() {
         {/* PROGRESS TAB */}
         {tab === 'Progress' && (
           <div className="space-y-6">
+            <StreakCard />
             <div>
               <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3">Active Quests</h3>
               {activeQuests.length === 0 ? (
@@ -240,6 +282,21 @@ function GamificationPage() {
                   {myBadges.slice(0, 8).map(b => <BadgeCard key={b.slug} badge={b} earned={true} />)}
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* MILESTONES TAB */}
+        {tab === 'Milestones' && (
+          <div className="space-y-4">
+            <div className="bg-gold/10 border border-gold/20 rounded-xl p-4 text-center mb-4">
+              <h2 className="text-lg font-bold text-gold-foreground">Your Legacy</h2>
+              <p className="text-xs text-muted-foreground">Share these monumental achievements with your friends.</p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <MilestoneCard icon="🔥" title="30 Days" flavorText="A month of unwavering dedication." date="Apr 15, 2026" />
+              <MilestoneCard icon="📖" title="1 Juz Read" flavorText="The first step in a lifelong journey." date="Mar 20, 2026" />
+              <MilestoneCard icon="🕋" title="100 Prayers" flavorText="Established the pillar of Islam." date="Feb 05, 2026" />
             </div>
           </div>
         )}

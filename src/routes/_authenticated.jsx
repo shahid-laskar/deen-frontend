@@ -7,6 +7,7 @@ import { MobileHeader } from '@/components/layout/MobileHeader'
 import { ContextualTopBar } from '@/components/layout/ContextualTopBar'
 import { CommandBar } from '@/components/layout/CommandBar'
 import { SeasonalPrompt } from '@/components/layout/SeasonalPrompt'
+import { GlobalAudioPlayer } from '@/components/worship/GlobalAudioPlayer'
 import { Outlet } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_authenticated')({
@@ -46,6 +47,9 @@ function AuthenticatedLayout() {
 
       {/* Seasonal theme prompt */}
       <SeasonalPrompt />
+
+      {/* Global Background Audio */}
+      <GlobalAudioPlayer />
     </div>
   )
 }

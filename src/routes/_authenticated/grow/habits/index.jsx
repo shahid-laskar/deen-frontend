@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import { HabitFormSheet } from '@/components/habits/HabitFormSheet'
 import { ChecklistSheet } from '@/components/habits/ChecklistSheet'
+import { EmptyState } from '@/components/ui/empty-state'
 
 export const Route = createFileRoute('/_authenticated/grow/habits/')({
   component: HabitsTodayPage,
@@ -292,23 +293,21 @@ function HabitsTodayPage() {
 
       {/* Habit groups */}
       {total === 0 ? (
-        <div className="rounded-3xl glass-card shadow-soft p-10 flex flex-col items-center text-center animate-slide-up stagger-2">
-          <Sparkles className="h-12 w-12 text-primary/40 mb-4" />
-          <h3 className="text-base font-bold text-foreground mb-1">Start your journey</h3>
-          <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
-            "The most beloved of deeds to Allah are those most consistent, even if small." — Bukhari
-          </p>
-          <div className="flex gap-3 justify-center flex-wrap">
-            <button onClick={() => setFormOpen(true)}
-              className="flex items-center gap-2 rounded-2xl bg-primary text-primary-foreground px-5 py-2.5 text-sm font-bold shadow-glow-primary">
-              <Plus className="h-4 w-4" /> New Habit
-            </button>
-            <Link to="/grow/habits/library"
-              className="flex items-center gap-2 rounded-2xl glass-card shadow-soft px-5 py-2.5 text-sm font-bold hover:shadow-elevated transition-all">
-              <BookOpen className="h-4 w-4" /> Browse Library
-            </Link>
-          </div>
-        </div>
+        <EmptyState
+          illustration="heart"
+          title="Start your journey"
+          description='"The most beloved of deeds to Allah are those most consistent, even if small." — Bukhari'
+          className="rounded-3xl glass-card shadow-soft bg-transparent animate-slide-up stagger-2"
+        >
+          <button onClick={() => setFormOpen(true)}
+            className="flex items-center gap-2 rounded-2xl bg-primary text-primary-foreground px-5 py-2.5 text-sm font-bold shadow-glow-primary">
+            <Plus className="h-4 w-4" /> New Habit
+          </button>
+          <Link to="/grow/habits/library"
+            className="flex items-center gap-2 rounded-2xl glass-card shadow-soft px-5 py-2.5 text-sm font-bold hover:shadow-elevated transition-all">
+            <BookOpen className="h-4 w-4" /> Browse Library
+          </Link>
+        </EmptyState>
       ) : (
         <div className="space-y-6 animate-slide-up stagger-2">
           {PRAYER_ANCHORS.map(anchor => {

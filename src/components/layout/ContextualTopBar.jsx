@@ -101,12 +101,12 @@ export function ContextualTopBar({ className }) {
       className
     )}>
       {/* Hijri date (left) */}
-      <button className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors group">
+      <Link to="/today/calendar" className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors group">
         <Icon name="calendar" size={13} className="opacity-60 group-hover:opacity-100" />
         <span className="text-[11px] font-semibold tracking-wide">
           {ctx.formatted || 'Hijri Date'}
         </span>
-      </button>
+      </Link>
 
       {/* Next prayer countdown (center) */}
       <Link

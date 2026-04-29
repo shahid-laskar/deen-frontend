@@ -18,7 +18,8 @@ const TABS = [
   { id: 'zakat', label: 'Zakat', icon: Calculator },
   { id: 'screener', label: 'Halal Screener', icon: TrendingUp },
   { id: 'mortgage', label: 'Mortgage', icon: HomeIcon },
-  { id: 'charity', label: 'Charity', icon: Heart },
+  { id: 'sadaqah', label: 'Sadaqah', icon: Heart },
+  { id: 'charity', label: 'Directory', icon: Building },
 ]
 
 function ZakatCalculator() {
@@ -28,6 +29,14 @@ function ZakatCalculator() {
   const [assets, setAssets] = useState({ cash: '', gold_grams: '', silver_grams: '', stocks: '', crypto: '', business_inventory: '', receivables: '' })
   const [liabilities, setLiabilities] = useState({ loans: '', rent_due: '', other: '' })
   const [result, setResult] = useState(null)
+  const [snapshots, setSnapshots] = useState(() => { try { return JSON.parse(localStorage.getItem('deen-zakat-snapshots') || '[]') } catch { return [] } })
+
+  const saveSnapshot = (res) => {
+    const next = [...snapshots, { date: new Date().toISOString(), result: res }]
+    setSnapshots(next)
+    localStorage.setItem('deen-zakat-snapshots', JSON.stringify(next))
+    toast.success('Snapshot saved!')
+  }
 
   const { mutate: calculate, isPending } = useMutation({
     mutationFn: () =>
@@ -132,10 +141,90 @@ function ZakatCalculator() {
           </Card>
           <div className="flex gap-3 pt-2">
             <Button variant="outline" className="flex-1" onClick={() => { setStep(0); setResult(null) }}><RefreshCw className="h-4 w-4 mr-2" /> Recalculate</Button>
-            <Button className="flex-1 bg-gold hover:bg-gold/90 text-gold-foreground font-bold" onClick={() => toast.success('Charity directory opened!')}>Pay Zakat <ChevronRight className="h-4 w-4 ml-1" /></Button>
+            <Button className="flex-1 bg-gold hover:bg-gold/90 text-gold-foreground font-bold" onClick={() => saveSnapshot(result)}>Save Snapshot</Button>
           </div>
         </div>
       )}
+
+      {step === 0 && snapshots.length > 0 && (
+        <Card className="p-5 sm:p-6 mt-6">
+          <h2 className="font-bold text-lg text-foreground mb-4">Past Snapshots</h2>
+          <div className="space-y-3">
+            {snapshots.map((s, i) => (
+              <div key={i} className="flex items-center justify-between p-3 rounded-xl border border-border bg-card">
+                <div>
+                  <p className="font-bold text-sm text-foreground">{new Date(s.date).toLocaleDateString()}</p>
+                  <p className="text-xs text-muted-foreground">Assets: ${s.result.net_zakatable_assets.toLocaleString()}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-black text-primary">${s.result.zakat_due.toLocaleString()}</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Zakat</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+    </div>
+  )
+}
+
+function SadaqahTracker() {
+  const [goal, setGoal] = useState(100)
+  const [given, setGiven] = useState(45)
+  const [entries, setEntries] = useState([
+    { id: 1, amount: 25, recipient: 'Islamic Relief', date: '2026-04-20', note: 'Orphan sponsorship' },
+    { id: 2, amount: 20, recipient: 'Local Masjid', date: '2026-04-25', note: 'Jumuah' },
+  ])
+  const [newAmount, setNewAmount] = useState('')
+  const [newRecipient, setNewRecipient] = useState('')
+
+  const handleAdd = () => {
+    if (!newAmount || !newRecipient) return
+    setEntries([{ id: Date.now(), amount: parseFloat(newAmount), recipient: newRecipient, date: new Date().toISOString().split('T')[0] }, ...entries])
+    setGiven(given + parseFloat(newAmount))
+    setNewAmount('')
+    setNewRecipient('')
+    toast.success('Sadaqah logged!')
+  }
+
+  const progress = Math.min(100, Math.round((given / goal) * 100))
+
+  return (
+    <div className="space-y-6 max-w-xl animate-in fade-in slide-in-from-bottom-2">
+      <Card className="p-6">
+        <h2 className="font-bold text-lg text-foreground mb-4">Monthly Sadaqah Goal</h2>
+        <div className="flex items-end justify-between mb-2">
+          <p className="text-3xl font-black text-primary">${given} <span className="text-sm font-medium text-muted-foreground">/ ${goal}</span></p>
+          <p className="text-xs font-bold text-muted-foreground">{progress}%</p>
+        </div>
+        <div className="h-2 bg-muted rounded-full overflow-hidden mb-4">
+          <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
+        </div>
+        <p className="text-xs text-muted-foreground italic">"Charity does not decrease wealth." — Muslim</p>
+      </Card>
+
+      <Card className="p-5">
+        <h3 className="font-bold text-sm mb-3">Log New Contribution</h3>
+        <div className="flex gap-2 mb-2">
+          <Input type="number" placeholder="Amount ($)" value={newAmount} onChange={e => setNewAmount(e.target.value)} className="w-24" />
+          <Input placeholder="Recipient (e.g. Masjid)" value={newRecipient} onChange={e => setNewRecipient(e.target.value)} className="flex-1" />
+        </div>
+        <Button className="w-full" onClick={handleAdd}>Add Sadaqah</Button>
+      </Card>
+
+      <div className="space-y-3">
+        <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Recent Contributions</h3>
+        {entries.map(e => (
+          <div key={e.id} className="flex justify-between items-center p-3 rounded-xl border border-border bg-card">
+            <div>
+              <p className="font-bold text-sm text-foreground">{e.recipient}</p>
+              <p className="text-[10px] text-muted-foreground">{e.date} {e.note && `• ${e.note}`}</p>
+            </div>
+            <p className="font-black text-primary">${e.amount}</p>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -307,6 +396,7 @@ export default function FinancePage() {
         {tab === 'zakat' && <ZakatCalculator />}
         {tab === 'screener' && <HalalScreener />}
         {tab === 'mortgage' && <MortgageCalculator />}
+        {tab === 'sadaqah' && <SadaqahTracker />}
         {tab === 'charity' && <CharityDirectory />}
       </div>
     </div>

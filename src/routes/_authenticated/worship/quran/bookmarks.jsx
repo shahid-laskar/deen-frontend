@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
+import { EmptyState } from '@/components/ui/empty-state'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 
@@ -123,18 +124,18 @@ function BookmarksTab() {
           {[...Array(3)].map((_, i) => <div key={i} className="h-32 rounded-2xl bg-muted animate-pulse" />)}
         </div>
       ) : bookmarks.length === 0 ? (
-        <div className="text-center py-20 border-2 border-dashed border-border rounded-3xl bg-muted/20">
-          <Bookmark className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-40" />
-          <p className="text-base font-bold text-foreground mb-1">No bookmarks yet</p>
-          <p className="text-sm text-muted-foreground mb-2">
-            {activeFolderId ? 'No bookmarks in this folder.' : 'Tap the bookmark icon on any verse while reading.'}
-          </p>
+        <EmptyState
+          illustration="book"
+          title="No bookmarks yet"
+          description={activeFolderId ? 'No bookmarks in this folder.' : 'Tap the bookmark icon on any verse while reading.'}
+          className="border-2 border-dashed border-border rounded-3xl bg-muted/20 py-12"
+        >
           {!activeFolderId && (
             <Button variant="outline" size="sm" onClick={() => navigate({ to: '/worship/quran' })}>
               <BookmarkIcon className="h-4 w-4 mr-1.5" /> Browse Quran
             </Button>
           )}
-        </div>
+        </EmptyState>
       ) : (
         <div className="space-y-3">
           {bookmarks.map(b => {

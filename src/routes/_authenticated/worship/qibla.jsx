@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { X, Camera } from 'lucide-react'
 
 export const Route = createFileRoute('/_authenticated/worship/qibla')({
   component: QiblaPage,
@@ -102,11 +103,45 @@ function MosqueCard({ mosque, isFavourite, onToggleFav }) {
   )
 }
 
+function AROverlay({ qiblaBearing, deviceHeading, onClose }) {
+  const diff = ((qiblaBearing - (deviceHeading || 0)) + 360) % 360
+  const isAligned = diff < 15 || diff > 345
+  
+  return (
+    <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center animate-in fade-in">
+      <div className="absolute inset-0 opacity-40 bg-[url('https://images.unsplash.com/photo-1579781354199-12185d03362a?q=80&w=1000&auto=format&fit=crop')] bg-cover bg-center" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/80" />
+      
+      <button onClick={onClose} className="absolute top-8 right-6 bg-white/20 hover:bg-white/30 transition-colors p-3 rounded-full z-20 backdrop-blur-md">
+        <X className="h-6 w-6 text-white" />
+      </button>
+      
+      <div className="relative z-10 flex flex-col items-center justify-center text-white text-center w-full px-6">
+        <div className={cn("w-48 h-48 rounded-full border-[6px] flex items-center justify-center mb-12 transition-all duration-500 shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden", isAligned ? "border-emerald-400 bg-emerald-500/30 scale-105 shadow-emerald-500/50" : "border-white/30 bg-black/40")}>
+          <div className="absolute inset-0 border-[4px] border-dashed border-white/20 rounded-full animate-spin-slow" />
+          <div className="text-7xl transition-transform duration-300 drop-shadow-xl" style={{ transform: `rotate(${diff}deg)` }}>🕋</div>
+        </div>
+        
+        <h2 className="text-4xl font-black mb-3 tracking-tight drop-shadow-lg">
+          {isAligned ? "You are facing the Qibla" : `Turn ${diff < 180 ? 'Right' : 'Left'}`}
+        </h2>
+        
+        <div className="flex gap-4 opacity-80 font-bold bg-black/40 px-6 py-3 rounded-2xl backdrop-blur-md mt-6">
+          <span>Qibla: {Math.round(qiblaBearing)}°</span>
+          <span className="opacity-50">|</span>
+          <span>Heading: {Math.round(deviceHeading || 0)}°</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function QiblaPage() {
   const { user, hasLocation } = useAuthStore()
   const [radius, setRadius] = useState(5000)
   const [deviceHeading, setDeviceHeading] = useState(null)
   const [compassActive, setCompassActive] = useState(false)
+  const [showAR, setShowAR] = useState(false)
   const [calibWarning, setCalibWarning] = useState(false)
   const [favourites, setFavourites] = useState(() => { try { return JSON.parse(localStorage.getItem('deen-fav-mosques') || '[]') } catch { return [] } })
 
@@ -202,10 +237,16 @@ function QiblaPage() {
             )}
           </div>
 
-          <Button onClick={toggleCompass} variant={compassActive ? 'default' : 'outline'} className="mt-6">
-            <Navigation className="h-4 w-4 mr-2" />
-            {compassActive ? 'Compass on' : 'Use live compass'}
-          </Button>
+          <div className="flex gap-3 mt-6">
+            <Button onClick={toggleCompass} variant={compassActive ? 'default' : 'outline'} className="flex-1">
+              <Navigation className="h-4 w-4 mr-2" />
+              {compassActive ? 'Compass on' : 'Live compass'}
+            </Button>
+            <Button onClick={() => setShowAR(true)} variant="outline" className="flex-1 border-primary/30 hover:bg-primary/5 text-primary">
+              <Camera className="h-4 w-4 mr-2" />
+              AR View
+            </Button>
+          </div>
 
           <div className="mt-8 text-center space-y-2">
             <p className="font-amiri text-xl text-primary" dir="rtl">وَلِلَّهِ الْمَشْرِقُ وَالْمَغْرِبُ فَأَيْنَمَا تُوَلُّوا فَثَمَّ وَجْهُ اللَّهِ</p>
@@ -253,6 +294,14 @@ function QiblaPage() {
             </div>
           )}
         </div>
+      )}
+
+      {showAR && (
+        <AROverlay 
+          qiblaBearing={qiblaBearing} 
+          deviceHeading={deviceHeading} 
+          onClose={() => setShowAR(false)} 
+        />
       )}
     </div>
   )

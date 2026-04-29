@@ -113,6 +113,7 @@ export function EmptyState({
   ctaOnClick,
   icon,
   className,
+  children,
 }) {
   const IllustrationSvg = typeof illustration === 'string' ? illustrations[illustration] : illustration
 
@@ -142,7 +143,7 @@ export function EmptyState({
       )}
 
       {/* CTA */}
-      {ctaTo && (
+      {ctaTo && !children && (
         <Link
           to={ctaTo}
           className="inline-flex items-center gap-2 rounded-xl bg-primary text-primary-foreground px-5 py-2.5 text-sm font-semibold shadow-sm shadow-primary/20 hover:shadow-md hover:shadow-primary/30 transition-all hover:-translate-y-0.5"
@@ -150,7 +151,7 @@ export function EmptyState({
           {ctaLabel || 'Get Started'}
         </Link>
       )}
-      {ctaOnClick && !ctaTo && (
+      {ctaOnClick && !ctaTo && !children && (
         <button
           onClick={ctaOnClick}
           className="inline-flex items-center gap-2 rounded-xl bg-primary text-primary-foreground px-5 py-2.5 text-sm font-semibold shadow-sm shadow-primary/20 hover:shadow-md hover:shadow-primary/30 transition-all hover:-translate-y-0.5"
@@ -158,6 +159,14 @@ export function EmptyState({
           {ctaLabel || 'Get Started'}
         </button>
       )}
+
+      {/* Custom Children Actions */}
+      {children && (
+        <div className="mt-2 flex flex-wrap justify-center gap-3">
+          {children}
+        </div>
+      )}
     </div>
   )
 }
+

@@ -64,4 +64,14 @@ i18n
     interpolation: { escapeValue: false },
   })
 
+i18n.on('languageChanged', (lng) => {
+  document.documentElement.dir = i18n.dir(lng);
+  localStorage.setItem('deen-language', lng);
+});
+
+// Set initial direction
+if (typeof document !== 'undefined') {
+  document.documentElement.dir = i18n.dir(i18n.language);
+}
+
 export default i18n

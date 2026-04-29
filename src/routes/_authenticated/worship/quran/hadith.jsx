@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Search, AlertTriangle, Shuffle, Sprout } from 'lucide-react'
+import { Search, AlertTriangle, Shuffle, Sprout, Bookmark } from 'lucide-react'
 import { quranApi } from '@/lib/api'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -24,6 +24,7 @@ const GRADE_STYLES = {
 
 const COLLECTIONS = [
   { key: null,       label: 'All' },
+  { key: 'bookmarks',label: 'Bookmarks' },
   { key: 'bukhari',  label: 'Bukhari' },
   { key: 'muslim',   label: 'Muslim' },
   { key: 'tirmidhi', label: 'Tirmidhi' },
@@ -40,16 +41,21 @@ const GRADES = [
   { key: 'daif',  label: "Da'if" },
 ]
 
-function HadithCard({ h }) {
+function HadithCard({ h, isBookmarked, onToggleBookmark }) {
   const grade = h.grade?.toLowerCase() || 'unknown'
   const style = GRADE_STYLES[grade] || GRADE_STYLES.unknown
   return (
     <Card className="p-5">
       <div className="flex items-center justify-between mb-4 pb-3 border-b border-border/50">
         <Badge variant="outline" className={cn('text-[9px] uppercase font-black tracking-widest border', style.bg)}>{style.label}</Badge>
-        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground bg-muted px-2 py-1 rounded-md">
-          {h.collection} #{h.hadith_number}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground bg-muted px-2 py-1 rounded-md">
+            {h.collection} #{h.hadith_number}
+          </span>
+          <button onClick={() => onToggleBookmark(h)} className={cn("transition-colors", isBookmarked ? "text-primary hover:text-primary/80" : "text-muted-foreground hover:text-foreground")}>
+            <Bookmark className="h-4 w-4" fill={isBookmarked ? "currentColor" : "none"} />
+          </button>
+        </div>
       </div>
       {h.arabic_text && (
         <p className="font-amiri text-xl leading-loose text-right rtl text-foreground mb-4">{h.arabic_text}</p>
@@ -81,9 +87,18 @@ function HadithTab() {
   const [collection, setCollection] = useState(null)
   const [grade,      setGrade]      = useState(null)
   const [offset,     setOffset]     = useState(0)
+  const [bookmarks,  setBookmarks]  = useState(() => { try { return JSON.parse(localStorage.getItem('deen-hadith-bookmarks') || '[]') } catch { return [] } })
   const LIMIT = 10
 
   const handleFilterChange = (fn) => { fn(); setOffset(0) }
+
+  const toggleBookmark = (h) => {
+    setBookmarks(prev => {
+      const next = prev.some(b => b.id === h.id) ? prev.filter(b => b.id !== h.id) : [h, ...prev]
+      localStorage.setItem('deen-hadith-bookmarks', JSON.stringify(next))
+      return next
+    })
+  }
 
   const { data: hadithOfDay } = useQuery({
     queryKey: ['hadith','day'],
@@ -94,14 +109,14 @@ function HadithTab() {
   const { data: searchResults = [], isFetching: searching } = useQuery({
     queryKey: ['hadith','search', search, collection],
     queryFn:  () => quranApi.searchHadith(search.trim(), collection),
-    enabled:  searchEnabled,
+    enabled:  searchEnabled && collection !== 'bookmarks',
     staleTime: 60_000,
   })
 
   const { data: allHadiths = [], isLoading, isFetching } = useQuery({
     queryKey: ['hadith','list', collection, grade, offset],
     queryFn:  () => quranApi.hadith({ collection, grade, limit: LIMIT, offset }),
-    enabled:  !searchEnabled,
+    enabled:  !searchEnabled && collection !== 'bookmarks',
     staleTime: 60_000,
     keepPreviousData: true,
   })
@@ -112,13 +127,13 @@ function HadithTab() {
     onError: () => toast.error('Seed failed'),
   })
 
-  const displayed = searchEnabled ? searchResults : allHadiths
+  const displayed = collection === 'bookmarks' ? bookmarks : (searchEnabled ? searchResults : allHadiths)
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 pt-4">
 
       {/* Hadith of the day */}
-      {hadithOfDay && <HadithCard h={hadithOfDay} />}
+      {hadithOfDay && collection !== 'bookmarks' && !searchEnabled && <HadithCard h={hadithOfDay} isBookmarked={bookmarks.some(b => b.id === hadithOfDay.id)} onToggleBookmark={toggleBookmark} />}
 
       {/* Search bar */}
       <div className="relative">
@@ -152,7 +167,7 @@ function HadithTab() {
       </div>
 
       {/* Grade filter */}
-      {!searchEnabled && (
+      {!searchEnabled && collection !== 'bookmarks' && (
         <div className="flex gap-2">
           {GRADES.map(g => (
             <button
@@ -190,11 +205,11 @@ function HadithTab() {
             )}
           </div>
         ) : (
-          displayed.map(h => <HadithCard key={h.id} h={h} />)
+          displayed.map(h => <HadithCard key={h.id} h={h} isBookmarked={bookmarks.some(b => b.id === h.id)} onToggleBookmark={toggleBookmark} />)
         )}
 
         {/* Pagination for browse mode */}
-        {!searchEnabled && displayed.length > 0 && (
+        {!searchEnabled && collection !== 'bookmarks' && displayed.length > 0 && (
           <div className="flex items-center justify-between pt-2">
             <Button
               variant="outline"

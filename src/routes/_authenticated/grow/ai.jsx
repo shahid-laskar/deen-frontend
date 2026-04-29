@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Progress } from '@/components/ui/progress'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
@@ -112,13 +114,29 @@ function AIGuidePage() {
   const used = usage?.messages_used_today ?? 0
   const limit = usage?.messages_limit ?? 20
 
+  const [planModal, setPlanModal] = useState(false)
+  const [planForm, setPlanForm] = useState({ wakeTime: '05:00', goals: '' })
+
+  const generatePlan = () => {
+    if (isPending) return
+    setPlanModal(false)
+    const prompt = `Please generate a realistic daily Islamic plan for me. I wake up at ${planForm.wakeTime}. My goals for today: ${planForm.goals || 'General ibadah and productivity'}. Include prayer times, habit blocks, and breaks.`
+    setMessages(m => [...m, { role: 'user', content: prompt, timestamp: new Date().toISOString() }])
+    sendMessage(prompt)
+  }
+
   return (
     <div className="flex h-[calc(100vh-60px)] md:h-screen">
       {/* Sidebar */}
       <div className="hidden md:flex flex-col w-56 border-r border-border bg-sidebar p-3 shrink-0">
-        <Button variant="outline" size="sm" onClick={startNew} className="mb-3 w-full">
-          <Plus className="h-3.5 w-3.5 mr-1" /> New chat
-        </Button>
+        <div className="space-y-2 mb-3">
+          <Button variant="outline" size="sm" onClick={startNew} className="w-full">
+            <Plus className="h-3.5 w-3.5 mr-1" /> New chat
+          </Button>
+          <Button variant="default" size="sm" onClick={() => setPlanModal(true)} className="w-full bg-gold hover:bg-gold/90 text-gold-foreground font-bold">
+            <Sparkles className="h-3.5 w-3.5 mr-1" /> Daily Plan Gen
+          </Button>
+        </div>
         <div className="flex-1 overflow-y-auto space-y-1">
           {conversations?.map(c => (
             <div key={c.id}
@@ -148,10 +166,11 @@ function AIGuidePage() {
           <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center">
             <Sparkles className="h-4 w-4 text-primary-foreground" />
           </div>
-          <div>
+          <div className="flex-1">
             <h1 className="font-semibold text-foreground">Deen Guide</h1>
             <p className="text-xs text-muted-foreground">Lifestyle & wellness companion · No fatwas, just guidance</p>
           </div>
+          <Button variant="outline" size="sm" onClick={() => setPlanModal(true)} className="md:hidden mr-2 bg-gold/10 text-gold hover:bg-gold/20 border-gold/20">Plan Gen</Button>
           <Badge variant="muted" className="ml-auto text-xs">{remaining} msgs left</Badge>
         </div>
 
@@ -216,6 +235,27 @@ function AIGuidePage() {
           </p>
         </div>
       </div>
+
+      <Dialog open={planModal} onOpenChange={setPlanModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-gold" /> Daily Plan Generator</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">Let AI schedule your day optimally around your prayer times and goals.</p>
+            <div>
+              <label className="text-xs font-bold text-foreground mb-1 block">Wake up time</label>
+              <Input type="time" value={planForm.wakeTime} onChange={e => setPlanForm({ ...planForm, wakeTime: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-foreground mb-1 block">Main Goals for Today</label>
+              <textarea className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm resize-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring min-h-[80px]" placeholder="e.g. Read 1 juz, study for 2 hours, workout" value={planForm.goals} onChange={e => setPlanForm({ ...planForm, goals: e.target.value })} />
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0 mt-4">
+            <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
+            <Button onClick={generatePlan} className="bg-gold hover:bg-gold/90 text-gold-foreground">Generate Plan</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

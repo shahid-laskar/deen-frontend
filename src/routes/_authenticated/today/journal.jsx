@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { EmptyState } from '@/components/ui/empty-state'
 import { getIslamicContext } from '@/lib/hijri'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
@@ -541,13 +542,12 @@ function EntriesTab() {
 
       {isLoading ? <div className="space-y-3">{[...Array(3)].map((_,i)=><div key={i} className="h-32 bg-muted/40 animate-pulse rounded-2xl glass-card" />)}</div> :
        filtered.length === 0 ? (
-        <div className="rounded-2xl glass-card p-10 text-center flex flex-col items-center">
-          <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-            <NotebookPen className="h-8 w-8 text-primary opacity-80" />
-          </div>
-          <p className="text-base font-bold text-foreground mb-1">{entries.length === 0 ? "No entries yet" : "No matches"}</p>
-          <p className="text-sm text-muted-foreground">{entries.length === 0 ? "Start writing — even a few lines is muhasabah." : "Try a different search or filter."}</p>
-        </div>
+        <EmptyState
+          illustration="journal"
+          title={entries.length === 0 ? "No entries yet" : "No matches"}
+          description={entries.length === 0 ? "Start writing — even a few lines is muhasabah." : "Try a different search or filter."}
+          className="rounded-2xl glass-card bg-transparent"
+        />
       ) : (
         <div className="space-y-8">
           {Object.entries(groupedEntries).map(([month, monthEntries]) => (

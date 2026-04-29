@@ -19,8 +19,9 @@ export const Route = createFileRoute('/_authenticated/community/')({
 
 const TABS = [
   { id: 'feed', label: 'Feed', icon: MessageSquare },
+  { id: 'duas', label: 'Dua Wall', icon: Heart },
   { id: 'qa', label: 'Scholar Q&A', icon: Award },
-  { id: 'circles', label: 'Circles', icon: Target },
+  { id: 'circles', label: 'Buddy', icon: Target },
   { id: 'halaqah', label: 'Halaqah', icon: GraduationCap },
 ]
 
@@ -312,21 +313,177 @@ function ScholarQA() {
 }
 
 function AccountabilityCircles() {
+  const [paired, setPaired] = useState(false)
+  const [partner, setPartner] = useState(null)
+  
+  const handleAutoPair = () => {
+    toast.success('Searching for a buddy...')
+    setTimeout(() => {
+      setPartner({ name: 'Ahmed M.', streak: 12, prayers: '4/5', lastActive: '10m ago' })
+      setPaired(true)
+      toast.success('Buddy found!')
+    }, 1500)
+  }
+
   return (
-    <div className="text-center py-20 px-4 border-2 border-dashed border-border rounded-3xl bg-muted/30 max-w-3xl mx-auto animate-in fade-in">
-      <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 text-primary"><Target className="h-8 w-8" /></div>
-      <h3 className="text-base font-bold text-foreground mb-1">Accountability Circles</h3>
-      <p className="text-sm text-muted-foreground">Join small groups for targeted goals and daily check-ins. Coming soon.</p>
+    <div className="space-y-6 max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-2">
+      {!paired ? (
+        <Card className="text-center py-16 px-4 border-2 border-dashed border-border rounded-3xl bg-muted/30 shadow-none">
+          <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 text-primary"><Users className="h-8 w-8" /></div>
+          <h3 className="text-xl font-bold text-foreground mb-2">Accountability Buddy</h3>
+          <p className="text-sm text-muted-foreground mb-8 max-w-sm mx-auto">Get paired with a brother/sister to keep each other accountable on prayers and habits.</p>
+          <Button size="lg" onClick={handleAutoPair}>Auto-Pair Me</Button>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          <Card className="p-5 border-primary/20 bg-primary/5 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-foreground">Your Buddy</h2>
+              <Badge>Active</Badge>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center text-xl font-bold text-primary">A</div>
+              <div>
+                <p className="font-bold text-foreground text-lg">{partner.name}</p>
+                <p className="text-xs text-muted-foreground">Active {partner.lastActive}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4 mt-6">
+              <div className="bg-card p-4 rounded-2xl border border-border">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-1">Streak</p>
+                <p className="text-2xl font-black text-orange-500">🔥 {partner.streak}</p>
+              </div>
+              <div className="bg-card p-4 rounded-2xl border border-border">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-1">Prayers Today</p>
+                <p className="text-2xl font-black text-emerald-500">🕌 {partner.prayers}</p>
+              </div>
+            </div>
+            <div className="flex gap-2 mt-4 pt-4 border-t border-border/50">
+              <Button variant="outline" className="flex-1 text-xs sm:text-sm bg-card" onClick={() => toast.success('Sent 💚')}>💚 Made Dua</Button>
+              <Button variant="outline" className="flex-1 text-xs sm:text-sm bg-card" onClick={() => toast.success('Sent 🌙')}>🌙 Alhamdulillah</Button>
+              <Button variant="outline" className="flex-1 text-xs sm:text-sm bg-card" onClick={() => toast.success('Sent 🤲')}>🤲 Need Dua</Button>
+            </div>
+          </Card>
+          <Button variant="ghost" className="w-full text-destructive" onClick={() => setPaired(false)}>Unpair</Button>
+        </div>
+      )}
     </div>
   )
 }
 
 function HalaqahCircles() {
+  const [view, setView] = useState('list')
+  const [activeHalaqa, setActiveHalaqa] = useState(null)
+  
+  const halaqas = [
+    { id: 1, name: 'Fajr Club', members: 10, limit: 12, plan: 'Surah Al-Kahf', checkIn: 'Friday' },
+    { id: 2, name: 'Seerah Study', members: 8, limit: 12, plan: 'Makkan Period', checkIn: 'Sunday' }
+  ]
+
   return (
-    <div className="text-center py-20 px-4 border-2 border-dashed border-border rounded-3xl bg-muted/30 max-w-3xl mx-auto animate-in fade-in">
-      <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 text-primary"><GraduationCap className="h-8 w-8" /></div>
-      <h3 className="text-base font-bold text-foreground mb-1">Study Halaqahs</h3>
-      <p className="text-sm text-muted-foreground">Structured curriculums for Quran, Hadith, and Fiqh. Coming soon.</p>
+    <div className="space-y-6 max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-2">
+      {view === 'list' ? (
+        <>
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-bold">Discover Halaqas</h2>
+            <Button size="sm"><Plus className="h-4 w-4 mr-1" /> Create</Button>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {halaqas.map(h => (
+              <Card key={h.id} className="p-5 hover:border-primary/40 cursor-pointer transition-colors" onClick={() => { setActiveHalaqa(h); setView('detail') }}>
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-bold text-foreground text-lg">{h.name}</h3>
+                  <Badge variant="secondary">{h.members}/{h.limit}</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground mb-4 font-medium">Weekly focus: {h.plan}</p>
+                <div className="flex justify-between items-center pt-3 border-t border-border">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Check-in: {h.checkIn}</span>
+                  <span className="text-xs font-bold text-primary">View →</span>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </>
+      ) : (
+        <Card className="p-0 overflow-hidden shadow-sm">
+           <div className="p-5 border-b border-border bg-primary/5">
+             <Button variant="ghost" size="sm" className="mb-4 -ml-2 text-muted-foreground" onClick={() => setView('list')}>← Back</Button>
+             <h2 className="text-2xl font-bold text-foreground">{activeHalaqa.name}</h2>
+             <p className="text-sm font-medium text-muted-foreground mt-1">Weekly focus: {activeHalaqa.plan} • Check-in: {activeHalaqa.checkIn}</p>
+           </div>
+           <div className="p-5">
+             <div className="flex gap-4 border-b border-border pb-4 mb-4">
+               <Button variant="outline" className="flex-1" onClick={() => toast.success('Weekly check-in submitted!')}>Weekly Check-in</Button>
+               <Button className="flex-1" onClick={() => toast.success('Joined Halaqa!')}>Request to Join</Button>
+             </div>
+             <div className="space-y-4">
+               <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">Wall</h3>
+               <div className="p-8 bg-muted/30 rounded-2xl text-center text-sm font-medium text-muted-foreground border-2 border-dashed border-border">
+                 Join to view discussions and reflections.
+               </div>
+             </div>
+           </div>
+        </Card>
+      )}
+    </div>
+  )
+}
+
+function DuaWall() {
+  const [duas, setDuas] = useState([
+    { id: 1, body: 'Please make dua for my mother\'s health, she is in the hospital.', category: 'health', duaCount: 145, time: '2h ago' },
+    { id: 2, body: 'Make dua for my upcoming exams tomorrow. Feeling anxious.', category: 'other', duaCount: 89, time: '5h ago' }
+  ])
+  const [newDua, setNewDua] = useState('')
+  const [cat, setCat] = useState('health')
+
+  const handleTap = (id) => {
+    setDuas(duas.map(d => d.id === id ? { ...d, duaCount: d.duaCount + 1 } : d))
+    toast.success('Dua made 💚')
+  }
+
+  const postDua = () => {
+    if (!newDua.trim()) return
+    setDuas([{ id: Date.now(), body: newDua, category: cat, duaCount: 0, time: 'Just now' }, ...duas])
+    setNewDua('')
+    toast.success('Dua requested!')
+  }
+
+  return (
+    <div className="space-y-6 max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-2">
+      <Card className="p-5 shadow-sm">
+        <h2 className="text-lg font-bold text-foreground mb-3">Request a Dua</h2>
+        <textarea className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm font-medium resize-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary min-h-[100px]" placeholder="What do you need dua for?" value={newDua} onChange={e => setNewDua(e.target.value)} />
+        <div className="flex flex-col sm:flex-row gap-3 mt-3">
+          <select className="h-10 px-3 py-2 rounded-xl border border-input bg-background text-sm font-bold" value={cat} onChange={e => setCat(e.target.value)}>
+            <option value="health">Health</option>
+            <option value="family">Family</option>
+            <option value="rizq">Rizq</option>
+            <option value="guidance">Guidance</option>
+            <option value="ummah">Ummah</option>
+            <option value="other">Other</option>
+          </select>
+          <Button className="flex-1" onClick={postDua} disabled={!newDua.trim()}>Request Dua</Button>
+        </div>
+      </Card>
+      
+      <div className="space-y-4">
+        {duas.map(dua => (
+          <Card key={dua.id} className="p-5 shadow-sm hover:border-primary/30 transition-colors">
+            <div className="flex justify-between items-start mb-3">
+              <Badge variant="secondary" className="text-[9px] uppercase tracking-wider">{dua.category}</Badge>
+              <span className="text-xs font-bold text-muted-foreground">{dua.time}</span>
+            </div>
+            <p className="text-[15px] font-medium text-foreground mb-5 leading-relaxed">{dua.body}</p>
+            <div className="flex justify-between items-center pt-3 border-t border-border">
+              <span className="text-xs font-bold text-muted-foreground">{dua.duaCount} people made dua</span>
+              <Button size="sm" variant="outline" className="gap-2 h-9 text-xs" onClick={() => handleTap(dua.id)}>
+                <Heart className="h-3.5 w-3.5" /> Tap to Make Dua
+              </Button>
+            </div>
+          </Card>
+        ))}
+      </div>
     </div>
   )
 }
@@ -354,6 +511,7 @@ export default function CommunityPage() {
 
       <div className="pt-2">
         {tab === 'feed' && <CommunityFeed />}
+        {tab === 'duas' && <DuaWall />}
         {tab === 'qa' && <ScholarQA />}
         {tab === 'circles' && <AccountabilityCircles />}
         {tab === 'halaqah' && <HalaqahCircles />}

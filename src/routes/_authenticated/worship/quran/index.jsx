@@ -5,6 +5,7 @@ import { Search } from 'lucide-react'
 import { quranApi } from '@/lib/api'
 import { SurahCard } from '@/components/quran/SurahCard'
 import { ContinueReadingHero } from '@/components/quran/ContinueReadingHero'
+import { EmptyState } from '@/components/ui/empty-state'
 
 export const Route = createFileRoute('/_authenticated/worship/quran/')({
   component: QuranIndex,
@@ -93,8 +94,13 @@ function QuranIndex() {
                   <SurahCard key={surah.id} surah={surah} />
                 ))}
                 {filteredSurahs.length === 0 && (
-                  <div className="col-span-full py-12 text-center text-muted-foreground animate-fade-in">
-                    No surahs found matching "{search}"
+                  <div className="col-span-full">
+                    <EmptyState
+                      illustration="book"
+                      title="No Surahs Found"
+                      description={`We couldn't find any surahs matching "${search}".`}
+                      className="bg-transparent"
+                    />
                   </div>
                 )}
               </>

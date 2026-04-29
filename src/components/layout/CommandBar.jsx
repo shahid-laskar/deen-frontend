@@ -19,6 +19,7 @@ const ROUTES = [
   { type: 'page', label: 'Journal',         to: '/today/journal',  icon: 'notebook' },
   { type: 'page', label: 'Prayer Times',    to: '/worship/prayer', icon: 'clock' },
   { type: 'page', label: 'Quran',           to: '/worship/quran',  icon: 'book' },
+  { type: 'page', label: 'Audio Hub',       to: '/worship/audio',  icon: 'headphones' },
   { type: 'page', label: 'Qibla Compass',   to: '/worship/qibla',  icon: 'compass' },
   { type: 'page', label: 'Habits',          to: '/grow/habits',    icon: 'heart' },
   { type: 'page', label: 'AI Guide',        to: '/grow/ai',        icon: 'sparkles' },
@@ -104,7 +105,7 @@ export function CommandBar() {
   const grouped = groupResults(results)
   const flatResults = results
 
-  // Keyboard shortcut ⌘K / Ctrl+K
+  // Keyboard shortcut ⌘K / Ctrl+K and custom trigger
   useEffect(() => {
     const handler = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -115,8 +116,15 @@ export function CommandBar() {
         setOpen(false)
       }
     }
+    
+    const customHandler = () => setOpen(true)
+    
     window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
+    window.addEventListener('openCommandBar', customHandler)
+    return () => {
+      window.removeEventListener('keydown', handler)
+      window.removeEventListener('openCommandBar', customHandler)
+    }
   }, [open])
 
   // Focus input when opening
@@ -236,12 +244,7 @@ export function CommandBar() {
 /** Button trigger for the command bar (used in mobile header) */
 export function CommandBarTrigger({ className }) {
   const handleOpen = () => {
-    // Dispatch a synthetic ⌘K event to open the command bar
-    window.dispatchEvent(new KeyboardEvent('keydown', {
-      key: 'k',
-      metaKey: true,
-      bubbles: true,
-    }))
+    window.dispatchEvent(new CustomEvent('openCommandBar'))
   }
 
   return (
