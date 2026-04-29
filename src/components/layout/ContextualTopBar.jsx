@@ -3,16 +3,16 @@ import { Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import api from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
-import { getIslamicContext } from '@/lib/hijri'
+import { getIslamicContext, HIJRI_MONTHS } from '@/lib/hijri'
 import { cn } from '@/lib/utils'
 import { Icon } from '@/components/ui/icon'
 
 /**
  * Contextual Top Bar — persistent across all hubs.
  * Per enhanced-ui spec §1.1:
- *   - Hijri date (left) — tap opens Hijri calendar
- *   - Next prayer + countdown (center) — tap opens prayer hub
- *   - Location chip (right) — tap opens location settings
+ *   - Hijri date & Gregorian Date (left)
+ *   - Next prayer + countdown (center)
+ *   - Location chip (right)
  *
  * Hides on scroll-down, returns on scroll-up (mobile only).
  */
@@ -92,20 +92,28 @@ export function ContextualTopBar({ className }) {
   }, [lastScrollY])
 
   const locationName = user?.city || user?.location_name || 'Set Location'
+  
+  const gregorianDate = new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date())
+  const shortHijri = ctx.hijri ? `${ctx.hijri.day} ${HIJRI_MONTHS[ctx.hijri.month - 1]}` : ctx.formatted
 
   return (
     <div className={cn(
-      'flex items-center justify-between px-4 py-2 border-b border-border/50 bg-card/80 backdrop-blur-lg transition-transform duration-300 z-20',
-      'md:px-6',
+      'flex items-center justify-between px-3 py-1.5 border-b border-border/50 bg-card/80 backdrop-blur-lg transition-transform duration-300 z-20 gap-2',
+      'md:px-6 md:py-2',
       hidden && 'md:translate-y-0 -translate-y-full',
       className
     )}>
-      {/* Hijri date (left) */}
-      <Link to="/today/calendar" className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors group">
-        <Icon name="calendar" size={13} className="opacity-60 group-hover:opacity-100" />
-        <span className="text-[11px] font-semibold tracking-wide">
-          {ctx.formatted || 'Hijri Date'}
-        </span>
+      {/* Date (left) */}
+      <Link to="/today/calendar" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group shrink-0">
+        <Icon name="calendar" size={14} className="opacity-60 group-hover:opacity-100 shrink-0 hidden sm:block" />
+        <div className="flex flex-col justify-center">
+          <span className="text-[11px] font-bold text-foreground leading-tight tracking-tight">
+            {shortHijri}
+          </span>
+          <span className="text-[9px] font-medium tracking-wide opacity-70 leading-tight">
+            {gregorianDate}
+          </span>
+        </div>
       </Link>
 
       {/* Next prayer countdown (center) */}

@@ -13,33 +13,34 @@
  * Algorithm based on the tabular Islamic calendar (Fatimid/civil epoch).
  */
 export function gregorianToHijri(date = new Date()) {
-  const jd = gregorianToJD(
-    date.getFullYear(),
-    date.getMonth() + 1,
-    date.getDate()
-  )
-  return jdToHijri(jd)
-}
+  try {
+    const formatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', {
+      day: 'numeric',
+      month: 'numeric',
+      year: 'numeric'
+    })
+    
+    const parts = formatter.formatToParts(date)
+    
+    let year, month, day
+    for (const part of parts) {
+      if (part.type === 'year') year = parseInt(part.value, 10)
+      if (part.type === 'month') month = parseInt(part.value, 10)
+      if (part.type === 'day') day = parseInt(part.value, 10)
+    }
+    
+    if (year && month && day) {
+      return { year, month, day }
+    }
+  } catch (e) {
+    console.error('Intl Islamic calendar not supported, falling back to basic approximation', e)
+  }
 
-function gregorianToJD(y, m, d) {
-  if (m < 3) { y--; m += 12 }
-  const A = Math.floor(y / 100)
-  const B = 2 - A + Math.floor(A / 4)
-  return Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + d + B - 1524.5
-}
-
-function jdToHijri(jd) {
-  jd = Math.floor(jd) + 0.5
-  const z    = jd - 1948439.5
-  const cyc  = Math.floor((z - 1) / 10631)
-  const z1   = z - 10631 * cyc
-  const j    = Math.floor((z1 - 1) / 354.367)
-  const z2   = Math.ceil(z1 - 29.5001 * j)
-  const month = Math.min(12, Math.ceil(z2 / 29.5))
-  const day   = Math.ceil(z2 - 29.5001 * (month - 1))
-  const year  = cyc * 30 + j + 1
-
-  return { year, month, day }
+  // Very rough fallback if Intl is somehow missing
+  const y = date.getFullYear()
+  const m = date.getMonth() + 1
+  const d = date.getDate()
+  return { year: y - 579, month: m, day: d } // extremely inaccurate fallback
 }
 
 // Hijri month names

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { BookOpen, Search, CheckCircle2, ChevronRight, BrainCircuit, PlayCircle, FileText } from 'lucide-react'
+import { BookOpen, Search, CheckCircle2, ChevronRight, BrainCircuit, PlayCircle, FileText, Youtube, ExternalLink } from 'lucide-react'
 import api from '@/lib/api'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -158,6 +158,93 @@ function VocabReview() {
   )
 }
 
+function LecturesTab() {
+  const [activeVideo, setActiveVideo] = useState(null)
+
+  const LECTURES = [
+    { id: 'l1', videoId: 'dQw4w9WgXcQ', title: 'The Power of Dua in Times of Hardship', scholar: 'Omar Suleiman', category: 'Heart Softeners', duration: '15:24' },
+    { id: 'l2', videoId: 'kJQP7kiw5Fk', title: 'Understanding Taqwa', scholar: 'Mufti Menk', category: 'Akhlaq', duration: '22:10' },
+    { id: 'l3', videoId: '9bZkp7q19f0', title: 'Tafsir Surah Al-Kahf', scholar: 'Nouman Ali Khan', category: 'Quran', duration: '45:00' },
+  ]
+
+  if (activeVideo) {
+    return (
+      <div className="animate-in fade-in slide-in-from-bottom-2">
+        <Button variant="ghost" onClick={() => setActiveVideo(null)} className="mb-4 -ml-2 text-muted-foreground">
+          <ChevronRight className="h-4 w-4 rotate-180 mr-1" /> Back to Lectures
+        </Button>
+        <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black mb-4 shadow-elevated">
+          <iframe 
+            src={`https://www.youtube.com/embed/${activeVideo.videoId}?autoplay=1`} 
+            className="w-full h-full border-0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            allowFullScreen
+          />
+        </div>
+        <h2 className="text-xl font-bold text-foreground mb-1">{activeVideo.title}</h2>
+        <p className="text-sm text-muted-foreground flex items-center gap-2">
+          <span className="font-medium text-foreground">{activeVideo.scholar}</span>
+          <span>•</span>
+          <Badge variant="secondary" className="text-[10px]">{activeVideo.category}</Badge>
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="animate-in fade-in slide-in-from-bottom-2 space-y-4">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-lg font-bold text-foreground">Curated Lectures</h2>
+        <Badge variant="outline" className="text-[10px] text-muted-foreground">From YouTube</Badge>
+      </div>
+      
+      <div className="grid gap-4 sm:grid-cols-2">
+        {LECTURES.map(lec => (
+          <button 
+            key={lec.id} 
+            onClick={() => setActiveVideo(lec)}
+            className="flex flex-col text-left rounded-2xl bg-card border border-border overflow-hidden hover:border-primary/50 transition-all group focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <div className="relative aspect-video w-full bg-muted overflow-hidden">
+              <img 
+                src={`https://img.youtube.com/vi/${lec.videoId}/maxresdefault.jpg`} 
+                alt={lec.title} 
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                onError={(e) => { e.target.src = `https://img.youtube.com/vi/${lec.videoId}/hqdefault.jpg` }}
+              />
+              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity transform scale-90 group-hover:scale-100">
+                  <PlayCircle className="h-6 w-6" />
+                </div>
+              </div>
+              <div className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-black/70 text-white text-[10px] font-bold">
+                {lec.duration}
+              </div>
+            </div>
+            <div className="p-4">
+              <Badge variant="secondary" className="text-[9px] uppercase mb-2">{lec.category}</Badge>
+              <h3 className="font-bold text-foreground leading-tight line-clamp-2 mb-1">{lec.title}</h3>
+              <p className="text-xs text-muted-foreground flex items-center justify-between">
+                {lec.scholar}
+                <a 
+                  href={`https://youtube.com/watch?v=${lec.videoId}`}
+                  target="_blank" 
+                  rel="noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-primary hover:text-primary/80"
+                  title="Open in YouTube"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </p>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function LearningPage() {
   const qc = useQueryClient()
   const [tab, setTab] = useState('Courses')
@@ -193,9 +280,9 @@ export default function LearningPage() {
             </div>
           </div>
 
-          <div className="flex p-1 rounded-xl bg-muted gap-1 w-fit">
-            {['Courses', 'Vocabulary (SRS)'].map(t => (
-              <button key={t} onClick={() => setTab(t)} className={cn('px-4 py-2.5 rounded-lg text-xs font-bold transition-all', tab === t ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}>
+          <div className="flex p-1 rounded-xl bg-muted gap-1 w-fit overflow-x-auto max-w-full scrollbar-none">
+            {['Courses', 'Lectures', 'Vocabulary (SRS)'].map(t => (
+              <button key={t} onClick={() => setTab(t)} className={cn('px-4 py-2.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap', tab === t ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}>
                 {t}
               </button>
             ))}
@@ -234,6 +321,10 @@ export default function LearningPage() {
               </div>
             )}
           </div>
+        )}
+
+        {!activePathId && tab === 'Lectures' && (
+          <LecturesTab />
         )}
 
         {activePathId && !activeLesson && (

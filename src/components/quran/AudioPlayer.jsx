@@ -186,7 +186,7 @@ export function AudioPlayer({
   if (!verse) return null
 
   return (
-    <div className={cn('fixed bottom-16 left-0 right-0 z-50 px-3 pb-1', className)}>
+    <div className={cn('fixed bottom-20 md:bottom-8 left-1/2 -translate-x-1/2 md:left-auto md:right-8 md:translate-x-0 z-50 w-[96%] md:w-auto md:min-w-[400px] max-w-2xl px-0 pb-0', className)}>
       <audio
         ref={audioRef}
         muted={muted}

@@ -10,7 +10,7 @@ import { Pattern } from '@/components/ui/pattern'
 import { ThemeTrigger } from '@/components/theme/ThemeTrigger'
 
 // ─── Nav structure ────────────────────────────────────────────────────────────
-const HUB_NAV = [
+export const HUB_NAV = [
   {
     label: 'Today',
     items: [
@@ -24,7 +24,6 @@ const HUB_NAV = [
     items: [
       { to: '/worship/prayer', iconName: 'clock', label: 'Prayer' },
       { to: '/worship/quran', iconName: 'book', label: 'Quran' },
-      { to: '/worship/audio', iconName: 'headphones', label: 'Audio Hub' },
       { to: '/worship/qibla', iconName: 'compass', label: 'Qibla' },
     ]
   },
@@ -58,9 +57,9 @@ const HUB_NAV = [
 ]
 
 // ─── Individual nav link ──────────────────────────────────────────────────────
-function NavItem({ to, iconName, label, collapsed, pink = false, search }) {
+function NavItem({ to, iconName, label, collapsed, pink = false, search, onClick }) {
   return (
-    <Link to={to} search={search} activeOptions={{ exact: true }} className="group">
+    <Link to={to} search={search} activeOptions={{ exact: true }} className="group" onClick={onClick}>
       {({ isActive }) => (
         <div className={cn(
           'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 relative',
@@ -96,7 +95,7 @@ function SectionLabel({ label, collapsed }) {
 // ─── Main Sidebar ─────────────────────────────────────────────────────────────
 export function Sidebar() {
   const { user, isFemale, logout } = useAuthStore()
-  const { sidebarCollapsed, toggleCollapsed } = useAppStore()
+  const { sidebarCollapsed, toggleCollapsed, sidebarOpen, setSidebarOpen } = useAppStore()
   const { resolvedDark, setMode, mode } = useTheme()
 
   const handleLogout = async () => {
@@ -114,16 +113,32 @@ export function Sidebar() {
     else setMode(resolvedDark ? 'light' : 'dark')
   }
 
+  const handleMobileLinkClick = () => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setSidebarOpen(false)
+    }
+  }
+
   const displayName = user?.profile?.display_name || user?.email?.split('@')[0] || 'User'
   const initial = displayName[0]?.toUpperCase() ?? 'U'
 
   return (
-    <aside className={cn(
-      'hidden md:flex flex-col h-full bg-sidebar border-r border-sidebar-border relative transition-all duration-300 overflow-hidden shrink-0',
-      sidebarCollapsed ? 'w-[4.5rem]' : 'w-64'
-    )}>
-      {/* Theme-aware geometric background */}
-      <Pattern className="text-sidebar-foreground opacity-[0.035]" />
+    <>
+      {/* Mobile Backdrop */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm md:hidden animate-fade-in"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      <aside className={cn(
+        'fixed md:relative top-0 bottom-0 left-0 z-[70] md:z-auto flex flex-col h-full bg-sidebar border-r border-sidebar-border transition-all duration-300 overflow-hidden shrink-0 shadow-2xl md:shadow-none',
+        sidebarCollapsed ? 'w-[4.5rem]' : 'w-72 md:w-64',
+        !sidebarOpen ? '-translate-x-full md:translate-x-0' : 'translate-x-0'
+      )}>
+        {/* Theme-aware geometric background */}
+        <Pattern className="text-sidebar-foreground opacity-[0.035]" />
 
       {/* Logo */}
       <div className="relative z-10 flex items-center gap-3 px-5 py-6 border-b border-sidebar-border shrink-0">
@@ -183,7 +198,7 @@ export function Sidebar() {
             <SectionLabel label={hub.label} collapsed={sidebarCollapsed} />
             {hub.items.map(n => {
               if (n.femaleOnly && !isFemale?.()) return null
-              return <NavItem key={n.to} {...n} collapsed={sidebarCollapsed} />
+              return <NavItem key={n.to} {...n} collapsed={sidebarCollapsed} onClick={handleMobileLinkClick} />
             })}
           </React.Fragment>
         ))}
@@ -192,7 +207,7 @@ export function Sidebar() {
       {/* Footer actions */}
       <div className="relative z-10 border-t border-sidebar-border px-3 py-4 space-y-1 shrink-0 mt-auto bg-sidebar/50 backdrop-blur-md">
         {/* Upgrade */}
-        <Link to="/me/subscription" className="group">
+        <Link to="/me/subscription" className="group" onClick={handleMobileLinkClick}>
           {({ isActive }) => (
             <div className={cn(
               'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
@@ -205,7 +220,7 @@ export function Sidebar() {
         </Link>
 
         {user?.role === 'admin' && (
-          <Link to="/me/admin" className="group">
+          <Link to="/me/admin" className="group" onClick={handleMobileLinkClick}>
             {({ isActive }) => (
               <div className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
@@ -228,7 +243,7 @@ export function Sidebar() {
         </button>
 
         {/* Settings */}
-        <Link to="/me/settings" className="group">
+        <Link to="/me/settings" className="group" onClick={handleMobileLinkClick}>
           {({ isActive }) => (
             <div className={cn(
               'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
@@ -259,5 +274,6 @@ export function Sidebar() {
         </button>
       </div>
     </aside>
+    </>
   )
 }

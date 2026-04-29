@@ -19,7 +19,6 @@ const ROUTES = [
   { type: 'page', label: 'Journal',         to: '/today/journal',  icon: 'notebook' },
   { type: 'page', label: 'Prayer Times',    to: '/worship/prayer', icon: 'clock' },
   { type: 'page', label: 'Quran',           to: '/worship/quran',  icon: 'book' },
-  { type: 'page', label: 'Audio Hub',       to: '/worship/audio',  icon: 'headphones' },
   { type: 'page', label: 'Qibla Compass',   to: '/worship/qibla',  icon: 'compass' },
   { type: 'page', label: 'Habits',          to: '/grow/habits',    icon: 'heart' },
   { type: 'page', label: 'AI Guide',        to: '/grow/ai',        icon: 'sparkles' },
