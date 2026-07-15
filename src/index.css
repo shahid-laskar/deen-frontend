@@ -380,13 +380,19 @@
 .scrollbar-thumb-border::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 99px; }
 .scrollbar-none::-webkit-scrollbar { display: none; }
 
-/* ─── Glassmorphism utilities (from my-deen-hub) ────────────── */
+/* ─── Glassmorphism utilities ───────────────────────────────── */
 
 /* Amiri Quran font class for actual Quranic text */
 .font-amiri-quran {
   font-family: "Amiri Quran", "Amiri", serif;
   direction: rtl;
   line-height: 2.4;
+  text-rendering: optimizeLegibility;
+}
+
+/* Improve Arabic rendering globally */
+.font-amiri {
+  text-rendering: optimizeLegibility;
 }
 
 .glass-card {
@@ -394,6 +400,13 @@
   backdrop-filter: blur(24px) saturate(1.3);
   -webkit-backdrop-filter: blur(24px) saturate(1.3);
   border: 1px solid color-mix(in oklab, var(--color-border) 60%, transparent);
+}
+
+.glass-strong {
+  background: color-mix(in oklab, var(--color-card) 92%, transparent);
+  backdrop-filter: blur(40px) saturate(1.5);
+  -webkit-backdrop-filter: blur(40px) saturate(1.5);
+  border: 1px solid color-mix(in oklab, var(--color-border) 50%, transparent);
 }
 
 .shadow-soft {
@@ -428,6 +441,14 @@
   background-clip: text;
 }
 
+/* Heading gradient variant */
+.heading-gradient {
+  background: linear-gradient(135deg, var(--color-foreground) 30%, var(--color-primary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 /* Spring-based card hover lift */
 .card-hover {
   transition:
@@ -438,7 +459,65 @@
   transform: translateY(-3px);
 }
 
-/* Slide-up entrance animation */
+/* ─── Auth hero background ─────────────────────────────────── */
+.auth-hero-bg {
+  background:
+    radial-gradient(ellipse at 20% 20%, color-mix(in oklab, var(--color-primary) 12%, transparent) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 80%, color-mix(in oklab, var(--color-gold) 8%, transparent) 0%, transparent 50%),
+    radial-gradient(ellipse at 60% 10%, color-mix(in oklab, var(--color-primary) 6%, transparent) 0%, transparent 40%);
+}
+
+/* ─── Premium input focus ──────────────────────────────────── */
+.input-premium {
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+.input-premium:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-primary) 15%, transparent);
+}
+
+/* ─── Ambient glow blob ────────────────────────────────────── */
+.ambient-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+/* ─── Floating nav pill indicator ─────────────────────────── */
+.nav-pill-indicator {
+  background: color-mix(in oklab, var(--color-primary) 12%, transparent);
+  border-left: 2px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+}
+
+/* ─── Tab underline (Framer layoutId target) ───────────────── */
+.tab-underline {
+  height: 2px;
+  background: var(--color-primary);
+  border-radius: 9999px;
+}
+
+/* ─── Prayer gradient utilities ────────────────────────────── */
+.prayer-gradient-fajr {
+  background: linear-gradient(135deg, hsl(var(--prayer-fajr)), hsl(220 70% 30%));
+}
+.prayer-gradient-dhuhr {
+  background: linear-gradient(135deg, hsl(var(--prayer-dhuhr)), hsl(42 90% 40%));
+}
+.prayer-gradient-asr {
+  background: linear-gradient(135deg, hsl(var(--prayer-asr)), hsl(28 80% 40%));
+}
+.prayer-gradient-maghrib {
+  background: linear-gradient(135deg, hsl(var(--prayer-maghrib)), hsl(280 60% 30%));
+}
+.prayer-gradient-isha {
+  background: linear-gradient(135deg, hsl(var(--prayer-isha)), hsl(250 60% 20%));
+}
+
+/* ─── Slide-up entrance animation ─────────────────────────── */
 @keyframes slide-up-fade {
   from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -447,7 +526,7 @@
   animation: slide-up-fade 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
-/* Shimmer for DailyVerse / skeleton glow */
+/* ─── Shimmer sweep (DailyVerse / skeleton glow) ──────────── */
 @keyframes shimmer-sweep {
   0%   { background-position: -200% 0; }
   100% { background-position:  200% 0; }
@@ -458,7 +537,7 @@
   animation: shimmer-sweep 3s ease-in-out infinite;
 }
 
-/* Pulse glow — for active audio player, due hifz etc */
+/* ─── Pulse glow (active audio player, Dhikr, etc.) ───────── */
 @keyframes pulse-glow {
   0%, 100% { opacity: 0.4; }
   50%       { opacity: 0.8; }
@@ -467,7 +546,54 @@
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
-/* ─── Reduced motion — disable ALL animations when OS setting is on ──────── */
+/* ─── Bounce-in (completion states, modals) ────────────────── */
+@keyframes bounceIn {
+  0%   { transform: scale(0.3); opacity: 0; }
+  50%  { transform: scale(1.08); }
+  70%  { transform: scale(0.95); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.animate-bounce-in {
+  animation: bounceIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* ─── Counter pop (dhikr digit change) ─────────────────────── */
+@keyframes counterPop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+.animate-counter-pop {
+  animation: counterPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* ─── Wave bars (recording / audio visualization) ──────────── */
+@keyframes waveBar {
+  0%, 100% { transform: scaleY(0.4); }
+  50%       { transform: scaleY(1); }
+}
+.wave-bar {
+  animation: waveBar 0.8s ease-in-out infinite;
+  transform-origin: bottom;
+}
+.wave-bar:nth-child(1) { animation-delay: 0s;    }
+.wave-bar:nth-child(2) { animation-delay: 0.1s;  }
+.wave-bar:nth-child(3) { animation-delay: 0.2s;  }
+.wave-bar:nth-child(4) { animation-delay: 0.3s;  }
+.wave-bar:nth-child(5) { animation-delay: 0.2s;  }
+.wave-bar:nth-child(6) { animation-delay: 0.1s;  }
+.wave-bar:nth-child(7) { animation-delay: 0s;    }
+
+/* ─── Ring fill animation (habit/dhikr progress) ───────────── */
+@keyframes ringFill {
+  from { stroke-dashoffset: var(--ring-circumference); }
+  to   { stroke-dashoffset: var(--ring-target-offset); }
+}
+.animate-ring-fill {
+  animation: ringFill 1s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* ─── Reduced motion ─────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -479,17 +605,49 @@
   }
 }
 
-/* ─── Focus rings — visible for keyboard nav ─────────────────────────────── */
+/* ─── Focus rings — visible for keyboard nav ─────────────────── */
 :focus-visible {
   outline: 2px solid var(--color-ring);
   outline-offset: 2px;
   border-radius: 4px;
 }
 
-/* ─── Utility for very-low-opacity primary bg (used in contextual topbar) ── */
+/* ─── Utility for very-low-opacity primary bg ─────────────────── */
 .bg-primary\/8 {
   background-color: color-mix(in oklab, var(--color-primary) 8%, transparent);
 }
 .hover\:bg-primary\/15:hover {
   background-color: color-mix(in oklab, var(--color-primary) 15%, transparent);
+}
+
+/* ─── Verse ornament divider ─────────────────────────────────── */
+.verse-divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.verse-divider::before,
+.verse-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--color-gold), transparent);
+}
+
+/* ─── Gradient border card (subscription / premium) ──────────── */
+.gradient-border {
+  position: relative;
+  border-radius: var(--radius-xl);
+}
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-gold));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
 }

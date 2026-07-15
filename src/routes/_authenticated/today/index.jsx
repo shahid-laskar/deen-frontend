@@ -79,14 +79,24 @@ function GeometricDivider() {
 function IslamicHeader({ displayName }) {
   const ctx = getIslamicContext()
   return (
-    <div className="space-y-1">
-      <p className="text-sm text-muted-foreground tracking-wide">{format(new Date(), 'EEEE, MMMM d, yyyy')}</p>
+    <div className="space-y-1.5">
+      <p className="text-xs text-muted-foreground tracking-wide uppercase font-semibold">{format(new Date(), 'EEEE, MMMM d')}</p>
       <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-        {getGreeting()}{displayName ? `, ${displayName}` : ''} 🤲
+        {getGreeting()}{displayName ? (
+          <span className="text-gradient-primary">, {displayName}</span>
+        ) : ''} 🤲
       </h1>
-      <p className="font-amiri text-base text-primary/80">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</p>
-      <GeometricDivider />
-      <p className="text-xs font-medium text-muted-foreground tracking-wide">{ctx.formatted}</p>
+      <div className="flex items-center gap-3">
+        <p className="font-amiri text-lg text-primary/80 relative">
+          بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ
+          <span className="absolute inset-0 animate-shimmer opacity-0 group-hover:opacity-100" />
+        </p>
+        <GeometricDivider />
+      </div>
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/8 border border-primary/15 text-[10px] font-bold text-primary tracking-wide">
+        <Icon name="moon" size={10} />
+        {ctx.formatted}
+      </span>
     </div>
   )
 }
@@ -103,9 +113,11 @@ function IslamicBanner() {
   const msg = msgs[ctx.season]
   if (!msg) return null
   return (
-    <div className="flex items-center gap-3 rounded-xl bg-primary/10 border border-primary/20 px-4 py-3 animate-fade-up">
-      <span className="text-xl">{msg.icon}</span>
-      <p className="text-sm font-medium text-primary">{msg.text}</p>
+    <div className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 px-4 py-3.5 animate-fade-up shadow-soft">
+      <span className="text-2xl">{msg.icon}</span>
+      <div>
+        <p className="text-sm font-bold text-primary">{msg.text}</p>
+      </div>
     </div>
   )
 }
@@ -142,8 +154,19 @@ function PrayerHero({ times, summary }) {
   const logged = summary?.total_logged ?? 0
   if (!next) return null
 
+  const getPrayerClass = (prayerName) => {
+    switch (prayerName) {
+      case 'Dhuhr':   return 'prayer-gradient-dhuhr'
+      case 'Asr':     return 'prayer-gradient-asr'
+      case 'Maghrib': return 'prayer-gradient-maghrib'
+      case 'Isha':    return 'prayer-gradient-isha'
+      case 'Fajr':
+      default:        return 'prayer-gradient-fajr'
+    }
+  }
+
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-border/50 p-6 shadow-glow-primary group" style={{ background: 'var(--gradient-hero)' }}>
+    <div className={cn('relative overflow-hidden rounded-2xl border border-white/10 p-6 shadow-elevated group', getPrayerClass(next.name))}>
       <Pattern className="opacity-[0.06] text-white" />
       <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
         {/* Progress ring */}
@@ -219,18 +242,50 @@ function DailyVerse({ verseData }) {
   const translation = verseData?.translation || 'Indeed, with hardship comes ease.'
   const ref = verseData?.reference || 'Surah Ash-Sharh (94:6)'
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 group">
-      <Pattern className="opacity-[0.03] text-primary" />
-      <div className="relative z-10 space-y-4">
-        <div className="flex items-center gap-2 text-gold">
-          <Icon name="book" size={16} />
-          <span className="text-xs uppercase tracking-wider font-bold">Verse of the Day</span>
+    <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 group card-hover shadow-soft">
+      {/* Gold left accent */}
+      <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl bg-gradient-to-b from-gold to-gold/30" />
+      <Pattern className="opacity-[0.025] text-gold" />
+      <div className="relative z-10 space-y-4 pl-2">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-gold/15">
+            <Icon name="book" size={14} className="text-gold" />
+          </div>
+          <span className="text-xs uppercase tracking-widest font-black text-gold">Verse of the Day</span>
         </div>
         <div className="text-center space-y-4 py-2">
-          <p className="font-amiri-quran text-2xl md:text-3xl leading-loose text-foreground" dir="rtl">{arabic}</p>
-          <div className="mx-auto w-16 h-0.5 bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
-          <p className="text-base text-foreground/80 font-medium italic">"{translation}"</p>
-          <p className="text-xs text-muted-foreground font-bold tracking-wide uppercase opacity-70">{ref}</p>
+          <p className="font-amiri-quran text-2xl md:text-3xl leading-loose text-foreground" dir="rtl">{arabic} ۝</p>
+          <div className="verse-divider" />
+          <p className="text-sm text-foreground/75 font-medium italic leading-relaxed">"{translation}"</p>
+          <p className="text-[10px] text-muted-foreground font-black tracking-widest uppercase">{ref}</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Hadith of the Day ──────────────────────────────────────────────────────────
+function HadithOfDay({ hadithData }) {
+  const arabic = hadithData?.arabic || 'إِنَّمَا الأَعْمَالُ بِالنِّيَّاتِ'
+  const translation = hadithData?.translation || 'Actions are according to intentions.'
+  const ref = hadithData?.reference || 'Sahih al-Bukhari 1'
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 group h-full card-hover shadow-soft">
+      {/* Sage left accent */}
+      <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl bg-gradient-to-b from-sage to-sage/30" />
+      <Pattern className="opacity-[0.025] text-sage" />
+      <div className="relative z-10 space-y-4 pl-2">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-sage/15">
+            <Icon name="scroll" size={14} className="text-sage" />
+          </div>
+          <span className="text-xs uppercase tracking-widest font-black text-sage">Hadith of the Day</span>
+        </div>
+        <div className="text-center space-y-4 py-2">
+          <p className="font-amiri text-2xl md:text-3xl leading-loose text-foreground" dir="rtl">{arabic}</p>
+          <div className="mx-auto w-16 h-0.5 bg-gradient-to-r from-transparent via-sage/50 to-transparent" />
+          <p className="text-sm text-foreground/75 font-medium italic leading-relaxed">"{translation}"</p>
+          <p className="text-[10px] text-muted-foreground font-black tracking-widest uppercase">{ref}</p>
         </div>
       </div>
     </div>
@@ -262,15 +317,20 @@ function HabitsSummary({ habits }) {
         </div>
         <p className="text-[11px] font-medium text-muted-foreground">{pct}% completed</p>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-3">
         {habits.slice(0, 5).map(h => (
-          <div key={h.id} className={cn('flex items-center gap-3 rounded-lg px-3 py-2 transition-colors', h.completed_today ? 'bg-sage/10' : 'hover:bg-muted/50')}>
-            {h.completed_today
-              ? <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sage"><Icon name="check" size={10} className="text-white" /></div>
-              : <Icon name="plus" size={14} className="h-5 w-5 shrink-0 text-border" />
-            }
-            <span className={cn('text-sm flex-1 truncate font-medium', h.completed_today ? 'text-muted-foreground line-through' : 'text-foreground')}>{h.name}</span>
-            {h.current_streak > 0 && <span className="text-[10px] text-gold shrink-0 font-bold">🔥 {h.current_streak}</span>}
+          <div key={h.id} className={cn('flex items-center justify-between rounded-xl p-3 border border-border/50 bg-background transition-colors', h.completed_today ? 'border-primary/30 bg-primary/5' : 'hover:border-primary/20 hover:bg-muted/50')}>
+            <div className="flex items-center gap-3">
+              <div className="relative flex h-8 w-8 items-center justify-center">
+                <svg width="32" height="32" className="-rotate-90">
+                  <circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" strokeWidth="3" className="text-muted/50" />
+                  <circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" strokeWidth="3" strokeDasharray="88" strokeDashoffset={h.completed_today ? 0 : 88} className={cn("transition-all duration-700", h.completed_today ? "text-primary" : "text-transparent")} />
+                </svg>
+                <Icon name={h.completed_today ? "check" : "target"} size={12} className={cn("absolute", h.completed_today ? "text-primary" : "text-muted-foreground")} />
+              </div>
+              <span className={cn('text-sm font-bold', h.completed_today ? 'text-muted-foreground line-through' : 'text-foreground')}>{h.name}</span>
+            </div>
+            {h.current_streak > 0 && <span className="text-xs text-orange-500 font-bold bg-orange-500/10 px-2 py-1 rounded-lg">🔥 {h.current_streak}</span>}
           </div>
         ))}
       </div>
@@ -316,30 +376,33 @@ function ChildrenProgressWidget() {
 
 // ─── Quick Actions ────────────────────────────────────────────────────────────
 const ACTIONS = [
-  { title: 'Quran', icon: 'book', color: 'bg-primary/10 text-primary', to: '/worship/quran', desc: 'Read & Listen' },
-  { title: 'Dhikr', icon: 'sparkles', color: 'bg-gold/15 text-gold', to: '/grow/habits', search: { tab: 'dhikr' }, desc: 'Tasbeeh Counter' },
-  { title: 'Journal', icon: 'notebook', color: 'bg-sage/15 text-sage', to: '/today/journal', desc: 'Daily Reflection' },
-  { title: 'Habits', icon: 'heart', color: 'bg-warm/10 text-warm', to: '/grow/habits', desc: 'Track Progress' },
-  { title: 'Qibla', icon: 'compass', color: 'bg-primary/10 text-primary', to: '/worship/qibla', desc: 'Find Direction' },
-  { title: 'Community', icon: 'user', color: 'bg-sage/15 text-sage', to: '/community', desc: 'Connect' },
-  { title: 'Wellness', icon: 'star', color: 'bg-warm/10 text-warm', to: '/grow/wellness', desc: 'Body & Mind' },
-  { title: 'Meals', icon: 'heart', color: 'bg-gold/15 text-gold', to: '/grow/meal', desc: 'Meal Nutrition' },
+  { title: 'Quran',     icon: 'book',      gradient: 'from-primary to-primary/70',       shadow: 'shadow-glow-primary',  to: '/worship/quran',  desc: 'Read & Listen' },
+  { title: 'Dhikr',    icon: 'sparkles',   gradient: 'from-amber-500 to-yellow-400',      shadow: 'shadow-glow-gold',    to: '/worship/dhikr',  desc: 'Tasbeeh Counter' },
+  { title: 'Journal',  icon: 'notebook',   gradient: 'from-emerald-500 to-teal-500',      shadow: '',                    to: '/today/journal',  desc: 'Reflect' },
+  { title: 'Habits',   icon: 'target',     gradient: 'from-violet-500 to-purple-600',     shadow: '',                    to: '/grow/habits',    desc: 'Track Progress' },
+  { title: 'Qibla',    icon: 'compass',    gradient: 'from-sky-500 to-blue-600',          shadow: '',                    to: '/worship/qibla',  desc: 'Direction' },
+  { title: 'Ummah',    icon: 'users',      gradient: 'from-pink-500 to-rose-500',         shadow: '',                    to: '/community',      desc: 'Connect' },
+  { title: 'Wellness', icon: 'heart',      gradient: 'from-green-500 to-emerald-600',     shadow: '',                    to: '/grow/wellness',  desc: 'Body & Mind' },
+  { title: 'Meals',    icon: 'utensils',   gradient: 'from-orange-500 to-amber-500',      shadow: '',                    to: '/grow/meal',      desc: 'Nutrition' },
 ]
 
 function QuickActions() {
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Quick Actions</h3>
+      <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">Quick Actions</h3>
       <div className="grid grid-cols-4 gap-3">
-        {ACTIONS.map(action => (
+        {ACTIONS.map((action, i) => (
           <Link key={action.title} to={action.to} search={action.search}
-            className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-4 transition-all duration-200 hover:shadow-md hover:border-primary/20 hover:-translate-y-0.5">
-            <div className={cn('flex h-11 w-11 items-center justify-center rounded-xl transition-transform group-hover:scale-110', action.color)}>
-              <Icon name={action.icon} size={20} />
+            className="group flex flex-col items-center gap-2.5 rounded-2xl border border-border/50 bg-card p-4 transition-all duration-200 card-hover hover:border-primary/20 hover:shadow-soft">
+            <div className={cn(
+              'flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br text-white transition-transform duration-200 group-hover:scale-110',
+              action.gradient, action.shadow
+            )}>
+              <Icon name={action.icon} size={22} />
             </div>
             <div className="text-center">
               <p className="text-xs font-bold text-foreground">{action.title}</p>
-              <p className="text-[10px] text-muted-foreground hidden md:block font-medium">{action.desc}</p>
+              <p className="text-[9px] text-muted-foreground hidden md:block font-medium mt-0.5">{action.desc}</p>
             </div>
           </Link>
         ))}
@@ -405,6 +468,12 @@ function DashboardPage() {
   const { data: verseData } = useQuery({
     queryKey: ['verse', 'today'],
     queryFn: () => api.get('/quran/verse-of-day').then(r => r.data).catch(() => null),
+    staleTime: 24 * 60 * 60_000,
+  })
+
+  const { data: hadithData } = useQuery({
+    queryKey: ['hadith', 'today'],
+    queryFn: () => api.get('/quran/hadith/of-the-day').then(r => r.data).catch(() => null),
     staleTime: 24 * 60 * 60_000,
   })
 
@@ -480,8 +549,11 @@ function DashboardPage() {
       {/* 5. Streak Pulse — current streak + sparkline */}
       {habitsLoading ? <CardSkeleton lines={2} /> : <StreakPulse habits={habits || []} />}
 
-      {/* 6. Daily Verse — ayah + reflection */}
-      <DailyVerse verseData={verseData} />
+      {/* 6. Daily Verse & Hadith — ayah + reflection */}
+      <div className="grid gap-5 md:grid-cols-2">
+        <DailyVerse verseData={verseData} />
+        <HadithOfDay hadithData={hadithData} />
+      </div>
 
       {/* 7. Smart Suggestion — AI-picked next action */}
       <SmartSuggestion prayerSummary={summary} habits={habits} />
@@ -489,10 +561,14 @@ function DashboardPage() {
       {/* Progressive disclosure: "Show more" toggle */}
       <button
         onClick={() => setShowMore(!showMore)}
-        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-border bg-card text-sm font-medium text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all"
+        className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-border/50 bg-card/50 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:bg-muted/40 hover:text-foreground transition-all group"
       >
         <span>{showMore ? 'Show less' : 'Show more'}</span>
-        <Icon name={showMore ? 'chevron-up' : 'chevron-down'} size={16} />
+        <Icon
+          name="chevron-down"
+          size={14}
+          className={cn('transition-transform duration-300', showMore && 'rotate-180')}
+        />
       </button>
 
       {/* Collapsible section */}

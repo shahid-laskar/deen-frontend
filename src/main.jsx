@@ -7,10 +7,24 @@ import { routeTree } from './routeTree.gen'
 import { queryClient } from './lib/queryClient'
 import { useAuthStore } from './store/authStore'
 import { initPostHog } from './lib/posthog'
+import * as Sentry from '@sentry/react'
+import { GlobalErrorBoundary } from './components/ui/error-boundary'
+import './lib/i18n'
 import './index.css'
 
-// Initialize analytics
+// Initialize analytics and error tracking
 initPostHog()
+
+Sentry.init({
+  dsn: "https://examplePublicKey@o0.ingest.sentry.io/0", // Stub DSN
+  integrations: [
+    Sentry.browserTracingIntegration(),
+    Sentry.replayIntegration(),
+  ],
+  tracesSampleRate: 1.0, 
+  replaysSessionSampleRate: 0.1, 
+  replaysOnErrorSampleRate: 1.0, 
+})
 
 // Create the router with auth context
 const router = createRouter({
@@ -20,6 +34,7 @@ const router = createRouter({
   },
   defaultPreload: 'intent',
   defaultPreloadStaleTime: 0,
+  defaultErrorComponent: GlobalErrorBoundary,
 })
 
 function App() {

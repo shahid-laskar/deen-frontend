@@ -8,7 +8,8 @@ import { ContextualTopBar } from '@/components/layout/ContextualTopBar'
 import { CommandBar } from '@/components/layout/CommandBar'
 import { SeasonalPrompt } from '@/components/layout/SeasonalPrompt'
 import { GlobalAudioPlayer } from '@/components/worship/GlobalAudioPlayer'
-import { Outlet } from '@tanstack/react-router'
+import { Outlet, useRouterState } from '@tanstack/react-router'
+import { motion, AnimatePresence } from 'framer-motion'
 
 export const Route = createFileRoute('/_authenticated')({
   beforeLoad: () => {
@@ -24,6 +25,7 @@ export const Route = createFileRoute('/_authenticated')({
 })
 
 function AuthenticatedLayout() {
+  const { location } = useRouterState()
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden">
       {/* Desktop sidebar */}
@@ -35,7 +37,17 @@ function AuthenticatedLayout() {
         {/* Contextual top bar — Hijri date + prayer countdown + location */}
         <ContextualTopBar />
         <main className="flex-1 overflow-y-auto pb-[calc(64px+env(safe-area-inset-bottom))] md:pb-0">
-          <Outlet />
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+            >
+              <Outlet />
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
 

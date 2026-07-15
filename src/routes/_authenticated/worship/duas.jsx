@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 
-export const Route = createFileRoute('/_authenticated/worship/quran/duas')({
+export const Route = createFileRoute('/_authenticated/worship/duas')({
   component: DuaTab,
 })
 

@@ -75,3 +75,31 @@ async function staleWhileRevalidate(request, cacheName) {
   }).catch(() => null)
   return cached || fetchPromise
 }
+
+// Push Notifications
+self.addEventListener('push', (e) => {
+  let data = { title: 'Deen', body: 'New notification' }
+  try {
+    if (e.data) data = e.data.json()
+  } catch (err) {}
+  
+  e.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: '/icon-192.png',
+      badge: '/badge.png'
+    })
+  )
+})
+
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close()
+  e.waitUntil(
+    clients.matchAll({ type: 'window' }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url === '/' && 'focus' in client) return client.focus()
+      }
+      if (clients.openWindow) return clients.openWindow('/')
+    })
+  )
+})

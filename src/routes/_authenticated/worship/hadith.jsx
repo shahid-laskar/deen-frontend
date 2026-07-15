@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 
-export const Route = createFileRoute('/_authenticated/worship/quran/hadith')({
+export const Route = createFileRoute('/_authenticated/worship/hadith')({
   component: HadithTab,
 })
 

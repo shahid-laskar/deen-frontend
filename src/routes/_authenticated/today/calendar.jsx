@@ -284,6 +284,52 @@ function CalendarPage() {
                         </div>
                       ))}
                     </div>
+                    
+                    {/* Daily Summary Overlay trigger - covers the cell */}
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <button className="absolute inset-0 w-full h-full cursor-pointer focus:outline-none" aria-label={`View daily summary for ${cell.day}`} />
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                          <DialogTitle className="flex items-center gap-2">
+                             Daily Summary <Icon name="sun" className="text-amber-500 w-5 h-5" />
+                          </DialogTitle>
+                        </DialogHeader>
+                        <div className="py-4 space-y-4">
+                           <div className="text-center p-4 bg-muted/30 rounded-xl">
+                             <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">{DAYS_OF_WEEK[cell.dateObj.getDay()]}, {cell.day} {MONTHS_GREGORIAN[currentDate.getMonth()]}</p>
+                             <h3 className="text-2xl font-bold text-foreground">{cell.hijri.day} {HIJRI_MONTHS[cell.hijri.month-1]} {cell.hijri.year}</h3>
+                           </div>
+                           
+                           {cell.events.length > 0 ? (
+                             <div className="space-y-2">
+                               <p className="text-xs font-bold text-muted-foreground uppercase">Scheduled Events</p>
+                               {cell.events.map((evt, i) => (
+                                 <div key={i} className={cn("px-3 py-2 text-sm font-bold rounded-lg border", evt.color)}>
+                                   {evt.title}
+                                 </div>
+                               ))}
+                             </div>
+                           ) : (
+                             <p className="text-sm text-muted-foreground text-center italic py-4">No special events today.</p>
+                           )}
+                           
+                           <div className="grid grid-cols-2 gap-3 mt-4">
+                              <div className="p-3 rounded-xl border border-border flex flex-col items-center justify-center bg-card">
+                                 <Icon name="check-circle" className="text-primary mb-1" size={20} />
+                                 <span className="text-lg font-bold">5/5</span>
+                                 <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Prayers Logged</span>
+                              </div>
+                              <div className="p-3 rounded-xl border border-border flex flex-col items-center justify-center bg-card">
+                                 <Icon name="book-open" className="text-amber-500 mb-1" size={20} />
+                                 <span className="text-lg font-bold">10</span>
+                                 <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Ayahs Read</span>
+                              </div>
+                           </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 )
               })}

@@ -38,15 +38,13 @@ export default function SeasonalPrompt() {
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
-        style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
       >
         <motion.div
-          className="w-full max-w-sm rounded-2xl overflow-hidden"
-          style={{ background: 'var(--t-bg-card)', border: '0.5px solid var(--t-border)' }}
+          className="relative w-[340px] max-w-[90vw] rounded-[24px] overflow-hidden bg-card border border-border shadow-2xl flex flex-col pointer-events-auto"
           initial={{ y: 40, opacity: 0 }}
           animate={{ y: 0, opacity: 1, transition: { type: 'spring', damping: 22, stiffness: 300 } }}
           exit={{ y: 40, opacity: 0 }}
@@ -63,28 +61,22 @@ export default function SeasonalPrompt() {
 
           <div className="p-6">
             <div className="text-4xl mb-3">{msg.emoji}</div>
-            <h2 className="font-display text-xl font-bold mb-2" style={{ color: 'var(--t-text)' }}>
+            <h2 className="font-display text-xl font-bold mb-2 text-foreground">
               {msg.title}
             </h2>
-            <p className="text-sm mb-6" style={{ color: 'var(--t-text-muted)' }}>
+            <p className="text-sm mb-6 text-muted-foreground">
               {msg.body}
             </p>
             <div className="flex gap-3">
               <button
                 onClick={declineSeasonalTheme}
-                className="flex-1 py-3 rounded-xl text-sm font-medium border"
-                style={{
-                  borderColor: 'var(--t-border-strong)',
-                  color: 'var(--t-text-muted)',
-                  background: 'transparent',
-                }}
+                className="flex-1 py-3.5 rounded-xl font-semibold text-sm transition-all border border-border text-muted-foreground hover:bg-muted"
               >
                 Keep current
               </button>
               <button
                 onClick={acceptSeasonalTheme}
-                className="flex-1 py-3 rounded-xl text-sm font-medium text-white"
-                style={{ background: 'var(--t-accent)' }}
+                className="flex-1 py-3.5 rounded-xl font-bold text-sm text-white transition-all bg-accent hover:brightness-110"
               >
                 Yes, switch! ✨
               </button>

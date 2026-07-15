@@ -6,18 +6,26 @@ import { useAuthStore } from '@/store/authStore'
 import { getIslamicContext, HIJRI_MONTHS } from '@/lib/hijri'
 import { cn } from '@/lib/utils'
 import { Icon } from '@/components/ui/icon'
+import { motion, AnimatePresence } from 'framer-motion'
 
 /**
- * Contextual Top Bar — persistent across all hubs.
- * Per enhanced-ui spec §1.1:
- *   - Hijri date & Gregorian Date (left)
- *   - Next prayer + countdown (center)
- *   - Location chip (right)
- *
+ * Contextual Top Bar — persists across all hubs.
+ * - Hijri date & Gregorian (left)
+ * - Next prayer + countdown (center) — prayer-specific icon + color
+ * - Location chip (right)
  * Hides on scroll-down, returns on scroll-up (mobile only).
  */
 
 const PRAYER_NAMES = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha']
+
+// Prayer-specific icon names and color classes
+const PRAYER_META = {
+  Fajr:    { icon: 'star',    color: 'text-blue-400',   bg: 'bg-blue-500/10'   },
+  Dhuhr:   { icon: 'sun',     color: 'text-amber-500',  bg: 'bg-amber-500/10'  },
+  Asr:     { icon: 'cloud',   color: 'text-orange-400', bg: 'bg-orange-500/10' },
+  Maghrib: { icon: 'sunset',  color: 'text-rose-400',   bg: 'bg-rose-500/10'   },
+  Isha:    { icon: 'moon',    color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+}
 
 function parseTime(t) {
   if (!t) return null
@@ -62,7 +70,7 @@ export function ContextualTopBar({ className }) {
     staleTime: 5 * 60_000,
   })
 
-  // Update countdown every second
+  // Update countdown every 10 seconds
   useEffect(() => {
     const tick = () => {
       const np = findNextPrayer(prayerTimes)
@@ -92,25 +100,31 @@ export function ContextualTopBar({ className }) {
   }, [lastScrollY])
 
   const locationName = user?.city || user?.location_name || 'Set Location'
-  
-  const gregorianDate = new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date())
+  const gregorianDate = new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'short' }).format(new Date())
   const shortHijri = ctx.hijri ? `${ctx.hijri.day} ${HIJRI_MONTHS[ctx.hijri.month - 1]}` : ctx.formatted
+  const prayerMeta = nextPrayer ? PRAYER_META[nextPrayer.name] : null
 
   return (
-    <div className={cn(
-      'flex items-center justify-between px-3 py-1.5 border-b border-border/50 bg-card/80 backdrop-blur-lg transition-transform duration-300 z-20 gap-2',
-      'md:px-6 md:py-2',
-      hidden && 'md:translate-y-0 -translate-y-full',
-      className
-    )}>
+    <motion.div
+      className={cn(
+        'flex items-center justify-between px-4 py-2 border-b border-border/30 glass-strong z-20 gap-2',
+        'md:px-6 md:py-2.5',
+        className
+      )}
+      animate={{ y: hidden ? -48 : 0 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+    >
       {/* Date (left) */}
-      <Link to="/today/calendar" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group shrink-0">
-        <Icon name="calendar" size={14} className="opacity-60 group-hover:opacity-100 shrink-0 hidden sm:block" />
+      <Link
+        to="/today/calendar"
+        className="flex items-center gap-2 group shrink-0 hover:opacity-80 transition-opacity"
+      >
+        <Icon name="calendar" size={13} className="text-muted-foreground/50 group-hover:text-primary transition-colors hidden sm:block" />
         <div className="flex flex-col justify-center">
-          <span className="text-[11px] font-bold text-foreground leading-tight tracking-tight">
+          <span className="text-[11px] font-bold text-gradient-primary leading-tight">
             {shortHijri}
           </span>
-          <span className="text-[9px] font-medium tracking-wide opacity-70 leading-tight">
+          <span className="text-[9px] font-medium text-muted-foreground/60 leading-tight">
             {gregorianDate}
           </span>
         </div>
@@ -119,24 +133,39 @@ export function ContextualTopBar({ className }) {
       {/* Next prayer countdown (center) */}
       <Link
         to="/worship/prayer"
-        className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/8 hover:bg-primary/15 transition-colors group"
+        className={cn(
+          'flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-transparent transition-all group',
+          prayerMeta ? `${prayerMeta.bg} hover:border-current/20` : 'bg-primary/8 hover:bg-primary/15'
+        )}
       >
-        <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-        <span className="text-[11px] font-bold text-primary">
+        {prayerMeta ? (
+          <Icon name={prayerMeta.icon} size={11} className={cn(prayerMeta.color)} />
+        ) : (
+          <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+        )}
+        <span className={cn('text-[11px] font-bold', prayerMeta ? prayerMeta.color : 'text-primary')}>
           {nextPrayer ? `${nextPrayer.name} in ${countdown}` : 'Prayer Times'}
         </span>
       </Link>
 
-      {/* Location chip (right) */}
-      <Link
-        to="/me/settings"
-        className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors group"
-      >
-        <Icon name="map-pin" size={12} className="opacity-60 group-hover:opacity-100" />
-        <span className="text-[11px] font-semibold truncate max-w-20">
-          {locationName}
-        </span>
-      </Link>
-    </div>
+      <div className="flex items-center gap-3">
+        {/* Notification Bell */}
+        <Link to="/me/settings" className="relative text-muted-foreground hover:text-foreground transition-colors group">
+          <Icon name="bell" size={15} className="opacity-55 group-hover:opacity-100" />
+          <span className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-red-500 border border-card" />
+        </Link>
+
+        {/* Location chip (right) */}
+        <Link
+          to="/me/settings"
+          className="hidden sm:flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors group"
+        >
+          <Icon name="map-pin" size={11} className="opacity-50 group-hover:opacity-100" />
+          <span className="text-[10px] font-semibold truncate max-w-[80px]">
+            {locationName}
+          </span>
+        </Link>
+      </div>
+    </motion.div>
   )
 }

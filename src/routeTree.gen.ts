@@ -24,6 +24,9 @@ import { Route as AuthenticatedCommunityIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedWorshipQuranRouteImport } from './routes/_authenticated/worship/quran'
 import { Route as AuthenticatedWorshipQiblaRouteImport } from './routes/_authenticated/worship/qibla'
 import { Route as AuthenticatedWorshipPrayerRouteImport } from './routes/_authenticated/worship/prayer'
+import { Route as AuthenticatedWorshipHadithRouteImport } from './routes/_authenticated/worship/hadith'
+import { Route as AuthenticatedWorshipDuasRouteImport } from './routes/_authenticated/worship/duas'
+import { Route as AuthenticatedWorshipDhikrRouteImport } from './routes/_authenticated/worship/dhikr'
 import { Route as AuthenticatedWorshipAudioRouteImport } from './routes/_authenticated/worship/audio'
 import { Route as AuthenticatedTodayTasksRouteImport } from './routes/_authenticated/today/tasks'
 import { Route as AuthenticatedTodayJournalRouteImport } from './routes/_authenticated/today/journal'
@@ -48,10 +51,9 @@ import { Route as AuthenticatedMeChildrenIndexRouteImport } from './routes/_auth
 import { Route as AuthenticatedGrowHabitsIndexRouteImport } from './routes/_authenticated/grow/habits/index'
 import { Route as AuthenticatedWorshipQuranStatsRouteImport } from './routes/_authenticated/worship/quran/stats'
 import { Route as AuthenticatedWorshipQuranSearchRouteImport } from './routes/_authenticated/worship/quran/search'
+import { Route as AuthenticatedWorshipQuranRecitationRouteImport } from './routes/_authenticated/worship/quran/recitation'
 import { Route as AuthenticatedWorshipQuranPracticeRouteImport } from './routes/_authenticated/worship/quran/practice'
 import { Route as AuthenticatedWorshipQuranHifzRouteImport } from './routes/_authenticated/worship/quran/hifz'
-import { Route as AuthenticatedWorshipQuranHadithRouteImport } from './routes/_authenticated/worship/quran/hadith'
-import { Route as AuthenticatedWorshipQuranDuasRouteImport } from './routes/_authenticated/worship/quran/duas'
 import { Route as AuthenticatedWorshipQuranBookmarksRouteImport } from './routes/_authenticated/worship/quran/bookmarks'
 import { Route as AuthenticatedMeChildrenKidsModeRouteImport } from './routes/_authenticated/me/children/kids-mode'
 import { Route as AuthenticatedMeChildrenChildIdRouteImport } from './routes/_authenticated/me/children/$childId'
@@ -138,6 +140,24 @@ const AuthenticatedWorshipPrayerRoute =
   AuthenticatedWorshipPrayerRouteImport.update({
     id: '/worship/prayer',
     path: '/worship/prayer',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedWorshipHadithRoute =
+  AuthenticatedWorshipHadithRouteImport.update({
+    id: '/worship/hadith',
+    path: '/worship/hadith',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedWorshipDuasRoute =
+  AuthenticatedWorshipDuasRouteImport.update({
+    id: '/worship/duas',
+    path: '/worship/duas',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedWorshipDhikrRoute =
+  AuthenticatedWorshipDhikrRouteImport.update({
+    id: '/worship/dhikr',
+    path: '/worship/dhikr',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedWorshipAudioRoute =
@@ -274,6 +294,12 @@ const AuthenticatedWorshipQuranSearchRoute =
     path: '/search',
     getParentRoute: () => AuthenticatedWorshipQuranRoute,
   } as any)
+const AuthenticatedWorshipQuranRecitationRoute =
+  AuthenticatedWorshipQuranRecitationRouteImport.update({
+    id: '/recitation',
+    path: '/recitation',
+    getParentRoute: () => AuthenticatedWorshipQuranRoute,
+  } as any)
 const AuthenticatedWorshipQuranPracticeRoute =
   AuthenticatedWorshipQuranPracticeRouteImport.update({
     id: '/practice',
@@ -284,18 +310,6 @@ const AuthenticatedWorshipQuranHifzRoute =
   AuthenticatedWorshipQuranHifzRouteImport.update({
     id: '/hifz',
     path: '/hifz',
-    getParentRoute: () => AuthenticatedWorshipQuranRoute,
-  } as any)
-const AuthenticatedWorshipQuranHadithRoute =
-  AuthenticatedWorshipQuranHadithRouteImport.update({
-    id: '/hadith',
-    path: '/hadith',
-    getParentRoute: () => AuthenticatedWorshipQuranRoute,
-  } as any)
-const AuthenticatedWorshipQuranDuasRoute =
-  AuthenticatedWorshipQuranDuasRouteImport.update({
-    id: '/duas',
-    path: '/duas',
     getParentRoute: () => AuthenticatedWorshipQuranRoute,
   } as any)
 const AuthenticatedWorshipQuranBookmarksRoute =
@@ -373,6 +387,9 @@ export interface FileRoutesByFullPath {
   '/today/journal': typeof AuthenticatedTodayJournalRoute
   '/today/tasks': typeof AuthenticatedTodayTasksRoute
   '/worship/audio': typeof AuthenticatedWorshipAudioRoute
+  '/worship/dhikr': typeof AuthenticatedWorshipDhikrRoute
+  '/worship/duas': typeof AuthenticatedWorshipDuasRoute
+  '/worship/hadith': typeof AuthenticatedWorshipHadithRoute
   '/worship/prayer': typeof AuthenticatedWorshipPrayerRoute
   '/worship/qibla': typeof AuthenticatedWorshipQiblaRoute
   '/worship/quran': typeof AuthenticatedWorshipQuranRouteWithChildren
@@ -388,10 +405,9 @@ export interface FileRoutesByFullPath {
   '/me/children/$childId': typeof AuthenticatedMeChildrenChildIdRoute
   '/me/children/kids-mode': typeof AuthenticatedMeChildrenKidsModeRoute
   '/worship/quran/bookmarks': typeof AuthenticatedWorshipQuranBookmarksRoute
-  '/worship/quran/duas': typeof AuthenticatedWorshipQuranDuasRoute
-  '/worship/quran/hadith': typeof AuthenticatedWorshipQuranHadithRoute
   '/worship/quran/hifz': typeof AuthenticatedWorshipQuranHifzRoute
   '/worship/quran/practice': typeof AuthenticatedWorshipQuranPracticeRoute
+  '/worship/quran/recitation': typeof AuthenticatedWorshipQuranRecitationRoute
   '/worship/quran/search': typeof AuthenticatedWorshipQuranSearchRoute
   '/worship/quran/stats': typeof AuthenticatedWorshipQuranStatsRoute
   '/grow/habits/': typeof AuthenticatedGrowHabitsIndexRoute
@@ -423,6 +439,9 @@ export interface FileRoutesByTo {
   '/today/journal': typeof AuthenticatedTodayJournalRoute
   '/today/tasks': typeof AuthenticatedTodayTasksRoute
   '/worship/audio': typeof AuthenticatedWorshipAudioRoute
+  '/worship/dhikr': typeof AuthenticatedWorshipDhikrRoute
+  '/worship/duas': typeof AuthenticatedWorshipDuasRoute
+  '/worship/hadith': typeof AuthenticatedWorshipHadithRoute
   '/worship/prayer': typeof AuthenticatedWorshipPrayerRoute
   '/worship/qibla': typeof AuthenticatedWorshipQiblaRoute
   '/community': typeof AuthenticatedCommunityIndexRoute
@@ -437,10 +456,9 @@ export interface FileRoutesByTo {
   '/me/children/$childId': typeof AuthenticatedMeChildrenChildIdRoute
   '/me/children/kids-mode': typeof AuthenticatedMeChildrenKidsModeRoute
   '/worship/quran/bookmarks': typeof AuthenticatedWorshipQuranBookmarksRoute
-  '/worship/quran/duas': typeof AuthenticatedWorshipQuranDuasRoute
-  '/worship/quran/hadith': typeof AuthenticatedWorshipQuranHadithRoute
   '/worship/quran/hifz': typeof AuthenticatedWorshipQuranHifzRoute
   '/worship/quran/practice': typeof AuthenticatedWorshipQuranPracticeRoute
+  '/worship/quran/recitation': typeof AuthenticatedWorshipQuranRecitationRoute
   '/worship/quran/search': typeof AuthenticatedWorshipQuranSearchRoute
   '/worship/quran/stats': typeof AuthenticatedWorshipQuranStatsRoute
   '/grow/habits': typeof AuthenticatedGrowHabitsIndexRoute
@@ -476,6 +494,9 @@ export interface FileRoutesById {
   '/_authenticated/today/journal': typeof AuthenticatedTodayJournalRoute
   '/_authenticated/today/tasks': typeof AuthenticatedTodayTasksRoute
   '/_authenticated/worship/audio': typeof AuthenticatedWorshipAudioRoute
+  '/_authenticated/worship/dhikr': typeof AuthenticatedWorshipDhikrRoute
+  '/_authenticated/worship/duas': typeof AuthenticatedWorshipDuasRoute
+  '/_authenticated/worship/hadith': typeof AuthenticatedWorshipHadithRoute
   '/_authenticated/worship/prayer': typeof AuthenticatedWorshipPrayerRoute
   '/_authenticated/worship/qibla': typeof AuthenticatedWorshipQiblaRoute
   '/_authenticated/worship/quran': typeof AuthenticatedWorshipQuranRouteWithChildren
@@ -491,10 +512,9 @@ export interface FileRoutesById {
   '/_authenticated/me/children/$childId': typeof AuthenticatedMeChildrenChildIdRoute
   '/_authenticated/me/children/kids-mode': typeof AuthenticatedMeChildrenKidsModeRoute
   '/_authenticated/worship/quran/bookmarks': typeof AuthenticatedWorshipQuranBookmarksRoute
-  '/_authenticated/worship/quran/duas': typeof AuthenticatedWorshipQuranDuasRoute
-  '/_authenticated/worship/quran/hadith': typeof AuthenticatedWorshipQuranHadithRoute
   '/_authenticated/worship/quran/hifz': typeof AuthenticatedWorshipQuranHifzRoute
   '/_authenticated/worship/quran/practice': typeof AuthenticatedWorshipQuranPracticeRoute
+  '/_authenticated/worship/quran/recitation': typeof AuthenticatedWorshipQuranRecitationRoute
   '/_authenticated/worship/quran/search': typeof AuthenticatedWorshipQuranSearchRoute
   '/_authenticated/worship/quran/stats': typeof AuthenticatedWorshipQuranStatsRoute
   '/_authenticated/grow/habits/': typeof AuthenticatedGrowHabitsIndexRoute
@@ -530,6 +550,9 @@ export interface FileRouteTypes {
     | '/today/journal'
     | '/today/tasks'
     | '/worship/audio'
+    | '/worship/dhikr'
+    | '/worship/duas'
+    | '/worship/hadith'
     | '/worship/prayer'
     | '/worship/qibla'
     | '/worship/quran'
@@ -545,10 +568,9 @@ export interface FileRouteTypes {
     | '/me/children/$childId'
     | '/me/children/kids-mode'
     | '/worship/quran/bookmarks'
-    | '/worship/quran/duas'
-    | '/worship/quran/hadith'
     | '/worship/quran/hifz'
     | '/worship/quran/practice'
+    | '/worship/quran/recitation'
     | '/worship/quran/search'
     | '/worship/quran/stats'
     | '/grow/habits/'
@@ -580,6 +602,9 @@ export interface FileRouteTypes {
     | '/today/journal'
     | '/today/tasks'
     | '/worship/audio'
+    | '/worship/dhikr'
+    | '/worship/duas'
+    | '/worship/hadith'
     | '/worship/prayer'
     | '/worship/qibla'
     | '/community'
@@ -594,10 +619,9 @@ export interface FileRouteTypes {
     | '/me/children/$childId'
     | '/me/children/kids-mode'
     | '/worship/quran/bookmarks'
-    | '/worship/quran/duas'
-    | '/worship/quran/hadith'
     | '/worship/quran/hifz'
     | '/worship/quran/practice'
+    | '/worship/quran/recitation'
     | '/worship/quran/search'
     | '/worship/quran/stats'
     | '/grow/habits'
@@ -632,6 +656,9 @@ export interface FileRouteTypes {
     | '/_authenticated/today/journal'
     | '/_authenticated/today/tasks'
     | '/_authenticated/worship/audio'
+    | '/_authenticated/worship/dhikr'
+    | '/_authenticated/worship/duas'
+    | '/_authenticated/worship/hadith'
     | '/_authenticated/worship/prayer'
     | '/_authenticated/worship/qibla'
     | '/_authenticated/worship/quran'
@@ -647,10 +674,9 @@ export interface FileRouteTypes {
     | '/_authenticated/me/children/$childId'
     | '/_authenticated/me/children/kids-mode'
     | '/_authenticated/worship/quran/bookmarks'
-    | '/_authenticated/worship/quran/duas'
-    | '/_authenticated/worship/quran/hadith'
     | '/_authenticated/worship/quran/hifz'
     | '/_authenticated/worship/quran/practice'
+    | '/_authenticated/worship/quran/recitation'
     | '/_authenticated/worship/quran/search'
     | '/_authenticated/worship/quran/stats'
     | '/_authenticated/grow/habits/'
@@ -772,6 +798,27 @@ declare module '@tanstack/react-router' {
       path: '/worship/prayer'
       fullPath: '/worship/prayer'
       preLoaderRoute: typeof AuthenticatedWorshipPrayerRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/worship/hadith': {
+      id: '/_authenticated/worship/hadith'
+      path: '/worship/hadith'
+      fullPath: '/worship/hadith'
+      preLoaderRoute: typeof AuthenticatedWorshipHadithRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/worship/duas': {
+      id: '/_authenticated/worship/duas'
+      path: '/worship/duas'
+      fullPath: '/worship/duas'
+      preLoaderRoute: typeof AuthenticatedWorshipDuasRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/worship/dhikr': {
+      id: '/_authenticated/worship/dhikr'
+      path: '/worship/dhikr'
+      fullPath: '/worship/dhikr'
+      preLoaderRoute: typeof AuthenticatedWorshipDhikrRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/worship/audio': {
@@ -942,6 +989,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWorshipQuranSearchRouteImport
       parentRoute: typeof AuthenticatedWorshipQuranRoute
     }
+    '/_authenticated/worship/quran/recitation': {
+      id: '/_authenticated/worship/quran/recitation'
+      path: '/recitation'
+      fullPath: '/worship/quran/recitation'
+      preLoaderRoute: typeof AuthenticatedWorshipQuranRecitationRouteImport
+      parentRoute: typeof AuthenticatedWorshipQuranRoute
+    }
     '/_authenticated/worship/quran/practice': {
       id: '/_authenticated/worship/quran/practice'
       path: '/practice'
@@ -954,20 +1008,6 @@ declare module '@tanstack/react-router' {
       path: '/hifz'
       fullPath: '/worship/quran/hifz'
       preLoaderRoute: typeof AuthenticatedWorshipQuranHifzRouteImport
-      parentRoute: typeof AuthenticatedWorshipQuranRoute
-    }
-    '/_authenticated/worship/quran/hadith': {
-      id: '/_authenticated/worship/quran/hadith'
-      path: '/hadith'
-      fullPath: '/worship/quran/hadith'
-      preLoaderRoute: typeof AuthenticatedWorshipQuranHadithRouteImport
-      parentRoute: typeof AuthenticatedWorshipQuranRoute
-    }
-    '/_authenticated/worship/quran/duas': {
-      id: '/_authenticated/worship/quran/duas'
-      path: '/duas'
-      fullPath: '/worship/quran/duas'
-      preLoaderRoute: typeof AuthenticatedWorshipQuranDuasRouteImport
       parentRoute: typeof AuthenticatedWorshipQuranRoute
     }
     '/_authenticated/worship/quran/bookmarks': {
@@ -1072,10 +1112,9 @@ const AuthenticatedMeChildrenRouteWithChildren =
 
 interface AuthenticatedWorshipQuranRouteChildren {
   AuthenticatedWorshipQuranBookmarksRoute: typeof AuthenticatedWorshipQuranBookmarksRoute
-  AuthenticatedWorshipQuranDuasRoute: typeof AuthenticatedWorshipQuranDuasRoute
-  AuthenticatedWorshipQuranHadithRoute: typeof AuthenticatedWorshipQuranHadithRoute
   AuthenticatedWorshipQuranHifzRoute: typeof AuthenticatedWorshipQuranHifzRoute
   AuthenticatedWorshipQuranPracticeRoute: typeof AuthenticatedWorshipQuranPracticeRoute
+  AuthenticatedWorshipQuranRecitationRoute: typeof AuthenticatedWorshipQuranRecitationRoute
   AuthenticatedWorshipQuranSearchRoute: typeof AuthenticatedWorshipQuranSearchRoute
   AuthenticatedWorshipQuranStatsRoute: typeof AuthenticatedWorshipQuranStatsRoute
   AuthenticatedWorshipQuranIndexRoute: typeof AuthenticatedWorshipQuranIndexRoute
@@ -1086,11 +1125,11 @@ const AuthenticatedWorshipQuranRouteChildren: AuthenticatedWorshipQuranRouteChil
   {
     AuthenticatedWorshipQuranBookmarksRoute:
       AuthenticatedWorshipQuranBookmarksRoute,
-    AuthenticatedWorshipQuranDuasRoute: AuthenticatedWorshipQuranDuasRoute,
-    AuthenticatedWorshipQuranHadithRoute: AuthenticatedWorshipQuranHadithRoute,
     AuthenticatedWorshipQuranHifzRoute: AuthenticatedWorshipQuranHifzRoute,
     AuthenticatedWorshipQuranPracticeRoute:
       AuthenticatedWorshipQuranPracticeRoute,
+    AuthenticatedWorshipQuranRecitationRoute:
+      AuthenticatedWorshipQuranRecitationRoute,
     AuthenticatedWorshipQuranSearchRoute: AuthenticatedWorshipQuranSearchRoute,
     AuthenticatedWorshipQuranStatsRoute: AuthenticatedWorshipQuranStatsRoute,
     AuthenticatedWorshipQuranIndexRoute: AuthenticatedWorshipQuranIndexRoute,
@@ -1125,6 +1164,9 @@ interface AuthenticatedRouteChildren {
   AuthenticatedTodayJournalRoute: typeof AuthenticatedTodayJournalRoute
   AuthenticatedTodayTasksRoute: typeof AuthenticatedTodayTasksRoute
   AuthenticatedWorshipAudioRoute: typeof AuthenticatedWorshipAudioRoute
+  AuthenticatedWorshipDhikrRoute: typeof AuthenticatedWorshipDhikrRoute
+  AuthenticatedWorshipDuasRoute: typeof AuthenticatedWorshipDuasRoute
+  AuthenticatedWorshipHadithRoute: typeof AuthenticatedWorshipHadithRoute
   AuthenticatedWorshipPrayerRoute: typeof AuthenticatedWorshipPrayerRoute
   AuthenticatedWorshipQiblaRoute: typeof AuthenticatedWorshipQiblaRoute
   AuthenticatedWorshipQuranRoute: typeof AuthenticatedWorshipQuranRouteWithChildren
@@ -1157,6 +1199,9 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedTodayJournalRoute: AuthenticatedTodayJournalRoute,
   AuthenticatedTodayTasksRoute: AuthenticatedTodayTasksRoute,
   AuthenticatedWorshipAudioRoute: AuthenticatedWorshipAudioRoute,
+  AuthenticatedWorshipDhikrRoute: AuthenticatedWorshipDhikrRoute,
+  AuthenticatedWorshipDuasRoute: AuthenticatedWorshipDuasRoute,
+  AuthenticatedWorshipHadithRoute: AuthenticatedWorshipHadithRoute,
   AuthenticatedWorshipPrayerRoute: AuthenticatedWorshipPrayerRoute,
   AuthenticatedWorshipQiblaRoute: AuthenticatedWorshipQiblaRoute,
   AuthenticatedWorshipQuranRoute: AuthenticatedWorshipQuranRouteWithChildren,

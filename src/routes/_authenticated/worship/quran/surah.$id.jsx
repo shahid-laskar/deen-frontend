@@ -7,6 +7,7 @@ import { AyahRow } from '@/components/quran/AyahRow'
 import { AudioPlayer } from '@/components/quran/AudioPlayer'
 import { TafsirDrawer } from '@/components/quran/TafsirDrawer'
 import { getQuranPrefs, setQuranPref, saveLastReadLocal } from '@/lib/quranPrefs'
+import { Breadcrumbs } from '@/components/ui/breadcrumbs'
 import { toast } from 'sonner'
 
 export const Route = createFileRoute('/_authenticated/worship/quran/surah/$id')({
@@ -203,9 +204,17 @@ function SurahReader() {
   }
 
   return (
-    <div className="animate-fade-in relative">
+    <div className="animate-fade-in relative page-container pt-0">
+      <div className="mb-2 hidden md:block">
+        <Breadcrumbs items={[
+          { label: 'Worship', to: '/worship' },
+          { label: 'Quran', to: '/worship/quran' },
+          { label: metadata?.name_simple || `Surah ${surahNumber}` }
+        ]} />
+      </div>
+
       {/* ── Sticky header ─────────────────────────────────────────────────── */}
-      <div className="sticky top-[60px] z-30 bg-background/95 backdrop-blur-md border-b border-border/50 -mx-4 px-4 py-3 md:-mx-8 md:px-8 mb-6 flex items-center justify-between shadow-sm">
+      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border/50 -mx-4 px-4 py-3 md:-mx-8 md:px-8 mb-6 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate({ to: '/worship/quran' })}

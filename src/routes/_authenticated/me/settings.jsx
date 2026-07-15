@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { ThemeGallery } from '@/components/theme/ThemeGallery'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 
 export const Route = createFileRoute('/_authenticated/me/settings')({
   component: SettingsPage,
@@ -56,6 +57,7 @@ function SettingRow({ label, description, checked, onCheckedChange }) {
 
 // ─── Appearance Tab ───────────────────────────────────────────────────────────
 function AppearanceTab({ onOpenGallery }) {
+  const { i18n } = useTranslation()
   const { 
     mode, setMode, themes, themeId,
     typeset, setTypesetOverride,
@@ -145,6 +147,21 @@ function AppearanceTab({ onOpenGallery }) {
             checked={seasonalEnabled}
             onCheckedChange={setSeasonalEnabled}
           />
+        </div>
+      </Section>
+
+      {/* Language */}
+      <Section title="Language">
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium text-foreground">App Language</label>
+          <select 
+            className="rounded-lg border border-input bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            value={i18n.language}
+            onChange={(e) => i18n.changeLanguage(e.target.value)}
+          >
+            <option value="en">English (US)</option>
+            <option value="ar">العربية (Arabic)</option>
+          </select>
         </div>
       </Section>
 
